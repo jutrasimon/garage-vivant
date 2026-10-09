@@ -35,22 +35,22 @@ Le code confirme ces mécanismes. Il ne prouve pas que chacun explique à lui se
 
 ### 3.1 Contrat des horloges et des boutons
 
-États explicites : **réservation → rassemblement → prêt → prestation → bilan**, avec branches annulation et absence. L’ouverture d’un panneau ne doit jamais, à elle seule, démarrer ou terminer une prestation.
+États explicites : **occasion ouverte → réservation directe ou candidature → confirmation → rassemblement → prestation en direct → bilan**, avec branches refus, retrait, annulation et absence. L’ouverture d’un panneau ne doit jamais, à elle seule, démarrer ou terminer une prestation.
 
-Quand le band arrive, une notification annonce « Les Érables sont prêts — regarder ou résoudre ». Par défaut, le spectacle attend; le header indique **Quartier en attente du show**, avec accès immédiat aux choix. Une option ultérieure « résoudre les shows non regardés automatiquement » peut servir au mode aquarium, mais ne doit pas être implicite.
+À l’heure du show, après validation des présences, **le quartier se met en pause et la vue du spectacle s’ouvre automatiquement au début**. Une courte annonce présente le band avant la première carte. Le joueur regarde en direct ou utilise Sauter; aucune résolution automatique hors écran dans cette version. Le header indique **Quartier en pause — show en direct**. Si un formulaire est ouvert, conserver son brouillon et sa position pour le retour; si l’onglet navigateur est masqué, attendre son retour avant de commencer la présentation.
 
 | Contrôle | Comportement proposé |
 |---|---|
-| Regarder | Démarre au début, à ×1, band et morceau annoncés. |
+| Entrée automatique | Ouvre le show au début, à ×1, band et morceau annoncés; met le quartier en pause. |
 | Pause / reprendre | Suspend uniquement la présentation; aucune conséquence supplémentaire. |
 | ×0,5 / ×1 / ×2 / ×4 | Change la vitesse de visionnement; tirages, physique et résultat restent identiques. |
 | Sauter la prestation | Résout les morceaux restants du band et ouvre son bilan; applique ses conséquences une fois. |
 | Sauter la soirée | Résout les créneaux restants, puis affiche les bilans par band. |
-| Retour au quartier | Suspend le visionnement; bandeau persistant « show en pause : reprendre / résoudre ». Pas de lecture cachée. |
+| Consulter le quartier | Inspection seulement, show et quartier en pause; retour visible au direct. Pour reprendre la simulation, terminer ou sauter la soirée. |
 | Interrompre la prestation | Abandon volontaire distinct de « sauter »; confirmation et coût annoncé avant application. |
 | Revoir | Rejoue les données enregistrées, sans modifier le monde. |
 
-Pour cette version, le quartier est gelé pendant le visionnement. La durée musicale est néanmoins un intervalle du calendrier : à la clôture d’un créneau, simuler une seule fois cet intervalle pour le quartier, avec les musiciens réservés et leur fatigue appliquée par la prestation. Les autres créneaux sont traités dans l’ordre. Cela évite les concerts de durée nulle et les deux groupes simultanés impossibles. Cette transition doit être bornée, reprenable et testée; elle ne doit pas provoquer un rattrapage visuel brutal à la fermeture du show.
+Pour cette version, l’horloge, les déplacements et les décisions du quartier restent gelés pendant toute la soirée. Pas de simulation cachée ni de rattrapage après le show. Les créneaux et morceaux s’enchaînent sur une horloge musicale propre à l’événement; leurs durées servent à construire l’affiche et à vérifier les disponibilités. À la fin, appliquer les conséquences une fois, puis reprendre le quartier au même instant simulé et à sa vitesse précédente (ou rester en pause s’il l’était déjà). Les créneaux terminés ne se redéclenchent pas lorsque l’horloge du quartier traverse ensuite leur heure nominale. Cette convention provisoire doit être documentée et testée explicitement.
 
 Masquer l’onglet navigateur suspend toujours la lecture, sans rattrapage au retour. Le slider du quartier reste aimanté à 0,5 et aux entiers; pendant un show, son état explique qu’il contrôle le quartier. Les commandes de lecture du show sont indépendantes.
 
@@ -119,10 +119,45 @@ Parcours en quatre étapes, résumé permanent : **date/créneau → band/membre
 
 - Avant confirmation, revenir et changer les choix librement.
 - Après confirmation, modifier seulement en revalidant disponibilités et consentements; conserver la réservation précédente si la modification échoue. Annulation toujours explicite.
-- Les NPC remplissent progressivement les places disponibles; une fenêtre laisse au joueur le temps de choisir. Leur participation suit leurs besoins et engagements. Aucun band du joueur n’est engagé sans décision explicite.
+- Les bands évaluent et réservent leurs occasions de façon autonome selon les règles ci-dessous, y compris les bands du personnage joueur. Le joueur peut intervenir, retirer une candidature ou annuler une réservation; les décisions autonomes sont annoncées avec leurs raisons. Les confirmations des membres restent nécessaires.
 - Un musicien commun à deux bands peut jouer deux créneaux compatibles. Vérifier les intervalles, trajets et récupération, pas seulement l’égalité de date. Expliquer les conflits de choix.
 - Si moins de deux musiciens arrivent, afficher l’absence et libérer le créneau. Un autre band n’est pas pénalisé par ce blocage. À court terme, le créneau reste vide; remplacement de dernière minute hors périmètre.
 - Un événement accepte 2–3 bands mais n’en invente pas si le quartier en possède moins. Il peut se dérouler partiellement rempli.
+
+### 4.4 Réserver une petite scène ou tenter une grosse
+
+**Un seul engagement futur par band**, commun à tous les membres : soit une réservation confirmée, soit une candidature en attente. Une candidature occupe donc la place jusqu’au résultat ou au retrait. Un band ne peut pas postuler à plusieurs créneaux d’une même soirée ni réserver ailleurs en attendant. Une défaite, une annulation ou la fin de la prestation libère cette place. Les appartenances multiples restent permises, sous réserve des disponibilités individuelles.
+
+**Petits shows : premier arrivé, premier servi, par créneau.** Dès l’ouverture annoncée, une demande admissible avec au moins deux membres confirmés prend la place, sans concours de réputation. Les contrôles portent sur les disponibilités et les règles de formation, pas sur une qualité minimale protectrice : un band peut viser trop haut et se planter. Traiter des demandes simultanées dans un ordre tiré par la graine, plutôt que favoriser systématiquement le premier groupe du tableau. La confirmation est atomique : deux bands ne gagnent jamais la même place.
+
+**Gros shows : candidatures puis sélection.** Ouvrir les inscriptions dès l’annonce de la date; les fermer et sélectionner à **T−2 jours simulés** comme réglage initial. Les élus disposent ainsi de deux jours pour préparer leur prestation. Afficher ouverture, date limite et annonce des résultats. Une date nouvellement générée doit toujours laisser une vraie fenêtre de candidature; à la migration, les réservations déjà confirmées sont conservées.
+
+L’organisateur est un profil abstrait de l’événement, sans nouveau NPC nécessaire. Ses goûts et attentes sont visibles : style, public, exigence et préférence pour la découverte ou les bands établis. La sélection considère adéquation musicale, préparation/maîtrise, réputation, fiabilité connue et complémentarité avec les groupes déjà retenus. Éviter qu’une réputation élevée écrase tous les autres critères.
+
+Utiliser une sélection aléatoire pondérée parmi les candidatures admissibles, sans remise; recalculer la complémentarité après chaque choix. Une préférence forte donne un avantage, pas une victoire garantie. Enregistrer la graine, les candidatures examinées et les raisons du résultat; recharger ne permet pas de relancer le concours. Attribuer chaque créneau une seule fois. Avec trop peu de candidatures, remplir ce qui est possible sans inventer de bands. Afficher « retenu », « non retenu » ou « retiré » : un retrait volontaire n’est pas un refus de l’organisateur.
+
+### 4.5 Pourquoi un band choisit de s’inscrire — ou d’attendre
+
+Évaluer les occasions à intervalles espacés et lors d’un changement pertinent, jamais à chaque image. Le band compare gain attendu, adéquation au public, préparation à la date du show, énergie, disponibilités, risque d’échec et coût d’occuper son unique engagement. Un seuil minimal d’intérêt et un délai avant réévaluation empêchent les candidatures automatiques partout et les cycles retrait/réinscription.
+
+L’ambition pousse vers un défi; la discipline valorise la préparation; la prudence après un échec favorise une petite scène. Agréger les personnalités des membres avec une proposition de l’organisateur du band, puis leurs confirmations; pas une décision qui change arbitrairement à chaque clic. Une réussite récente peut encourager sans garantir une nouvelle inscription. Une déception peut rendre prudent sans interdire tout retour sur scène.
+
+Présenter au joueur **accessible · ambitieux · très risqué**, avec deux ou trois raisons. Distinguer la difficulté d’être sélectionné de celle de réussir devant ce public. Pas de pourcentage exact cachant l’incertitude sur les autres candidatures.
+
+### 4.6 Moral, refus et risque de scène
+
+Introduire un moral collectif explicable dans la fiche du band : niveau de référence et modificateurs temporaires datés, reliés à un événement. Il représente la confiance du groupe dans son projet, distincte du développement, de la réputation et des émotions individuelles. Son effet sur initiative et interprétation reste borné.
+
+| Issue | Conséquence de design |
+|---|---|
+| Candidature non retenue | Déception temporaire du band, moins d’assurance pour retenter une grosse scène; aucune perte de réputation puisqu’il n’a pas joué. |
+| Retrait avant sélection | Libère l’engagement, sans malus de refus; délai de réévaluation pour éviter le spam. |
+| Prestation décevante | Moral et réputation affectés selon l’écart aux attentes de cette scène. Résultat expliqué au bilan. |
+| Prestation réussie | Confiance et reconnaissance proportionnées à l’occasion; petite scène utile pour progresser. |
+
+Hypothèses initiales à équilibrer : refus = −8 de moral pendant deux jours; mauvaise prestation = −5 à −15 de moral pendant un à trois jours selon l’écart aux attentes. Les modificateurs décroissent progressivement; plafonner leur cumul et leur influence sur la prochaine prestation. La réputation peut baisser réellement après un échec public, mais une scène amateur tolère davantage qu’un gros événement. Les bornes de réputation doivent permettre une progression et une récupération cohérentes.
+
+Prévenir la spirale d’échec : les petites scènes restent ouvertes aux débutants, la préparation/reprise collective aide à récupérer et le malus temporaire expire même sans victoire. Un seul événement de refus par candidature, un seul bilan par prestation. Les membres peuvent recevoir une émotion liée sans appliquer deux fois le même malus de performance via émotion et moral.
 
 ## 5. Groupes et personnages : de l’espace pour l’information utile
 
@@ -250,8 +285,8 @@ Chaque lot produit une PR décrite, ses migrations, ses tests et la doc du compo
 | Lot | Travail | Dépendances | Condition pour continuer |
 |---|---|---|---|
 | 0 — Référence fiable | Reproduire fin instantanée, blocages et scroll; fixtures V5.1; contrat horloges; premiers GDD temps/show. | Audit actuel. | Reproductions enregistrées; sauvegardes représentatives conservées. |
-| 1 — Un show compréhensible | État prêt, lecture contrôlée, skip, inspection, cartes/effets, mini-cubes, bilan attribué. Une chanson. | Lot 0. | Un testeur comprend trois cartes et termine/sort du show sans assistance. |
-| 2 — Calendrier et préparation | Identifiants permanents, quatre dates roulantes, créneaux, modifications/annulations, conflits d’intervalles. | Contrat horloges lot 1. | 100 jours sans fin de calendrier; cas refus/absence résolus; aucun double engagement. |
+| 1 — Un show compréhensible | Pause du quartier, ouverture automatique en direct, skip, inspection, cartes/effets, mini-cubes, bilan attribué. Une chanson. | Lot 0. | Un testeur comprend trois cartes et termine/sort du show sans assistance. |
+| 2 — Calendrier et préparation | Identifiants permanents, quatre dates roulantes, créneaux, réservation autonome des petites scènes, candidatures/sélection des grosses, engagement unique, moral et modifications/annulations. | Contrat horloges lot 1. | 100 jours sans fin de calendrier; sélection à T−2; refus/absence résolus; aucun engagement multiple par band. |
 | 3 — Soirées musicales | Setlists, morceaux multiples, passage entre bands, public et bilans cumulés, historique groupe. | Lots 1–2. | Soirée de trois bands avec musicien partagé compatible; sauter/revoir/recharger donne les mêmes effets. |
 | 4 — Interface stable | Liste de groupes, fiches modulaires, souvenirs datés, refonte des zones de scroll. | Identifiants et historique stabilisés. | Manipulation cinq minutes à ×10 sans perte de scroll/focus; mobile et clavier utilisables. |
 | 5 — Choix autonomes | Fusion récupération, migrations, sac personnalisé et probabilités expliquées. | Modèle actions et contrôles stables. | Distribution cohérente en contexte figé; sécurité vitale; anciennes priorités conservées explicitement. |
@@ -266,6 +301,7 @@ Le squelette documentaire commence au lot 0; les documents accompagnent chaque l
 - Convertir les anciennes saisons en événements à identifiants uniques, en utilisant contexte temporel et réservations. Préserver les références historiques; ne pas attribuer arbitrairement un ancien bilan à la nouvelle occurrence de `o1`.
 - Convertir chaque réservation mono-chanson en créneau avec setlist d’un morceau. Préserver les participants confirmés; afficher toute incompatibilité nouvelle au lieu d’annuler silencieusement.
 - Une prestation V5.1 en cours conserve son ancien résolveur jusqu’au bilan ou reçoit une conversion prouvée équivalente. Un replay ancien utilise sa version de règles; si reconstruction impossible, conserver son bilan et expliquer l’indisponibilité du replay.
+- Ajouter les candidatures (état, événement, créneau souhaité, formation, date, résultat), décisions de sélection et modificateurs de moral avec identifiants permanents. Migration : moral neutre, aucune déception inventée. Si une ancienne sauvegarde possède plusieurs engagements futurs par band, les conserver comme exceptions héritées et bloquer toute nouvelle inscription jusqu’à leur résolution; ne pas supprimer de réservation silencieusement.
 - Une conséquence s’applique par identifiant permanent de prestation, une seule fois. Rechargement, double clic, skip, avance du calendrier et retour d’onglet ne peuvent pas la doubler.
 - Les nouvelles préférences Rapin sont facultatives : migration en profil automatique. Pas de baisse rétroactive des compétences, disparition de chansons ou modification arbitraire des relations.
 - Extraire les responsabilités progressivement : calendrier, préparation, résolution, présentation et historique. Pas de réécriture globale du moteur ni de framework UI imposé pour cette mise à jour.
@@ -277,13 +313,15 @@ Le squelette documentaire commence au lot 0; les documents accompagnent chaque l
 
 1. Même entrée/graines : mêmes résultats en lecture normale, ×4, skip, pause/reprise et import au milieu; replay sans récompense.
 2. Quatre dates futures uniques après chaque transition et saut temporel; gros événement tous les quatre; aucune dépendance à « Nouvelle saison ».
-3. Créneaux chevauchants refusés; créneaux compatibles acceptés; refus, absence, annulation et modification ne bloquent pas les autres bands.
+3. Engagement futur unique par band, candidature comprise; disponibilités de musiciens partagés; réservations simultanées atomiques; sélection pondérée reproductible à T−2, sans doublon ni nouvelle pige au chargement; retrait/refus libèrent la place. Une incompatibilité entre membres n’est pas traitée comme un refus de l’organisateur.
 4. Setlist valide en durée; une personne éclatée ne devient pas plusieurs fans; pas de multiplication des gains entre chansons.
 5. Fiches, modules, curseurs et sélections stables pendant mises à jour; fenêtres contextuelles contenues à l’écran; contrastes des boutons testés.
 6. Migration V5.1 : ancien show terminé/en cours, réservation, catalogue volumineux, band archivé, compteurs des deux actions, mémoire sans date.
 7. Rapin : total de base 100 %, normalisation des actions admissibles, impossibilité expliquée, sécurité vitale, réglages effectifs seulement à la prochaine décision.
 8. Relations : refroidissement comparé, réparation, asymétrie; une rencontre par épisode de proximité; aucun rendez-vous manqué par boucle de bavardage.
 9. Documentation : build, liens/ancres, recherche française, nouvelle version et stockage des notes, conservation du lien Jouer.
+10. Déclenchement du direct depuis tout panneau : ouverture au début, quartier totalement gelé, reprise sans rattrapage; formulaires conservés, onglet navigateur masqué suspendu; créneaux terminés jamais rejoués à leur heure nominale.
+11. Refus sans perte de réputation; moral temporaire expirant, cumul plafonné, échec public proportionné aux attentes; aucune multiplication de pénalité après import, replay ou double clic. Bands autonomes capables de renoncer à une occasion et de revenir après déception.
 
 ### Séance de jeu indispensable
 
@@ -293,7 +331,7 @@ Tester ensuite une soirée longue, dix musiciens, lecture accélérée, retour e
 
 ### Équilibrage et limites
 
-Comparer plusieurs graines sur 30 puis 100 jours : répartition des tensions, relations positives/négatives, durée des conflits, shows programmés/joués/manqués, raisons des absences, récupération et progression. Examiner les cas extrêmes; ne pas imposer un taux artificiel de conflits pour remplir une jauge.
+Comparer plusieurs graines sur 30 puis 100 jours : répartition des tensions, relations positives/négatives, durée des conflits, shows programmés/joués/manqués, taux de candidature et d’abstention, diversité des bands sélectionnés, durée des creux de moral, raisons des absences, récupération et progression. Examiner les cas extrêmes; ne pas imposer un taux artificiel de conflits pour remplir une jauge.
 
 Mesurer fluidité et durée de présentation avec 24 personnages et la plus grosse foule retenue. Plafonner particules et messages, jamais supprimer un résultat de simulation pour gagner des images/seconde. Budgéter stockage des historiques et replays : bilans compacts durables, traces lourdes récentes bornées et exportables, indisponibilité ancienne expliquée.
 
