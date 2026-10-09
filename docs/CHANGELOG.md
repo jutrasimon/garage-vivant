@@ -1,5 +1,14 @@
 # Changements
 
+## 0.6.2 — Les cartes prennent la scène
+
+- Scène aux proportions correctes, sans panneau latéral qui écrase le canvas.
+- Decks individuels visibles et consultables; cartes pigées depuis leur pile, jouées au premier plan puis conservées dans une défausse consultable.
+- Chansons de 30 secondes à ×1, avec départ explicite et cinq phrases. Les règles et tirages restent identiques à toutes les vitesses et au skip.
+- Zones de groove, charges de crescendo/soutien, bonus de combo, gains locaux et réactions du public visibles. Sons distincts selon l’instrument et l’effet.
+- Inspection des fans, musiciens, decks et cartes : pause temporaire et reprise dans l’état précédent, y compris après plusieurs inspections.
+- Sauvegardes et historiques conservés; bilans attribués au band.
+
 ## 0.6.1 — Recherche et fiches réparées
 
 - Recherche en fenêtre contenue : champ large, rubriques, texte sans liens Markdown bruts, extraits ciblés, termes surlignés et navigation ↑/↓/Entrée. Fermeture par X, Échap ou clic extérieur; reprise à la vitesse précédente.

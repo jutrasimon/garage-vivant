@@ -1,5 +1,5 @@
-import {INTENTIONS} from './stage.mjs?v=0.6.0';
-import {rand,clamp,round,log,GENRES} from './engine.mjs?v=0.6.0';
+import {INTENTIONS} from './stage.mjs?v=0.6.2';
+import {rand,clamp,round,log,GENRES} from './engine.mjs?v=0.6.2';
 const live=['applied','booked','assembling','playing'];
 export const pendingBooking=(s,id)=>s.bookings.find(b=>b.groupId===id&&live.includes(b.status));
 export function morale(g,time){return clamp(60+(g.moraleEffects||[]).reduce((n,e)=>n+e.amount*Math.max(0,1-(time-e.time)/(e.until-e.time)),0));}

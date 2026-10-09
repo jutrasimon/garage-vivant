@@ -94,7 +94,7 @@ function nearestTarget(s, actor, c) {
 function cast(s, cue) {
   const actor=s.actors.find(p=>p.id===cue.actorId),c=CARDS[cue.cardId];
   actor.played.push(c.id);
-  addEvent(s,'card',`${actor.name} joue « ${c.name} ».`,{actorId:actor.id,cardId:c.id,phrase:cue.phrase});
+  const event=addEvent(s,'card',`${actor.name} joue « ${c.name} ».`,{actorId:actor.id,cardId:c.id,phrase:cue.phrase,supportBefore:s.support,crescendoBefore:s.crescendo});
   if(c.tag==='curse') {
     const protectedBy=s.support>0;
     if(protectedBy) s.support--;
@@ -102,10 +102,11 @@ function cast(s, cue) {
     if(c.kind==='hangover') {const loss=protectedBy?4:8;actor.energy=limit(actor.energy-loss);actor.energyLoss+=loss;}
     if(c.kind==='blank'&&!protectedBy) {s.zones=s.zones.filter(z=>z.kind!=='groove');s.crescendo=0;}
     if(c.kind==='ego') {if(!protectedBy)s.support=0;const target=nearestTarget(s,actor,{radius:65});s.impacts.push({...cue,tick:s.tick+30,x:target.x,y:target.y,radius:65,power:protectedBy?8:4,kind:'solo',tag:'impact',combo:[]});}
-    addEvent(s,'curse',protectedBy?`Un allié rattrape ${actor.name} : l’erreur est atténuée.`:`${c.name} perturbe ${actor.name}.`,{actorId:actor.id,cardId:c.id,protected:protectedBy});
+    addEvent(s,'curse',protectedBy?`Un allié rattrape ${actor.name} : l’erreur est atténuée.`:`${c.name} perturbe ${actor.name}.`,{actorId:actor.id,cardId:c.id,protected:protectedBy,energyLoss:c.kind==='hangover'?(protectedBy?4:8):0});
     return;
   }
   const target=nearestTarget(s,actor,c);
+  event.target={x:target.x,y:target.y,radius:c.radius};
   const diversity=1/Math.max(1,s.actors.filter(a=>a.instrument===actor.instrument).length*.36);
   const sizeFactor=(4/s.actors.length)*(.7+s.development*.003);
   const repeats=s.events.filter(e=>e.type==='card'&&e.phrase===cue.phrase&&CARDS[e.cardId].tag===c.tag).length-1;
@@ -128,11 +129,13 @@ function react(s, fan, queue) {
   if(fan.reacted || fan.meter<100) return;
   if(fan.reaction==='euphoria')fan.fragmented=true;fan.reacted=true;fan.reactedAt=s.tick;fan.meter=100;
   const text={euphoria:'éclate d’euphorie et entraîne ses voisins',emotion:'est touché et ouvre les autres à l’émotion',trance:'entre en transe et amplifie les rythmes suivants'}[fan.reaction];
-  addEvent(s,'reaction',`${fan.name} ${text}.`,{fanId:fan.id,reaction:fan.reaction,x:fan.x,y:fan.y});
+  const event=addEvent(s,'reaction',`${fan.name} ${text}.`,{fanId:fan.id,reaction:fan.reaction,x:fan.x,y:fan.y,neighbours:[]});
   if(fan.reaction==='trance') s.zones.push({kind:'trance',x:fan.x,y:fan.y,radius:170,until:SHOW_TICKS,name:fan.name});
   for(const n of s.fans) if(n!==fan && !n.reacted && Math.hypot(n.x-fan.x,n.y-fan.y)<175) {
+    const before=n.meter,receptivity=n.receptivity;
     if(fan.reaction==='euphoria') {n.meter=limit(n.meter+13);const dx=n.x-fan.x,dy=n.y-fan.y,d=Math.max(10,Math.hypot(dx,dy));n.vx+=dx/d*95;n.vy+=dy/d*95;}
     if(fan.reaction==='emotion') {n.receptivity=Math.min(1.45,n.receptivity+.18);n.meter=limit(n.meter+5);}
+    event.neighbours.push({id:n.id,before,after:n.meter,receptivityBefore:receptivity,receptivityAfter:n.receptivity});
     if(n.meter>=100) queue.push(n);
   }
 }

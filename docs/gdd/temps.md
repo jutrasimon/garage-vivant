@@ -6,7 +6,7 @@
 | Journée | 1440 minutes : 3 minutes réelles à ×1 hors pauses; 6 à ×0,5; 18 secondes à ×10. |
 | Vitesse | 0–10 par pas de 0,1; aimantation au glissement sur 0,5 et entiers; zéro suspend. |
 | +1 h | Avance jusqu’à 60 minutes puis pause; s’arrête si un show commence. |
-| Spectacle | Horloge indépendante, 60 secondes par chanson à ×1, simulation fixe à 60 pas/s. |
+| Spectacle | 30 secondes de présentation par chanson à ×1. Le moteur conserve ses 3600 pas musicaux; la cadence de lecture relie les deux horloges. |
 | Durée musicale | 4 minutes par morceau, créneaux de 10/20 minutes; sert au programme et aux disponibilités. |
 | Direct | Quartier gelé; reprise au même instant, sans vieillissement ni rattrapage. |
 | Onglet masqué | Quartier et lecture suspendus. |
