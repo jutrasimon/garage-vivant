@@ -1,0 +1,31 @@
+/* Scope card spacing above the legacy inspector section styles. */
+#inspector #profile .profile-module { padding:16px!important; margin:0!important; border:1px solid #d6ddcb; background:#fffef9; border-radius:10px; }
+#inspector #profile .module-toolbar { display:none; flex-wrap:wrap; gap:5px; margin:0 0 14px; padding-bottom:10px; border-bottom:1px dashed #d9dfd0; }
+#inspector.customizing #profile .module-toolbar { display:flex; }
+#inspector .module-toolbar button { font-size:11px; padding:5px 8px; }
+#inspector #profile .profile-module>.section-head { line-height:1.6; flex-wrap:wrap; gap:6px 10px; margin-bottom:14px; }
+#inspector #profile .profile-module .section-head>span { letter-spacing:0; font-weight:500; }
+#inspector .profile-modules { margin-top:18px; }
+#inspector.expanded #profile,#inspector.expanded>.section-head { max-width:1160px; margin-inline:auto; }
+#inspector.expanded>.section-head { top:-20px; padding:13px 0; background:#f4f2eb; }
+#inspector.expanded .v5-meter { font-size:12px; margin:14px 0; }
+#inspector.expanded .quick-actions button { font-size:12px; padding:9px; }
+#inspector.expanded .profile-song summary { font-size:12px; }
+#inspector.expanded .profile-module .muted { font-size:12px; }
+#inspector #profile .hidden-modules { margin-top:18px; padding:12px 0; }
+#inspector #profile .hidden-modules .profile-module { margin-top:12px!important; }
+#inspector #profile .rank { grid-template-columns:minmax(0,1fr) 60px 28px; }
+#profile-customize { font-size:10px; white-space:nowrap; }
+#profile-customize[aria-pressed=true] { background:#e4ecd9; border-color:#a4b892; color:#47643b; }
+#inspector>.section-head { gap:8px; flex-wrap:wrap; }
+#inspector>.section-head>span { margin-right:auto; }
+#inspector #rapin-pool .bag-row { grid-template-columns:minmax(0,1fr) 64px 24px 56px; gap:5px; }
+#inspector #rapin-pool .bag-row input[type=number] { width:100%; min-width:0; }
+#inspector #rapin-pool .bag-row>span { min-width:0; overflow-wrap:anywhere; }
+#inspector #rapin-pool .bag-row input[type=checkbox] { margin:0; }
+@media(min-width:851px) {
+  #inspector.expanded #rapin-pool .bag-row { grid-template-columns:minmax(100px,1fr) 80px 30px 70px; gap:8px; }
+}
+@media(max-width:850px) {
+  #inspector.expanded #profile { max-width:560px; }
+}

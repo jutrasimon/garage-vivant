@@ -2,7 +2,7 @@
 
 Application statique sur GitHub Pages. `engine.mjs` simule le quartier; `life.mjs` gère carrière et commandes; `calendar.mjs` gère événements et candidatures; `social.mjs` les sessions, griefs et sacs personnalisés; `stage.mjs` résout la physique musicale. Le rendu et l’audio ne consomment pas le hasard du quartier.
 
-Le monde se sauvegarde dans le navigateur. Export/import JSON permet de le déplacer. La V6 conserve les anciens catalogues, statistiques et engagements. Repos et décrocher fusionnent leurs compteurs; anciens créneaux et shows se conservent. Copie avant migration dans `garage-vivant-before-v6`. Une sauvegarde invalide n’est jamais écrasée automatiquement. Les préférences de modules sont séparées du monde.
+Le monde se sauvegarde dans le navigateur. Export/import JSON permet de le déplacer. La V6 conserve les anciens catalogues, statistiques et engagements. Repos et décrocher fusionnent leurs compteurs; anciens créneaux et shows se conservent. Copie avant migration dans `garage-vivant-before-v6`. Une sauvegarde invalide n’est jamais écrasée automatiquement. Les préférences de modules sont séparées du monde. Le numéro d’interface (`release.mjs`, 0.6.1) est distinct du format de sauvegarde (`engine.mjs`, 0.6.0) : un correctif visuel ne déclenche pas de migration.
 
 La documentation VitePress et l’index de recherche du jeu proviennent des mêmes Markdown. Le pipeline construit et publie jeu et doc ensemble, avec le préfixe `/garage-vivant/docs/`. Notes lues stockées par identifiants; ouvrir la page ne lit pas toutes les notes.
 

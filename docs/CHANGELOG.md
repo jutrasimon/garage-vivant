@@ -1,5 +1,12 @@
 # Changements
 
+## 0.6.1 — Recherche et fiches réparées
+
+- Recherche en fenêtre contenue : champ large, rubriques, texte sans liens Markdown bruts, extraits ciblés, termes surlignés et navigation ↑/↓/Entrée. Fermeture par X, Échap ou clic extérieur; reprise à la vitesse précédente.
+- Le X remplace le bouton de fermeture du bas dans les fenêtres du jeu.
+- Modules personnages : marges internes réparées, largeur de lecture contenue, commandes dans « Organiser ». Le sac Rapin garde sa barre de disposition aux mises à jour et les modules repliables conservent un résumé natif valide.
+- Version d’interface séparée du format de sauvegarde : aucun changement du moteur ou réinitialisation des sacs personnalisés.
+
 ## 0.6.0 — Le quartier prend la scène
 
 - Direct visible dès le début, quartier figé, cartes et effets lisibles, inspection des fans et musiciens, skip déterministe et mini-cubes persistants.
