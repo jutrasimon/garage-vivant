@@ -1,5 +1,5 @@
-import {CARDS} from './stage.mjs?v=0.6.3';
-import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext} from './show-playback.mjs?v=0.6.3';
+import {CARDS} from './stage.mjs?v=0.6.4';
+import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext,showBeat,actorSize} from './show-playback.mjs?v=0.6.4';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={guitar:'Guitare',bass:'Basse',drums:'Batterie',voice:'Chant',keys:'Clavier',sax:'Saxophone',trumpet:'Trompette',percussion:'Percussions'};
 const colors={rhythm:'#a9c995',impact:'#e4bd75',emotion:'#d3a8c3',support:'#9fc8d2',curse:'#d39280'};
@@ -48,16 +48,16 @@ export function showTitleHTML(show) {
   return `<div class="live-show-title"><span class="eyebrow">${show.preview?'ESSAI':'EN DIRECT'} · ${esc(show.role||'Prestation')} · ${esc(show.opportunityName)}</span><h2>${esc(show.groupName)}</h2><p>♫ ${esc(show.song.title)} <span>· morceau ${(show.songIndex||0)+1}/${show.setlist?.length||1} · phrase ${phrase+1}/5</span></p><div class="song-progress"><div class="bar"><i style="width:${songSeconds(show)/30*100}%"></i></div><b data-song-time>${Math.floor(songSeconds(show))} / 30 s</b></div></div>`;
 }
 export function showOverlayHTML(show,{ready=false,geometry={width:900,height:650,scale:1,ox:0,oy:0}}={}) {
-  const cards=cardEvents(show),event=cards.at(-1),recent=cards.slice(-4,-1).reverse();
+  const beat=showBeat(show,geometry),event=beat.event;
   const position=(x,y)=>`left:${(geometry.ox+x*geometry.scale)/geometry.width*100}%;top:${(geometry.oy+y*geometry.scale)/geometry.height*100}%`;
   const actors=show.actors.map((a,i)=>{const pos=actorPosition(show,i);return `<button class="stage-actor-anchor" data-stage-actor="${a.id}" style="${position(pos.x,pos.y-18)}" aria-label="Inspecter ${esc(a.name)}"></button>`;}).join('');
   const decks=show.actors.map((a,i)=>{const pos=actorPosition(show,i);return `<button class="stage-deck" data-stage-deck="${a.id}" data-key="deck-${a.id}" style="${position(pos.x,pos.deckY)}" aria-label="Voir le deck de ${esc(a.name)} : ${a.played.length} sur 5 cartes jouées"><span class="deck-backs"><i></i><i></i><i></i></span><small>${a.played.length}/5</small></button>`;}).join('');
   if(ready)return `${actors}${decks}<div class="show-ready"><span class="eyebrow">LE QUARTIER ATTEND</span><h3>${esc(show.groupName)}</h3><p>5 cartes par musicien · 30 secondes par chanson.<br>Inspecte les decks, puis lance le show.</p><button id="start-show" class="primary">▶ Lancer le show</button></div>`;
   if(!event)return `${actors}${decks}<div class="show-count-in">Place à la musique…</div>`;
-  const c=CARDS[event.cardId],actor=show.actors.find(a=>a.id===event.actorId),{impact,target}=cardContext(show,event),combo=comboLabel(impact||target),age=eventAge(show,event);
-  const phase=age<.2?'drawing':impact||c.tag==='curse'?'resolved':'targeting';
-  const previous=recent.map(e=>`<button class="discard-card ${CARDS[e.cardId].tag}" data-inspect-card="${e.id}" title="Revoir ${esc(CARDS[e.cardId].name)}"><small>${esc(show.actors.find(a=>a.id===e.actorId)?.name)}</small><b>${esc(CARDS[e.cardId].name)}</b></button>`).join('');
-  return `${actors}${decks}<div class="card-foreground"><div class="discard-stack">${previous}</div><button class="hero-card ${c.tag} ${combo?'combo-card':''} ${phase}" data-key="card-${show.id}-${show.songIndex||0}-${event.id}" data-inspect-card="${event.id}" aria-label="Inspecter ${esc(c.name)}"><small>${esc(actor.name)} · ${names[actor.instrument]}</small><strong>${esc(c.name)}</strong>${instrumentArt(actor.instrument,c.tag)}<div class="card-modifier">${combo?`<span class="combo-badge">${combo} · +${combo==='GROOVE + CRESCENDO'?'71':combo==='GROOVE'?'22':'40'} %</span>`:c.tag==='emotion'?`<span class="emotion-badge">Intensité ${show.song.intensity}/100 · +${Math.round(show.song.intensity*.7)} %</span>`:`<span class="card-type">${tags[c.tag]}</span>`}</div><p class="card-rule">${esc(rule(c))}</p><span class="card-outcome">${esc(outcome(show,event))}</span></button></div>`;
+  const state=`<span hidden data-show-phase="${beat.phase}" data-card-event="${event.id}" data-shot-actor="${event.actorId}" data-source-x="${beat.origin.x}" data-source-y="${beat.origin.y}"></span>`;
+  if(beat.phase!=='reveal')return `${actors}${decks}${state}`;
+  const c=CARDS[event.cardId],actor=show.actors.find(a=>a.id===event.actorId),combo=comboLabel(beat.impact||beat.target);
+  return `${actors}${decks}${state}<div class="card-foreground"><button class="hero-card ${c.tag} ${combo?'combo-card':''} revealing" data-key="card-${show.id}-${show.songIndex||0}-${event.id}" data-inspect-card="${event.id}" aria-label="Inspecter ${esc(c.name)}"><small>${esc(actor.name)} · ${names[actor.instrument]}</small><strong>${esc(c.name)}</strong>${instrumentArt(actor.instrument,c.tag)}<div class="card-modifier">${combo?`<span class="combo-badge">${combo} · +${combo==='GROOVE + CRESCENDO'?'71':combo==='GROOVE'?'22':'40'} %</span>`:c.tag==='emotion'?`<span class="emotion-badge">Intensité ${show.song.intensity}/100 · +${Math.round(show.song.intensity*.7)} %</span>`:`<span class="card-type">${tags[c.tag]}</span>`}</div><p class="card-rule">${esc(rule(c))}</p><span class="card-outcome">${c.tag==='curse'?esc(outcome(show,event)):'Carte jouée → le musicien va tirer'}</span></button></div>`;
 }
 export function showResourcesHTML(show) {
   const cards=cardEvents(show),next=show.cues[show.nextCue],actor=show.actors.find(a=>a.id===next?.actorId);
@@ -88,22 +88,37 @@ export function drawShowStage(canvas,show,{reduced=false,selectedFan=null}={},de
   box(ctx,45,48,810,160,'#2a4338',12);box(ctx,45,204,810,12,'#8a785e');
   ['#b4d998','#cba0d9','#e8c278'].forEach((c,i)=>{ctx.fillStyle=c+'12';ctx.beginPath();ctx.moveTo(210+i*235,15);ctx.lineTo(50+i*280,600);ctx.lineTo(280+i*260,600);ctx.fill();box(ctx,196+i*235,20,28,9,c,4);});
   text(ctx,'GARAGE VIVANT · LIVE',450,36,10,'#8fba99');
-  const cards=cardEvents(show),latest=cards.at(-1),context=latest?cardContext(show,latest):{},age=latest?eventAge(show,latest):100;
-  const shotOrigin={x:(g.cardX+g.cardWidth*.18-g.ox)/g.scale,y:(g.cardY+g.cardHeight*.28-g.oy)/g.scale};
+  const beat=showBeat(show,g),latest=beat.event;
+  const hit=show.events.filter(e=>e.type==='impact').at(-1),hitAge=hit?eventAge(show,hit):100;
+  if(!reduced&&hitAge<.16){const kick=(1-hitAge/.16)*3/g.scale;ctx.translate(Math.sin(hitAge*160)*kick,Math.cos(hitAge*135)*kick*.6);}
   for(const z of show.zones){const trance=z.kind==='trance',remaining=Math.max(0,songSeconds(show,Math.min(z.until,show.totalTicks||2160))-songSeconds(show));circle(ctx,z.x,z.y,z.radius,trance?'#c9a8da99':'#a5d58cbb',trance?'#c7a4ed0d':'#9fd29612');text(ctx,`${trance?'TRANSE':'GROOVE'} · ${remaining.toFixed(1)} s`,z.x,Math.max(232,z.y-z.radius-8),12,trance?'#d7c5e5':'#c4e6b0');}
-  if(context.target&&CARDS[latest.cardId].tag!=='curse'&&age<1.3){
-    const t=context.target,c=colors[CARDS[latest.cardId].tag],pending=!context.impact;
-    ctx.save();ctx.strokeStyle=c;ctx.globalAlpha=pending?.85:Math.max(0,1-age/1.3);ctx.lineWidth=2/g.scale;ctx.setLineDash([6/g.scale,6/g.scale]);ctx.beginPath();ctx.moveTo(shotOrigin.x,shotOrigin.y);ctx.lineTo(t.x,t.y);ctx.stroke();ctx.setLineDash([]);
-    circle(ctx,t.x,t.y,t.radius,c,pending?c+'12':null,2/g.scale);circle(ctx,t.x,t.y,12/g.scale,c,null,2/g.scale);
-    ctx.beginPath();ctx.moveTo(t.x-19/g.scale,t.y);ctx.lineTo(t.x+19/g.scale,t.y);ctx.moveTo(t.x,t.y-19/g.scale);ctx.lineTo(t.x,t.y+19/g.scale);ctx.stroke();
-    text(ctx,pending?'ZONE VISÉE':'IMPACT',t.x,Math.max(234,t.y-t.radius-12/g.scale),13,c);
-    if(pending&&!reduced){const duration=Math.max(.08,songSeconds(show,context.target.tick??latest.tick+30)-songSeconds(show,latest.tick)),p=Math.min(1,age/duration);circle(ctx,shotOrigin.x+(t.x-shotOrigin.x)*p,shotOrigin.y+(t.y-shotOrigin.y)*p,5/g.scale,c,c,1/g.scale);}
+  if(beat.target&&['aim','shot'].includes(beat.phase)){
+    const t=beat.target,o=beat.origin,c=colors[CARDS[latest.cardId].tag],p=beat.shotProgress;
+    ctx.save();ctx.strokeStyle=c;ctx.lineWidth=1.5/g.scale;ctx.globalAlpha=beat.phase==='aim'?.65:.25;
+    ctx.setLineDash([4/g.scale,8/g.scale]);ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(t.x,t.y);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+    circle(ctx,t.x,t.y,t.radius,c+'80',c+'08',1/g.scale);
+    const lock=(beat.phase==='aim'?Math.max(0,(beat.shotAt-songSeconds(show))/(beat.shotAt-beat.aimAt)):0),r=(12+lock*12)/g.scale;
+    ctx.lineWidth=2/g.scale;ctx.beginPath();
+    for(let i=0;i<4;i++){const angle=i*Math.PI/2,x=t.x+Math.cos(angle)*r,y=t.y+Math.sin(angle)*r;ctx.moveTo(x+Math.sin(angle)*5/g.scale,y-Math.cos(angle)*5/g.scale);ctx.lineTo(x,y);ctx.lineTo(x-Math.sin(angle)*5/g.scale,y+Math.cos(angle)*5/g.scale);}ctx.stroke();
+    if(beat.phase==='shot'){
+      const x=o.x+(t.x-o.x)*p,y=o.y+(t.y-o.y)*p;
+      if(!reduced){
+        const tail=Math.max(0,p-.22);ctx.lineWidth=5/g.scale;ctx.strokeStyle=c;ctx.shadowColor=c;ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(o.x+(t.x-o.x)*tail,o.y+(t.y-o.y)*tail);ctx.lineTo(x,y);ctx.stroke();ctx.shadowBlur=0;
+        if(p<.65){circle(ctx,o.x,o.y,(8+12*Math.sin(p*Math.PI))/g.scale,c,c+'88',2/g.scale);}
+      }
+      circle(ctx,x,y,4/g.scale,'#fff5d7','#fff5d7',1/g.scale);
+    }
     ctx.restore();
   }
-  show.actors.forEach((a,i)=>{const pos=actorPosition(show,i),active=latest?.actorId===a.id&&age<1.3,played=cards.filter(e=>e.actorId===a.id).at(-1),bounce=reduced?0:Math.sin(show.tick*.05+i)*1.5+(active?Math.sin(Math.min(1,age/.3)*Math.PI)*5:0),x=pos.x,y=pos.y-bounce,size=Math.max(pos.size,Math.min(show.actors.length<=4?(g.width<700?30:44):show.actors.length<=8?(g.width<700?22:34):18,g.scale*90)/g.scale);
-    if(active)circle(ctx,x,y-size/2,size*.8,CARDS[latest.cardId].tag==='curse'?'#d59280':'#d9e7b7',null,2);
-    ctx.save();ctx.translate(x,y);if(!reduced&&a.identity?.movement==='flamboyant')ctx.rotate(Math.sin(show.tick*.06)*.035);box(ctx,-size/2,-size,size,size,a.color,4);box(ctx,-size/2,-size,size,5,'#ffffff30',3);box(ctx,-6,-size*.55,3,3,'#f4f2df');box(ctx,4,-size*.55,3,3,'#f4f2df');decorateCube(ctx,0,0,size,a);ctx.restore();text(ctx,a.name,x,y+16,show.actors.length>12?8:11);text(ctx,({guitar:'♫',bass:'♬',drums:'●',voice:'♪',keys:'▥',sax:'♮',trumpet:'♯',percussion:'✦'})[a.instrument],x+size/2+12,y-10,18,'#ecc786');
-    if(active&&age<.2&&!reduced){const t=Math.min(1,age/.2),px=x+(shotOrigin.x-x)*t,py=pos.deckY+(shotOrigin.y-pos.deckY)*t;box(ctx,px-9,py-14,18,27,colors[CARDS[played.cardId].tag],3);}
+  show.actors.forEach((a,i)=>{
+    const pos=actorPosition(show,i),active=latest?.actorId===a.id&&beat.phase!=='rest',size=actorSize(show,g,pos),firing=active&&beat.phase==='shot';
+    const recoil=firing&&!reduced?Math.sin(beat.shotProgress*Math.PI)*7/g.scale:0,dir=beat.target?Math.sign(beat.target.x-pos.x):1;
+    const bounce=reduced||active?0:Math.sin(show.tick*.05+i)*1.5,x=pos.x-dir*recoil,y=pos.y-bounce-recoil*.3;
+    if(active)circle(ctx,pos.x,pos.y-size/2,size*.8,colors[CARDS[latest.cardId].tag],null,(beat.phase==='aim'?3:2)/g.scale);
+    ctx.save();ctx.translate(x,y);if(firing&&!reduced)ctx.rotate(-dir*.1*Math.sin(beat.shotProgress*Math.PI));else if(!reduced&&a.identity?.movement==='flamboyant')ctx.rotate(Math.sin(show.tick*.06)*.035);
+    box(ctx,-size/2,-size,size,size,a.color,4);box(ctx,-size/2,-size,size,5,'#ffffff30',3);box(ctx,-6,-size*.55,3,3,'#f4f2df');box(ctx,4,-size*.55,3,3,'#f4f2df');decorateCube(ctx,0,0,size,a);ctx.restore();
+    text(ctx,a.name,pos.x,pos.y+16,show.actors.length>12?8:11);text(ctx,({guitar:'♫',bass:'♬',drums:'●',voice:'♪',keys:'▥',sax:'♮',trumpet:'♯',percussion:'✦'})[a.instrument],x+size/2+12,y-10,18,'#ecc786');
+    if(active&&beat.phase==='error')pop(ctx,'RATÉ',pos.x,pos.y-size-14/g.scale,'#e2a08c',14/g.scale);
   });
   for(const f of show.fans){const reaction=show.events.find(e=>e.type==='reaction'&&e.fanId===f.id),ra=reaction?eventAge(show,reaction):100,fragmented=(f.fragmented||f.reacted&&f.reaction==='euphoria')&&ra>.12,bounce=reduced?0:Math.sin(show.tick*.045+Number(f.id.slice(1)))*f.meter/65,x=f.x,y=f.y-bounce;
     ctx.fillStyle='#071a1e55';ctx.beginPath();ctx.ellipse(x,y+5,20,6,0,0,Math.PI*2);ctx.fill();
@@ -117,7 +132,18 @@ export function drawShowStage(canvas,show,{reduced=false,selectedFan=null}={},de
     if(selectedFan===f.id){ctx.strokeStyle='#e4d394';ctx.lineWidth=2;ctx.strokeRect(x-32,y-42,64,83);}
   }
   for(const e of show.events){const a=eventAge(show,e);if(a<0||a>.9)continue;
-    if(e.type==='impact'){const c=colors[e.tag]||'#e4bd75',progress=reduced?1:Math.min(1,a/.45);ctx.globalAlpha=Math.max(.15,1-a/.9);circle(ctx,e.x,e.y,e.radius*progress,c,null,e.combo?.some(x=>x.includes('déclenché'))?5:2);ctx.globalAlpha=1;const combo=comboLabel(e);if(combo)pop(ctx,combo,e.x,Math.max(239,e.y-e.radius-18), '#f1d487',15);}
+    if(e.type==='impact'){
+      const c=colors[e.tag]||'#e4bd75',progress=reduced?1:Math.min(1,a/.32),combo=comboLabel(e);
+      ctx.save();ctx.globalAlpha=Math.max(0,1-a/.65);circle(ctx,e.x,e.y,e.radius*progress,c,null,(combo?4:2)/g.scale);
+      if(!reduced&&a<.28){
+        const flash=1-a/.28;circle(ctx,e.x,e.y,(12+a*120)/g.scale,'#fff3c7',`rgba(255,240,190,${flash*.65})`,2/g.scale);
+        ctx.strokeStyle=c;ctx.lineWidth=3/g.scale;ctx.beginPath();
+        for(let i=0;i<12;i++){const angle=i*Math.PI/6+(e.id%5)*.15,near=(12+a*90)/g.scale,far=near+(12+flash*15)/g.scale;ctx.moveTo(e.x+Math.cos(angle)*near,e.y+Math.sin(angle)*near);ctx.lineTo(e.x+Math.cos(angle)*far,e.y+Math.sin(angle)*far);}ctx.stroke();
+      }
+      ctx.restore();
+      if(a<.48)pop(ctx,combo?'BANG ! ×'+(combo==='GROOVE + CRESCENDO'?'1,71':combo==='GROOVE'?'1,22':'1,40'):'BANG !',e.x,e.y-(36+(reduced?0:a*16))/g.scale,'#ffe2a1',Math.max(18,28-a*16)/g.scale);
+      if(combo)pop(ctx,combo,e.x,Math.max(239,e.y-e.radius-18),'#f1d487',15);
+    }
     if(e.type==='reaction'){if(e.reaction==='euphoria')circle(ctx,e.x,e.y,175*(reduced?1:Math.min(1,a/.7)),'#e6bc7155');for(const n of e.neighbours||[]){const f=show.fans.find(f=>f.id===n.id);if(f&&n.after>n.before)pop(ctx,`+${Math.round(n.after-n.before)}`,f.x-30,f.y-22-(reduced?0:a*10),'#e8d399',14);}}
   }
 }
