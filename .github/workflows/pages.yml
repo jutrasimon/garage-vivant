@@ -27,13 +27,15 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npx playwright install --with-deps chromium
+      - name: Construire la documentation
+        run: npm run docs:build
       - name: Vérifier les interactions ordinateur et tactile
         run: npm run test:browser
       - name: Conserver les captures de validation
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: interface-v5
+          name: interface-v6
           path: test-results/
           retention-days: 7
 
@@ -54,6 +56,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - run: npm run docs:build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

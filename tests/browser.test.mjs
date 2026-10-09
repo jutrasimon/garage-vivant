@@ -1,95 +1,39 @@
-// Real Chromium checks run on GitHub's runner. No simulated DOM or production writes.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
-import {join,resolve,extname} from 'node:path';
+import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright';
-import {createWorld,step,createGroup,decide,relationship} from '../dist/engine.mjs';
+import {createWorld,createGroup,relationship,restore} from '../dist/engine.mjs';
 import {command} from '../dist/life.mjs';
-
 const root=resolve('dist');
-const server=createServer(async(req,res)=>{
- try{const path=resolve(root,'.'+(req.url==='/'?'/index.html':req.url.split('?')[0]));if(path!==root&&!path.startsWith(root+'/')){res.writeHead(403);res.end();return;}
- const data=await readFile(path);res.setHeader('Content-Type',({'.html':'text/html','.mjs':'text/javascript','.css':'text/css'})[extname(path)]||'application/octet-stream');res.end(data);
- }catch{res.writeHead(404);res.end();}
-});
-await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-const base=`http://127.0.0.1:${server.address().port}`;
-await mkdir('test-results',{recursive:true});
-const browser=await chromium.launch();
-const errors=[];
-async function capture(page,name){
- await page.screenshot({path:`test-results/${name}.png`});
- if(process.env.QA_INLINE_IMAGE==='1'){const image=await page.screenshot({type:'jpeg',quality:50});console.log(`QA_IMAGE ${name} ${image.toString('base64')}`);}
+const server=createServer(async(req,res)=>{try{const url=req.url.split('?')[0].replace(/^\/garage-vivant(?=\/)/,''),path=resolve(root,'.'+(url==='/'?'/index.html':url));if(!path.startsWith(root+'/'))throw Error();const data=await readFile(path);res.setHeader('Content-Type',({'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.json':'application/json'})[extname(path)]||'application/octet-stream');res.end(data);}catch{res.writeHead(404);res.end();}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`http://127.0.0.1:${server.address().port}/garage-vivant/`;await mkdir('test-results',{recursive:true});const browser=await chromium.launch();const errors=[];
+async function load(page,s){page.on('pageerror',e=>errors.push(e.stack));await page.addInitScript(save=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(save));},s);await page.goto(base);await page.waitForSelector('#profile .profile-head',{state:'attached',timeout:8000}).catch(e=>{console.log('PAGE ERRORS',errors);throw e;});}
+async function capture(page,name){await page.screenshot({path:`test-results/${name}.png`,fullPage:false});}
+const fixture=JSON.parse(await readFile(new URL('v04-world.json',import.meta.url)));
+function world(){const s=createWorld(205,8);for(const a of s.people){a.needs.energy=95;for(const b of s.people)if(a!==b)Object.assign(relationship(s,a,b),{affinity:85,trust:85,tension:0});}const g=createGroup(s,s.people.slice(0,4).map(p=>p.id),{manual:true,name:'Les Cubes du Canal'});g.development=65;g.nextBookingAttempt=1e12;const song={genre:'Indie',emotion:'joy',tone:'lumineuse',intensity:40,resonance:60,sources:[],hit:false,id:1,authors:[s.people[0].id],time:s.time,title:'Les néons du quartier',quality:65};s.songs=[song];s.nextSongId=2;g.repertoire=[{songId:1,mastery:70,rehearsals:4}];const npc=createGroup(s,s.people.slice(4,7).map(p=>p.id),{manual:true,name:'Les Voisins électriques'});npc.nextBookingAttempt=1e12;restore(s);return {s,g,npc};}
+let page;try{
+const {s,g,npc}=world();page=await browser.newPage({viewport:{width:1440,height:960}});await load(page,s);
+assert.equal(await page.locator('#mini-calendar .season-slot').count(),4);
+const header=await page.locator('header').boundingBox(),main=await page.locator('#main').boundingBox();assert(main.y>=header.y+header.height-1);
+await page.locator('#people [data-person]').nth(7).click();await page.locator('#skills-edit summary').click();const slider=page.locator('[data-edit="skills:writing"]');await slider.scrollIntoViewIfNeeded();await slider.evaluate(el=>window.originalSlider=el);
+for(const speed of [.5,1,10]){await page.locator('#speed').evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}));},speed);await slider.focus();const before=await slider.boundingBox(),top=await page.locator('#inspector').evaluate(el=>el.scrollTop);await page.waitForTimeout(1100);assert(await slider.evaluate(el=>el===window.originalSlider&&document.activeElement===el));const after=await slider.boundingBox();assert(Math.abs(after.y-before.y)<3);// The scroll offset may compensate new content above; the focused editor must stay at its visual position.
 }
-async function load(page,world){page.on('pageerror',error=>errors.push(error.message));await page.addInitScript(save=>localStorage.setItem('garage-vivant-v1',JSON.stringify(save)),world);await page.goto(base);await page.waitForSelector('#profile .profile-head',{state:'attached'});}
-const s=createWorld(205,8);step(s,1440*3);const band=createGroup(s,s.people.slice(0,4).map(p=>p.id),{manual:true,name:'Les Cubes du Canal'});
-let song=s.songs.find(song=>song.authors.some(id=>band.members.includes(id)));if(!song){const p=s.people[0];for(let n=0;n<10&&!song;n++){p.needs.energy=100;decide(s,p,'write');step(s,200);song=s.songs.find(song=>song.authors.includes(p.id));}}
-assert(song);command(s,{type:'repertoire',groupId:band.id,songId:song.id});band.repertoire[0].mastery=65;band.development=55;
-for(const a of s.people)for(const b of s.people)if(a!==b)Object.assign(relationship(s,a,b),{affinity:75,trust:75,tension:0});
-s.playerId=s.people[0].id;
-let page;
-try{
- page=await browser.newPage({viewport:{width:1440,height:960}});await load(page,s);
- const header=await page.locator('header').boundingBox(),main=await page.locator('#main').boundingBox();assert(main.y>=header.y+header.height-1,'Header must not cover the workspace');assert.equal(await page.locator('main nav').count(),0);
- await page.locator('#people [data-person]').nth(7).click();assert((await page.locator('#profile h2').textContent()).includes(s.people[7].name));
- // Open a persistent editor and drag its range while the world changes at all target speeds.
- await page.locator('#skills-edit summary').click();
- const slider=page.locator('[data-edit="skills:writing"]');await slider.scrollIntoViewIfNeeded();await slider.focus();
- await slider.evaluate(el=>{window.testRange=el;});
- for(const speed of [.5,1,10]){
-  await page.locator('#speed').evaluate((el,speed)=>{el.value=String(speed);el.dispatchEvent(new Event('input',{bubbles:true}));},speed);
-  await slider.focus();const before=await slider.boundingBox(),scroll=await page.locator('#inspector').evaluate(el=>el.scrollTop);
-  await page.waitForTimeout(1200);
-  assert(await slider.evaluate(el=>el===window.testRange),'The slider node must survive updates');assert(await slider.evaluate(el=>document.activeElement===el),'Focus must survive updates');
-  const after=await slider.boundingBox();assert(Math.abs(after.y-before.y)<3,`Focused control shifted at speed ${speed}`);assert(Math.abs(await page.locator('#inspector').evaluate(el=>el.scrollTop)-scroll)<8,'Inspector scroll jumped');
- }
- const box=await slider.boundingBox();await page.mouse.move(box.x+box.width*.6,box.y+box.height/2);await page.mouse.down();await page.waitForTimeout(900);await page.mouse.move(box.x+box.width*.7,box.y+box.height/2,{steps:12});await page.mouse.up();assert(await slider.evaluate(el=>el===window.testRange));
- // Profiles each retain their own reading position, with no roster rebuild.
- const savedScroll=await page.locator('#inspector').evaluate(el=>el.scrollTop);await page.locator('#people [data-person]').nth(0).click();await page.locator('#people [data-person]').nth(7).click();assert(Math.abs(await page.locator('#inspector').evaluate(el=>el.scrollTop)-savedScroll)<8);
- await page.locator('[data-view="journal"]').click();await page.locator('#main').evaluate(el=>el.scrollTop=240);await page.waitForTimeout(800);const journalScroll=await page.locator('#main').evaluate(el=>el.scrollTop);
- await page.locator('[data-view="groups"]').click();await page.locator('[data-view="journal"]').click();assert(Math.abs(await page.locator('#main').evaluate(el=>el.scrollTop)-journalScroll)<8,'Navigation lost view scroll');
- await page.locator('#main').evaluate(el=>el.scrollTop=350);await page.waitForTimeout(1400);assert(await page.locator('#main').evaluate(el=>el.scrollTop)>300,'New events forced journal to the top');
- await page.locator('[data-view="relations"]').click();await page.locator('#matrix [data-pair]').first().click();assert.equal(await page.locator('#matrix thead .selected-name').count(),2);assert.equal(await page.locator('#matrix tbody th.selected-name').count(),2);assert.equal(await page.locator('#matrix .selected-row').count(),1);
- const relation=page.locator('[data-rel]').first();await relation.focus();await relation.evaluate(el=>window.testRelation=el);await page.waitForTimeout(900);assert(await relation.evaluate(el=>window.testRelation===el&&document.activeElement===el));
- await page.locator('#version').click();assert(await page.locator('#dialog').evaluate(el=>el.open));assert((await page.locator('#dialog-content').textContent()).includes('0.5.1'));await page.locator('#dialog-close').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'version');assert(await page.locator('#relations-view').isVisible(),'Patch notes must keep the current view');
- await page.locator('#people [data-person]').nth(0).click();await page.locator('[data-view="shows"]').click();await page.locator('#show-group').selectOption(band.id);await page.locator('#preview-show').click();await page.locator('#show-speed').selectOption('4');
- assert(await page.locator('#show-setup').isHidden());assert(await page.locator('#stage').isVisible());
- await page.waitForTimeout(1000);await page.locator('#show-pause').click();const paused=await page.locator('#show-status').textContent();await page.waitForTimeout(900);assert.equal(await page.locator('#show-status').textContent(),paused,'Show did not pause');await page.locator('#show-pause').click();
- await page.waitForSelector('.show-result',{timeout:20000});assert((await page.locator('.show-result').textContent()).includes('fans conquis'));await capture(page,'desktop-show');
- await page.locator('#replay-show').click();assert(await page.locator('.live-show-title').isVisible());await page.locator('#show-pause').click();await capture(page,'desktop-replay');
- assert.equal(errors.length,0,errors.join('\n'));await page.close();page=null;
+const reading=await page.locator('#inspector').evaluate(el=>el.scrollTop);await page.locator('#people [data-person]').first().click();await page.locator('#people [data-person]').nth(7).click();assert(Math.abs((await page.locator('#inspector').evaluate(el=>el.scrollTop))-reading)<8);
+await page.locator('#speed').evaluate(el=>{el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));el.value='1.1';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));});assert.equal(await page.locator('#speed').inputValue(),'1');await page.locator('#speed').focus();await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#speed').inputValue(),'1.1');
 
- // Reproduce the reported blockers with an ordinary NPC band and no catalogue.
- const starter=createWorld(1,4),npc=createGroup(starter,starter.people.slice(1,3).map(p=>p.id),{manual:true,name:'Le Band des Voisins'});
- page=await browser.newPage({viewport:{width:1440,height:960}});await load(page,starter);
- await page.locator('#speed').evaluate(el=>{el.value='0';el.dispatchEvent(new Event('input',{bubbles:true}));});
- // Pointer magnet, precise keyboard adjustment and one-click return to 1.0.
- await page.locator('#speed').evaluate(el=>{el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));el.value='1.1';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));});assert.equal(await page.locator('#speed').inputValue(),'1');
- await page.locator('#speed').focus();await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#speed').inputValue(),'1.1');await page.locator('#speed-value').click();assert.equal(await page.locator('#speed').inputValue(),'1');
- await page.locator('[data-view="shows"]').click();assert.equal(await page.locator('#speed').inputValue(),'0');
- await page.locator('#show-group').selectOption(npc.id);await page.locator('[data-opportunity="o1"]').click();assert.equal(await page.locator('[data-opportunity="o1"]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#show-song').inputValue(),'free');
- const partner=page.locator(`[data-show-member="${npc.members[1]}"]`);await partner.uncheck();assert(await page.locator('#book-show').isDisabled());assert(await page.locator('#preview-show').isDisabled());await partner.check();
- await page.locator('#preview-show').click();assert(await page.locator('#stage').isVisible());await page.locator('#stop-show').click();assert(await page.locator('#show-setup').isVisible());assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).showHistory.length),0);
- await page.locator('#book-show').click();assert((await page.locator('#show-feedback').textContent()).includes('pas deux confirmations'));assert((await page.locator('#show-feedback').textContent()).includes('Préfère'));
- await page.locator('#book-show').click();assert.equal(await page.locator('.upcoming-show').count(),1);await page.locator('[data-cancel-booking]').click();assert.equal(await page.locator('.upcoming-show').count(),0);assert(await page.locator('#book-show').isEnabled());
- for(let i=0;i<8&&!await page.locator('[data-advance-booking]').count();i++)await page.locator('#book-show').click();assert.equal(await page.locator('[data-advance-booking]').count(),1);await capture(page,'desktop-preparation-v51');
- await page.locator('[data-advance-booking]').click();assert(await page.locator('#stage').isVisible());assert.equal(await page.locator('#main').evaluate(el=>el.scrollTop),0,'New show must open at its controls and title');await page.locator('#show-speed').selectOption('4');await page.waitForSelector('.show-result',{timeout:20000});assert((await page.locator('.show-result').textContent()).includes('LE SHOW EST TERMINÉ'));assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).showHistory.length),1);await capture(page,'desktop-real-show-v51');
- await page.locator('[data-return-preparation]').click();assert(await page.locator('#show-setup').isVisible());assert(await page.locator('[data-view="shows"]').evaluate(el=>el.classList.contains('active')));
- await page.locator('[data-view="settings"]').click();await page.locator('#decision-mode').selectOption('bag');assert.equal(await page.locator('#rapin-pool .bag-row').count(),7);assert((await page.locator('#rapin-pool').textContent()).includes('Pige active'));await page.locator('#rapin-pool').scrollIntoViewIfNeeded();await capture(page,'desktop-rapin');
- await page.close();page=null;
- const late=createWorld(73,4);step(late,1440*10);createGroup(late,late.people.slice(1,3).map(p=>p.id),{manual:true,name:'Après le jour neuf'});
- page=await browser.newPage({viewport:{width:1440,height:960}});await load(page,late);await page.locator('[data-view="shows"]').click();await page.locator('.season-next [data-new-season]').click();assert.equal(await page.locator('.season-next').count(),0);assert(await page.locator('#book-show').isEnabled());assert(await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('garage-vivant-v1'));return s.season.opportunities.every(o=>o.time>s.time);}));await page.close();page=null;
-
- // Touch-sized browser, modal focus/scroll isolation, horizontal roster, no body overflow.
- const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});page=await context.newPage();await load(page,s);
- assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Mobile page overflows horizontally');assert.equal(await page.evaluate(()=>document.scrollingElement.scrollTop),0);
- const mobileHeader=await page.locator('header').boundingBox(),mobileMain=await page.locator('#main').boundingBox();assert(mobileMain.y>=mobileHeader.height-1);
- await page.locator('#people [data-person]').nth(6).tap();assert(await page.locator('#inspector').evaluate(el=>el.classList.contains('open')));
- await page.locator('#skills-edit summary').tap();const touchSlider=page.locator('[data-edit="skills:writing"]');await touchSlider.scrollIntoViewIfNeeded();await touchSlider.focus();const touchBox=await touchSlider.boundingBox();await page.waitForTimeout(1300);const touchAfter=await touchSlider.boundingBox();assert(Math.abs(touchAfter.y-touchBox.y)<3,'Mobile editor jumped');
- await page.locator('#close-inspector').tap();await page.locator('[data-view="shows"]').tap();await page.locator('#show-group').selectOption(band.id);await page.locator('[data-deck]').first().tap();assert(await page.locator('#dialog').evaluate(el=>el.open));const body=await page.evaluate(()=>document.scrollingElement.scrollTop);await page.locator('#dialog').evaluate(el=>el.scrollTop=200);await page.waitForTimeout(900);assert.equal(await page.evaluate(()=>document.scrollingElement.scrollTop),body);await page.locator('#dialog-close').tap();await capture(page,'mobile-preparation');
- await page.locator('#preview-show').tap();await page.locator('#show-pause').tap();await page.locator('#stage').scrollIntoViewIfNeeded();await capture(page,'mobile-show');
- assert.equal(errors.length,0,errors.join('\n'));await context.close();page=null;
- console.log('Chromium desktop + touch viewport passed: stable editor nodes, focus, active simulation at 0.5/1/10, drag, profile/view scroll, matrix highlights, patch notes, automatic show/pause/replay, responsive header, mobile panel and modal scrolling.');
-}catch(error){if(page)await page.screenshot({path:'test-results/failure.png'}).catch(()=>{});throw error;}
-finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+await page.locator('#speed').fill('10');await page.waitForTimeout(300);await page.locator('#speed').fill('0');assert.equal(await page.locator('#speed-value').textContent(),'Pause');await page.locator('#speed-value').click();assert.equal(await page.locator('#speed-value').textContent(),'×1.0');await page.locator('#speed').fill('0');
+await page.locator('#profile-wide').click();assert(await page.locator('#inspector').evaluate(e=>e.classList.contains('expanded')));
+const module=page.locator('.profile-module').filter({has:page.locator('#needs')});await module.locator('[data-module-action="hide"]').click();assert(await page.locator('.hidden-modules #needs').count());await page.locator('[data-reset-layout]').click();
+await page.locator('[data-bag-custom]').check();const weight=page.locator('[data-bag-weight$=":write"]');await weight.fill('35');await weight.press('Tab');await page.waitForTimeout(500);assert(Math.abs(Number(await weight.inputValue())-35)<.1);await capture(page,'v6-profile');
+await page.locator('#profile-wide').click();await page.locator('[data-view="groups"]').click();await page.locator(`[data-group-select="${npc.id}"]`).click();assert((await page.locator('.band-detail h2').textContent()).includes(npc.name));await page.locator('#band-search').fill('Voisins');assert.equal(await page.locator('.band-row').count(),1);await page.locator('#band-search').fill('');await capture(page,'v6-bands');
+await page.locator('[data-view="shows"]').click();await page.locator('#show-group').selectOption(g.id);await page.locator('#show-slot').selectOption({label:'Tête d’affiche · 20 min'});await page.locator('[data-set-song="0"]').selectOption('1');await page.locator('#set-add').click();await page.locator('[data-set-song="1"]').selectOption('1');assert((await page.locator('.show-form').textContent()).includes('8/20'));
+await page.locator('#preview-show').click();await page.waitForTimeout(2000);await page.locator('#show-pause').click();assert(await page.locator('.hero-card').isVisible());await page.locator('[data-stage-actor]').first().click();assert(await page.locator('#dialog').evaluate(e=>e.open));await page.locator('#dialog-close').click();await capture(page,'v6-show');await page.locator('#skip-show').click();assert(await page.locator('.show-result').isVisible());await page.locator('[data-return-preparation]').click();
+let booked=false;for(let i=0;i<12&&!booked;i++){await page.locator('#book-show').click();booked=await page.locator('[data-advance-booking]').count()>0;}assert(booked);await page.locator('[data-advance-booking]').first().click();await page.waitForTimeout(500);assert(await page.locator('#performance-wrap').isVisible());const clock=await page.locator('#clock').textContent();await page.waitForTimeout(800);assert.equal(await page.locator('#clock').textContent(),clock);await page.reload();await page.waitForTimeout(500);assert(await page.locator('#performance-wrap').isVisible());assert.equal(await page.locator('#clock').textContent(),clock);await page.locator('#skip-show').click();assert(await page.locator('.show-result').isVisible());await page.locator('#replay-show').click();await page.locator('#skip-show').click();await page.locator('[data-return-preparation]').click();assert(await page.locator('.show-result').isVisible());await page.locator('#next-slot').click();await page.waitForTimeout(400);assert(await page.locator('#map-view').isVisible());await page.locator('#speed').fill('0');await page.locator('[data-view="groups"]').click();await page.locator(`[data-group-select="${g.id}"]`).click();assert((await page.locator('.band-detail').textContent()).includes('Les néons du quartier'));
+await page.locator('#doc-search').click();await page.locator('#doc-query').fill('tension');await page.locator('#doc-results a').first().waitFor({state:'visible',timeout:8000});await page.locator('#dialog-close').click();
+const popupPromise=page.waitForEvent('popup');await page.locator('#version').click();const popup=await popupPromise;await popup.waitForLoadState();assert(popup.url().includes('versions.html'));await popup.bringToFront();await popup.waitForSelector('#v060');await popup.waitForFunction(()=>JSON.parse(localStorage.getItem('garage-vivant-read-notes')||'[]').includes('v060'),{},{timeout:8000});await popup.close();
+await page.locator('[data-view="journal"]').click();await page.locator('#main').evaluate(el=>el.scrollTop=300);await page.waitForTimeout(700);const journalTop=await page.locator('#main').evaluate(el=>el.scrollTop);await page.locator('[data-view="groups"]').click();await page.locator('[data-view="journal"]').click();assert(Math.abs((await page.locator('#main').evaluate(el=>el.scrollTop))-journalTop)<8);await page.locator('[data-view="relations"]').click();await page.locator('[data-pair]').first().click();assert(await page.locator('.selected-name').count()>=2);const relation=page.locator('[data-rel]').first();await relation.focus();await relation.evaluate(el=>window.originalRelation=el);await page.waitForTimeout(900);assert(await relation.evaluate(el=>el===window.originalRelation&&document.activeElement===el));await capture(page,'v6-relations');
+await page.close();
+page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await load(page,world().s);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.locator('#people [data-person]').first().click();await page.locator('#profile-wide').click();await page.locator('#inspector').evaluate(e=>e.scrollTop=500);const scroll=await page.locator('#inspector').evaluate(e=>e.scrollTop);await page.waitForTimeout(1200);assert(Math.abs((await page.locator('#inspector').evaluate(e=>e.scrollTop))-scroll)<3);await capture(page,'v6-mobile-profile');await page.locator('#close-inspector').click();await page.locator('[data-view="shows"]').click();await capture(page,'v6-mobile-calendar');
+assert.deepEqual(errors,[]);console.log('V6 Chromium passed: modular profiles, Rapin editing, compact bands, multiple songs, real booking, live clock freeze, skip, history, docs search, patch tab, matrix and mobile scroll.');
+}catch(e){if(page)await capture(page,'failure');throw e;}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

@@ -43,18 +43,32 @@ export function reconcile(element, html) {
   for(let p=element;p;p=p.parentElement) if(p.scrollHeight>p.clientHeight || p.scrollWidth>p.clientWidth) scrolling.push({node:p,top:p.scrollTop,left:p.scrollLeft});
   for(const p of element.querySelectorAll('[data-scroll]')) scrolling.push({node:p,top:p.scrollTop,left:p.scrollLeft});
   const scroller=element.closest('[data-scroll]');
+  const scope=scroller||element;
+  const anchorSelector='[id],[data-entry],[data-stable],[data-key],[data-edit],[data-rel],[data-priority]';
   const boundary=scroller?.getBoundingClientRect().top||0;
   const active=document.activeElement;
-  const visibleFocus=element.contains(active)&&active.getBoundingClientRect().top>=boundary&&active.getBoundingClientRect().bottom<=(scroller?.getBoundingClientRect().bottom||globalThis.innerHeight);
-  const anchor=scroller?.scrollTop>0?(visibleFocus?active:[...element.querySelectorAll('[id],[data-entry],[data-stable],[data-edit],[data-rel],[data-priority]')].find(p=>identity(p)&&p.getBoundingClientRect().bottom>boundary)):null;
+  // A module above the editor can change height without containing its focus.
+  // Anchor within the whole scrolling panel, not just the fragment being patched.
+  const visibleFocus=scope.contains(active)&&active.getBoundingClientRect().top>=boundary&&active.getBoundingClientRect().bottom<=(scroller?.getBoundingClientRect().bottom||globalThis.innerHeight);
+  const anchor=scroller?.scrollTop>0?(visibleFocus?active:[...scope.querySelectorAll(anchorSelector)].find(p=>{const r=p.getBoundingClientRect();return identity(p)&&r.bottom>boundary&&r.height<scroller.clientHeight&&r.top>=boundary-20;})):null;
   const anchorKey=anchor&&identity(anchor),offset=anchor?.getBoundingClientRect().top;
   children(element,template.content,document);
   for(const state of scrolling) if(state.node.isConnected){state.node.scrollTop=state.top;state.node.scrollLeft=state.left;}
-  if(anchorKey && scroller) {
-    const next=[...element.querySelectorAll('[id],[data-entry],[data-stable],[data-edit],[data-rel],[data-priority]')].find(p=>identity(p)===anchorKey);
+  if(anchor && scroller) {
+    const next=anchor===active&&active.isConnected?active:anchorKey&&[...scope.querySelectorAll(anchorSelector)].find(p=>identity(p)===anchorKey);
     if(next) scroller.scrollTop+=next.getBoundingClientRect().top-offset;
   }
   element.__renderedHTML=html;
+}
+export function withReadingAnchor(panel,update) {
+  if(!panel)return update();
+  const focus=panel.ownerDocument.activeElement,bounds=panel.getBoundingClientRect();
+  const visible=node=>{const r=node.getBoundingClientRect();return r.bottom>bounds.top&&r.top<bounds.bottom;};
+  const anchor=panel.contains(focus)&&visible(focus)?focus:
+    [...panel.querySelectorAll('[data-key],[data-stable],[data-edit],[id]')].find(node=>visible(node)&&node.getBoundingClientRect().height<panel.clientHeight);
+  const offset=anchor?.getBoundingClientRect().top;
+  update();
+  if(anchor?.isConnected&&panel.contains(anchor))panel.scrollTop+=anchor.getBoundingClientRect().top-offset;
 }
 export function createViewPositions() {
   const positions=new Map();
