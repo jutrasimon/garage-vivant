@@ -1,5 +1,17 @@
 # Changements
 
+## 0.6.0 — Le quartier prend la scène
+
+- Direct visible dès le début, quartier figé, cartes et effets lisibles, inspection des fans et musiciens, skip déterministe et mini-cubes persistants.
+- Quatre dates renouvelées, gros événement tous les quatre, deux à trois créneaux, setlists multiples et passages entre groupes.
+- Bands autonomes : premier arrivé sur petite scène, candidatures et tirage pondéré à T−2 sur grosse scène. Un engagement futur par band, modifications revalidées et annulations.
+- Moral collectif temporaire; refus sans perte de réputation, échec public proportionné aux attentes. Bilans et historique attribués aux groupes.
+- Liste compacte des bands; profils larges et modules réorganisables, masqués mais consultables. Scroll et focus conservés pendant les mises à jour.
+- Récupération unifiée, compteurs hérités fusionnés, sac Rapin éditable avec verrous et probabilités effectives distinctes.
+- Griefs, refroidissement modulé par affinité, rencontres de trajet et détente ensemble. Souvenirs datés et archive bornée.
+- GDD VitePress, recherche Ctrl+Espace, notes dans un onglet séparé et badge non lu.
+- Sauvegardes V5.1 réelles conservées, ancien show rejouable, tests de 100 jours et parcours Chromium ordinateur/tactile avant publication.
+
 ## 0.5.1 — Préparer, jouer, recommencer
 
 - Dates cliquables; préparation des bands du quartier sans changer de personnage incarné. Organisateur identifié et refus affichés sur place.

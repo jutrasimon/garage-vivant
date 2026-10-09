@@ -1,0 +1,5 @@
+import {readFile,writeFile,mkdir,cp,readdir} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+execFileSync(process.execPath,['node_modules/vitepress/bin/vitepress.js','build','docs'],{stdio:'inherit'});
+await mkdir('dist/docs',{recursive:true});await cp('docs/.vitepress/dist','dist/docs',{recursive:true});
+const files=['docs/index.md',...(await readdir('docs/gdd')).filter(x=>x.endsWith('.md')).map(x=>'docs/gdd/'+x)];const entries=[];for(const file of files){const text=await readFile(file,'utf8'),parts=text.split(/^##? /m);let title='';for(const part of parts){if(!part.trim())continue;const lines=part.split('\n'),heading=lines.shift().trim();title||=heading;const slug=heading.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');entries.push({title:heading,system:title,text:lines.join(' ').replace(/[\[\]#*`|]/g,' ').slice(0,6000),url:'docs/'+file.slice(5).replace(/\.md$/,'.html')+(heading===title?'':'#'+slug)});}}await writeFile('dist/doc-index.json',JSON.stringify({version:'0.6.0',entries}));
