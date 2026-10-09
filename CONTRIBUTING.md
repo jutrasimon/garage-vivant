@@ -1,6 +1,6 @@
 # Contribuer à Garage vivant
 
-Le jeu est une application web statique ; le code exécutable est dans `dist/`. Le README décrit le comportement actuel et les tests. Lire les éventuelles instructions `AGENTS.md` applicables. Le plan V5 n’est pas un mandat de développement automatique.
+Le jeu est une application web statique ; le code exécutable est dans `dist/`. Le README décrit le comportement actuel et les tests. Lire les éventuelles instructions `AGENTS.md` applicables. Le plan V5 documente les choix de conception; respecter le mandat confié et la version décrite dans le README.
 
 ## Branches et modifications
 

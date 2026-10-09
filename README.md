@@ -1,69 +1,90 @@
-[▶ Jouer sur GitHub Pages](https://jutrasimon.github.io/garage-vivant/)
+[▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-> Publication préparée. Activation initiale : Settings → Pages → Source : GitHub Actions.
+# Garage vivant · v0.5.0
 
-# Garage vivant · v0.4.0
+Une simulation de musiciens de banlieue : incarner un voisin, monter son band, préparer une chanson et regarder un show automatique. Les autres cubes font leur vie, entretiennent leurs relations et peuvent refuser une proposition. Application web statique en français, sans API ni dépendance à l’exécution.
 
-Laboratoire autonome de musiciens de banlieue. Application statique en français, sans dépendance ni API. Entrée : `dist/index.html`.
+## Jouer
 
-## Boucle
+1. Choisir son musicien dans la fiche, avec **Incarner**. Les actions reprennent ensuite leur autonomie.
+2. Dans **Groupes** ou **Shows**, **Monter un band** propose une invitation. Affinité, confiance, tension et déchéance influencent l’acceptation. Un refus impose six heures avant une nouvelle invitation au même band.
+3. **Composer** avance une idée persistante en plusieurs séances. Dans la fiche du band, sélectionner une composition d’un membre pour le répertoire.
+4. Répéter cette chanson, préparer les decks et l’énergie, puis réserver une occasion dans **Shows**. Les partenaires doivent confirmer; leurs engagements peuvent être incompatibles.
+5. Le show se résout automatiquement en cinq phrases. Lire le bilan et les enchaînements pour préparer le suivant.
 
-Observer → comprendre les décisions → ajuster personnages et priorités → suivre rencontres, projets, chansons et groupes. Les groupes sont autonomes, non exclusifs et sans plafond de membres ou d’appartenances. Population du laboratoire : 24 maximum. Répertoire de groupe, répétition chanson par chanson, carrière et audio restent hors de cette version.
+**Répétition générale** permet d’observer les cartes sans récompense de show. **Aller jusqu’au show** simule la préparation et les déplacements; ce bouton ne recharge pas gratuitement les musiciens. Un replay conserve le même tirage et n’applique aucune conséquence supplémentaire.
 
-## Actions et compositions
+La saison comporte trois occasions aux jours 2, 4 et 6, puis une finale au jour 8. Les occasions manquées font partie de l’histoire. Le bilan clôt la saison; le quartier reste jouable et une nouvelle saison conserve ses personnages, ses chansons et ses bands.
 
-Sept actions : se reposer, socialiser, pratiquer, jammer ensemble, composer, décrocher, former un groupe. Alimentation, travail, satiété et argent restent retirés. Les priorités 1/2/3/0 sont conservées ; une énergie critique impose toujours le repos.
+## Personnages, actions et progression
 
-Composer crée ou poursuit un projet avec une identité, un titre, un style et des causes persistantes. Chaque minute réellement passée à composer avance le travail ; déplacements et autres activités n’avancent pas le projet. Une interruption conserve sa progression. Chaque séance achevée augmente le compteur de séances ; une chanson est publiée seulement lorsque le projet est prêt et la séance terminée. À ×1, environ quatre à six séances sont nécessaires selon la discipline. Le réglage « Progression des compositions » accélère ou suspend cette progression.
+Sept actions autonomes : se reposer, socialiser, pratiquer, jammer, composer, décrocher et former un groupe. Alimentation, travail et argent restent retirés. Les priorités 1/2/3/0 restent disponibles; l’épuisement impose le repos. Les propositions au personnage joueur s’exécutent directement; les autres musiciens gardent leur possibilité de refus.
 
-La fiche et le carnet distinguent projets en cours et chansons terminées. La qualité affichée pendant le projet est un potentiel provisoire, sans variation finale. Les 75 premières minutes de travail créatif déterminent la tonalité et les expériences fondatrices ; les séances suivantes développent la chanson sans effacer cette origine. Une idée issue d’une jam peut nourrir le prochain projet, avec sa provenance et un bonus d’ensemble. Une même idée n’est pas réutilisée pour plusieurs projets du même auteur. Les anciens catalogues restent complets. Un scénario qui lance un autre projet conserve l’ancien dans le carnet.
+Les besoins, les six dimensions de personnalité, les traits, les six familles d’émotions et leurs trois intensités restent actifs. Un accessoire stable et une gestuelle distinguent chaque cube. Action et émotion se lisent simultanément sur la carte. La fiche rapide expose énergie, déchéance et engagement; **Vue détaillée** élargit la fiche sur ordinateur. Les compétences apparaissent au-dessus des compositions.
 
-La réputation combine talent (25), catalogue (30), reconnaissance (25) et collaborations (20). Le catalogue dépend de la qualité et sature progressivement avec le nombre de chansons ; la reconnaissance utilise les huit meilleurs échos. Un brouillon ou sa révision ne donne aucune récompense de publication.
+Les nouvelles populations sont majoritairement amateurs, avec quelques expérimentés et de rares talents. Les gains ralentissent à haut niveau. Les compétences des anciennes sauvegardes ne sont pas diminuées. La maîtrise instrumentale débloque des cartes à 35 et 60.
 
-## Sessions et journal
+Socialiser exige un partenaire disponible au même endroit. Attendre seul apporte de la détente, sans gain social; une attente décevante peut laisser une frustration à la fin de la session.
 
-Les jams gardent un rendez-vous commun : invitation, déplacement, attente, session effective puis bilan. Il faut deux musiciens présents pour avancer les 85 minutes communes. Une attente solitaire de 90 minutes conduit à la pratique solo. Le départ d’un partenaire suspend la musique s’il ne reste qu’une personne. La carte garde les surbrillances, connexions et noms des activités communes. L’action est à droite du cube, l’émotion facultative à gauche ; un trajet affiche une flèche.
+## Composition et catalogue
 
-Les jams peuvent produire synchronisation, apprentissage, idée, débat artistique, accrochage ou consolidation. Les probabilités dépendent notamment de la compatibilité, du vécu, des compétences, de la discipline, de l’empathie, des styles, de la confiance et du risque de conflit. Chaque résultat a ses propres effets et expose son explication. Répéter un résultat dans la même jam multiplie ses effets par 0,6 à chaque répétition. L’empathie peut apaiser un accrochage ; un débat artistique ne crée pas automatiquement de l’hostilité.
+Un projet garde son titre, sa progression, sa tonalité et les expériences fondatrices. À rythme normal, une chanson demande environ quatre à six séances. Une interruption ne détruit pas le travail. Les 75 premières minutes créatives déterminent son origine émotionnelle; les séances suivantes ne l’effacent pas. Les idées de jam peuvent nourrir le prochain projet, une fois par auteur. Les titres intègrent aussi des lieux, des souvenirs ou l’histoire du band.
 
-Le journal présente une entrée par activité, avec état, lieu, durée effectivement passée, participants et déroulement dépliable. Le bilan de jam conserve les participants qui sont partis. Les événements bruts restent accessibles via une option de laboratoire. Filtrage par personnage et type conservé. Lecture et détails ouverts sont préservés pendant les mises à jour. Les bilans et événements sont des vues des effets déjà appliqués : les consulter ne modifie pas la simulation.
+La qualité d’écriture reste distincte de la maîtrise collective et de l’interprétation en show. La réputation individuelle combine talent (25), catalogue (30), reconnaissance (25) et collaborations (20). La reconnaissance combine les huit meilleurs échos de chansons et les shows, dans sa limite de 25.
 
-Historique borné : 240 bilans récents (les activités en cours sont conservées), 24 événements par bilan, 500 événements bruts. Le catalogue de chansons et les projets ne sont pas tronqués.
+Par défaut, les nouvelles chansons sous 25/100 sont archivées. Le seuil se règle dans le carnet. L’archive est visible et réversible : aucun morceau, auteur ou souvenir n’est supprimé. Le seuil n’archive pas rétroactivement les anciens catalogues. Les longues listes proposent **Voir davantage**; leur compte et leur export restent complets. Le quartier mesure les créations du jour séparément du catalogue historique.
 
-## Relations et découverte
+## Relations, jams et bands
 
-Affinité, confiance, tension, complicité musicale, attirance et amour restent orientés. Alex → Charlie décrit ce qu’Alex ressent. La chimie potentielle dépend des profils et est symétrique ; elle est distincte de la complicité vécue.
+Affinité, confiance, tension, complicité, attirance et amour restent orientés : Alex → Charlie décrit le ressenti d’Alex. La chimie potentielle est symétrique; elle est révélée par des grades après des jams communes terminées. La fréquence des moments d’une seule jam ne remplace pas plusieurs expériences distinctes. Les valeurs exactes restent une option de laboratoire. Une case sélectionnée souligne la ligne, la colonne et les deux noms.
 
-La chimie est inconnue avant une première jam commune terminée. Ensuite, un grade apparaît : difficile, contrastée, prometteuse ou très prometteuse. La confiance dans ce constat passe d’impression incertaine (1–2 sessions) à tendance observée (3–5), puis confirmée (6+). La familiarité ne fait pas monter artificiellement le potentiel. Les événements répétés d’une seule session ne comptent pas comme plusieurs découvertes. Les valeurs exactes restent disponibles dans le laboratoire ; la vue ordinaire ne les divulgue pas par les couleurs ou les infobulles.
+Les échanges sociaux, accrochages, écoutes empathiques et avances amoureuses gardent leurs effets et leurs causes. La tension diminue de 0,4 par heure. Les jams peuvent produire synchronisation, apprentissage, idée, débat, accrochage ou consolidation. Répéter un résultat dans une session atténue progressivement ses effets.
 
-Les émotions, souvenirs, empathie, avances réciproques et retour au calme de la V3 restent actifs. Les tensions diminuent de 0,4 par heure. La formation autonome conserve ses conditions : affinité ≥22 dans les deux sens, confiance ≥18, tension <40 et complicité ≥10 — ou affinité mutuelle ≥40. Rendez-vous physique et délai de douze heures conservés.
+Une jam commence avec deux musiciens réellement présents au même garage. Après 90 minutes d’attente solitaire, la pratique solo prend le relais. Une répétition crédite uniquement le band annoncé ou un band commun sans ambiguïté; appartenir à deux bands ne fait pas progresser les deux automatiquement. Les déplacements ne comptent pas comme répétition.
 
-## Temps et sauvegardes
+La formation autonome conserve ses conditions : affinité mutuelle ≥22, confiance ≥18, tension <40, complicité ≥10 — ou affinité mutuelle ≥40. Les membres peuvent appartenir à plusieurs bands; aucun plafond spécifique de membres ou d’appartenances. Population du quartier : 24 maximum.
 
-Slider 0–10 par pas de 0,1 ; zéro met en pause. Jouer reprend la dernière vitesse non nulle. À ×1, une seconde réelle vaut huit minutes simulées. +1 h avance soixante minutes puis met en pause. Le moteur avance dans tous les panneaux internes ; interpolation maintenue hors carte, sans rattrapage au retour. Un onglet navigateur masqué suspend le temps.
+**Développement** : coordination actuelle, entretenue par la musique commune. Stades 0–24 embryonnaire, 25–49 en place, 50–74 rodé, 75–100 affirmé. Après 48 heures sans entretien, baisse de 0,24 par heure. À zéro, le band s’archive avec son histoire. **Réputation** : reconnaissance acquise par les shows, distincte du développement. Les départs restent dans l’histoire du band, même lorsqu’il n’a plus de membres.
 
-Sauvegarde locale automatique et export/import JSON reproductible. Migrations V0.1, V0.2 et V0.3 : chansons, personnages, relations et groupes conservés. Les activités et rendez-vous V3 en cours sont conservés ; leur instrumentation commence au moment de la migration. Aucune expérience passée de découverte n’est inventée. Une copie locale avant migration est conservée sous `garage-vivant-before-v4` lorsque le stockage le permet. Une sauvegarde illisible n’est pas écrasée automatiquement ; import ou création explicite d’un quartier requis pour reprendre la sauvegarde.
+Le répertoire est un sous-ensemble des compositions des membres. Chaque chanson garde une maîtrise collective et un nombre de répétitions. Les bands des NPC choisissent progressivement des morceaux selon style et qualité. Les bands du musicien joueur conservent son choix explicite. Les tensions entre bands découlent des engagements incompatibles, pas de la simple appartenance multiple.
 
-## Vérifications
+## Shows, cartes et public physique
 
-- `node tests/engine.test.mjs` : 39 jours simulés, huit graines et population de 24, valeurs bornées et déterminisme.
-- `node tests/systems.test.mjs` : anciennes migrations, projets, jams à deux, groupes autonomes et multiples, groupe de quinze, catalogue de plus de 100, réputation, émotions et sérialisation.
-- `node tests/v4.test.mjs` : migration V3 avec jam et composition en cours ; interruption/reprise ; origine émotionnelle ; six résultats ; inspiration ; bilans sans doubles effets ; découverte par sessions distinctes ; départs ; contrôle de progression ; import invalide.
-- `node tests/runtime.test.mjs` : vitesses 0/0,5/1/10, reprise, carte cachée et absence de rattrapage.
-- `node tests/interface.test.mjs` : fonctions de rendu, chimie cachée et valeurs de laboratoire, textes échappés, projets et détails des sessions ; vérification structurelle des deux bulles.
+Chaque musicien prépare 8 à 10 cartes distinctes. Cinq sont pigées sans remise; une est jouée par phrase. Basse, batterie et percussions préparent, puis clavier, guitare et cuivres, puis chant. Les grooves élargissent les impacts, deux préparations déclenchent un crescendo, et le soutien peut atténuer une erreur alliée.
 
-Aucun navigateur de validation autorisé n’est disponible dans cet environnement. Le rendu visuel et les interactions réelles de défilement n’ont pas été vérifiés ici.
+Rythme, intensité, émotion, portée et préparation forment le vocabulaire partagé. La chanson, sa maîtrise, la coordination, l’énergie, les compétences, l’intention et les goûts du public modifient réellement les impacts. Taille normalisée, diversité et atténuation des effets répétés évitent que recruter tout le quartier donne une victoire gratuite.
 
-## Développement et prochaine étape
+Le public comprend 8 à 12 cubes, chacun avec un style et une sensibilité instrumentale distincts. Les zones et les impulsions déplacent réellement les spectateurs. À jauge pleine, une seule réaction majeure par show : euphorie et éclatement, émotion et réceptivité voisine, ou transe et amplification rythmique. Les fragments sont décoratifs et les fans réapparaissent au bilan.
 
-Dépôt : https://github.com/jutrasimon/garage-vivant
+Le spectacle dure 36 secondes à ×1, avec pause et vitesses ×0,5/1/2/4. Sa physique avance à 60 pas fixes par seconde; la vitesse de lecture n’affecte jamais le résultat. Les sons synthétiques s’activent volontairement. **Effets réduits** et la préférence système réduisent les animations.
 
-Le [plan V5](docs/PLAN_V5.md) décrit la prochaine évolution. L’audit transversal des glitches de scroll est la priorité P0, avant les nouveaux systèmes de gameplay. Ce plan n’est pas encore implémenté.
+## Déchéance
 
-Pour lancer localement : `python3 -m http.server 8000 --directory dist`, puis ouvrir `http://localhost:8000`. Les tests nécessitent Node.js et aucune installation de dépendances ; leurs commandes figurent ci-dessus. `dist/` contient directement le code source exécutable, sans étape de compilation.
+Excès choisis et nuits sacrifiées malgré la fatigue augmentent la déchéance; le succès seul ne la fait pas monter. Le repos, la détente et le soutien empathique aident à récupérer. Les causes et les prochains seuils sont visibles.
 
-La V4 importée correspond au commit Sites `e57388010c37dda631668b9533af29537e404a29`. L’import GitHub est un instantané du code, des tests et des fixtures ; il ne recrée pas l’historique Git antérieur. Le workflow GitHub Actions vérifie les modifications et publie `dist/` depuis `main` lorsque GitHub Pages est activé. Les pull requests lancent les tests sans publier le site principal.
+- 25 : gueule de bois, énergie −8.
+- 50 : trou de mémoire, préparation perdue.
+- 70 : ego en roue libre, soutien détourné.
+- 85 : absence au mauvais moment, une phrase manquée.
 
-## Collaboration
+Ces cartes remplacent des emplacements du deck; modifier les cartes musicales ne permet pas de les retirer. Le personnage reste dans le quartier et ses bands. Un show apporte fatigue, reconnaissance, souvenirs et évolution des liens; **Tout donner** ajoute aussi une tentation d’excès.
 
-Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les branches, l’identité des auteurs, les messages de commit, les tests et l’intégration via pull request.
+## Temps, interface et sauvegardes
+
+Header fixe avec navigation, temps, slider 0–10 par pas de 0,1 et version cliquable pour les patch notes. Zéro met en pause; **+1 h** avance une heure puis reste en pause. À ×1, une seconde réelle vaut huit minutes de quartier. Pendant un show, l’horloge du quartier attend la résolution; les contrôles du spectacle règlent sa lecture.
+
+La simulation continue dans les panneaux internes; masquer l’onglet navigateur suspend quartier et spectacle. Aucun rattrapage au retour. Les contrôles et détails sont conservés par une réconciliation du DOM, plutôt que par des reconstructions des panneaux. Positions de lecture par vue et personnage, focus et défilement horizontal sont conservés. Le journal propose des types cumulables, un masquage du repos et un indicateur de nouvelles entrées pendant la lecture. Ses détails exposent des effets déjà appliqués; les consulter ne les répète pas.
+
+Sauvegarde locale automatique, export/import JSON, et migration V0.1 à V0.4 sans suppression de personnages, chansons, compétences, relations, groupes ou projets. Copie avant migration sous `garage-vivant-before-v5`; copie avant nouvelle partie sous `garage-vivant-before-new-game`. Une sauvegarde illisible n’est pas écrasée automatiquement. Les projets, les archives et les shows en cours se restaurent; une conséquence ne s’applique qu’une fois.
+
+Les sauvegardes dépendent du navigateur et de l’origine web. Pour passer de l’ancien site ChatGPT à GitHub Pages, exporter puis importer le monde.
+
+## Développement et validation
+
+`dist/` contient les sources exécutables; aucune compilation ni dépendance de jeu. `engine.mjs` conserve la simulation du quartier, `life.mjs` les commandes et la carrière locale, `stage.mjs` la résolution des shows, `ui-state.mjs` la stabilité du DOM, `v5-view.mjs` la présentation de la V5. Les animations et l’audio ne modifient pas la simulation. Pas de nouveaux outils génériques ou de multijoueur dans cette version.
+
+`npm test` vérifie le déterminisme, les 39 jours simulés, les populations jusqu’à 24, les migrations V1–V4, les jams et départs, les compositions persistantes, les catalogues de plus de 100, les relations, les shows de 2 à 24 membres, les engagements, les archives, la déchéance et les replays.
+
+La CI installe les seules dépendances de test avec `npm ci`, puis Chromium via `npx playwright install --with-deps chromium`. `npm run test:browser` vérifie les interactions réelles à 1440×960 et en viewport tactile 390×844 : scroll, focus, curseurs à ×0,5/1/10, sélection, navigation, fenêtres, shows et pause/replay. Les captures sont conservées dans l’artefact `interface-v5`. Le viewport tactile Chromium ne remplace pas un test sur un téléphone iOS réel.
+
+Le workflow `.github/workflows/pages.yml` publie `dist/` depuis `main` après réussite de tous les tests. Les pull requests exécutent les vérifications sans publier. Voir [CONTRIBUTING.md](CONTRIBUTING.md), le [plan V5](docs/PLAN_V5.md) et [les changements](docs/CHANGELOG.md).
