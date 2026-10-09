@@ -1,0 +1,53 @@
+name: Vérifier et publier le jeu
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Tests de non-régression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier JavaScript et la simulation
+        run: |
+          node --check dist/engine.mjs
+          node --check dist/app.mjs
+          node --check dist/runtime.mjs
+          node tests/engine.test.mjs
+          node tests/systems.test.mjs
+          node tests/v4.test.mjs
+          node tests/runtime.test.mjs
+          node tests/interface.test.mjs
+
+  deploy:
+    name: Publier GitHub Pages
+    needs: verify
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Déployer le jeu
+        id: deployment
+        uses: actions/deploy-pages@v5

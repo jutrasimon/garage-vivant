@@ -1,3 +1,7 @@
+[▶ Jouer sur GitHub Pages](https://jutrasimon.github.io/garage-vivant/)
+
+> Publication préparée. Activation initiale : Settings → Pages → Source : GitHub Actions.
+
 # Garage vivant · v0.4.0
 
 Laboratoire autonome de musiciens de banlieue. Application statique en français, sans dépendance ni API. Entrée : `dist/index.html`.
@@ -58,4 +62,8 @@ Le [plan V5](docs/PLAN_V5.md) décrit la prochaine évolution. L’audit transve
 
 Pour lancer localement : `python3 -m http.server 8000 --directory dist`, puis ouvrir `http://localhost:8000`. Les tests nécessitent Node.js et aucune installation de dépendances ; leurs commandes figurent ci-dessus. `dist/` contient directement le code source exécutable, sans étape de compilation.
 
-La V4 importée correspond au commit Sites `e57388010c37dda631668b9533af29537e404a29`. L’import GitHub est un instantané du code, des tests et des fixtures ; il ne recrée pas l’historique Git antérieur. Le transfert ne change pas l’hébergement actuel et ne configure pas de déploiement automatique.
+La V4 importée correspond au commit Sites `e57388010c37dda631668b9533af29537e404a29`. L’import GitHub est un instantané du code, des tests et des fixtures ; il ne recrée pas l’historique Git antérieur. Le workflow GitHub Actions vérifie les modifications et publie `dist/` depuis `main` lorsque GitHub Pages est activé. Les pull requests lancent les tests sans publier le site principal.
+
+## Collaboration
+
+Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les branches, l’identité des auteurs, les messages de commit, les tests et l’intégration via pull request.
