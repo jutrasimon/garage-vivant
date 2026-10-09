@@ -108,7 +108,7 @@ function renderShows(){
 }
 function submit(cmd){const r=command(world,cmd);notify(r.message);render();if(view==='groups')renderGroups();if(view==='shows')renderShows();save();return r;}
 function plannedCommand(type){const prep=resolveShowPlan(world,showPlan);if(type==='book'&&!prep.ready)return {ok:false,message:prep.reason};if(!prep.group)return {ok:false,message:prep.reason};if(showPlan.songId!==null){const r=command(world,{type:'repertoire',groupId:showPlan.groupId,actorId:showPlan.actorId,songId:showPlan.songId});if(!r.ok)return r;}return command(world,{type,...showPlan});}
-function launchPreview(replay=false){const r=replay?command(world,{type:'replay'}):plannedCommand('preview');showFeedback=r;notify(r.message);render();save();if(r.ok){showingPerformance=true;showPaused=false;showBudget=0;setPlaybackSpeed(playback,playback.speed||1);changeView('shows');}}
+function launchPreview(replay=false){const r=replay?command(world,{type:'replay'}):plannedCommand('preview');showFeedback=r;notify(r.message);render();save();if(r.ok){showingPerformance=true;showPaused=false;showBudget=0;setPlaybackSpeed(playback,playback.speed||1);changeView('shows');$('#main').scrollTop=0;}}
 $('#version').onclick=e=>{e.stopPropagation();modal(patchesHTML());};
 $('#brand-home').onclick=e=>{e.preventDefault();changeView('map');};
 $('#new-game').onclick=()=>$('#reset').click();
@@ -149,16 +149,16 @@ document.addEventListener('click',e=>{
  if(el.hasAttribute('data-open-shows')){if(el.dataset.openShows){showPlan.groupId=el.dataset.openShows;showPlan.actorId=null;showPlan.members=null;showPlan.songId=undefined;}showFeedback=null;showingPerformance=world.performance?.status==='playing';changeView('shows');}
  if(el.dataset.opportunity){const o=world.season.opportunities.find(o=>o.id===el.dataset.opportunity);showingPerformance=false;if(o.time>world.time&&['open','booked'].includes(o.status)){showPlan.opportunityId=o.id;showFeedback=null;}else{const played=world.showHistory.filter(r=>r.opportunityId===o.id&&r.time>=world.season.started);showFeedback={message:played.length?played.map(r=>`${r.groupName} : ${r.conquered}/${r.total} fans, accueil ${r.score}/100.`).join(' '):'Cette date est passée. Choisis une date à venir ou lance la prochaine saison.'};}renderShows();}
  if(el.dataset.editBooking){const b=world.bookings.find(b=>b.id===el.dataset.editBooking);if(b){Object.assign(showPlan,{groupId:b.groupId,songId:b.songId,actorId:b.members[0],opportunityId:b.opportunityId,intention:b.intention,members:[...b.members]});showFeedback={message:'La formation confirmée est affichée. Annule la réservation pour modifier ses choix.'};showingPerformance=false;renderShows();}}
- if(el.id==='book-show'){const r=plannedCommand('book');showFeedback=r;notify(r.message);renderShows();save();}
+ if(el.id==='book-show'){const r=plannedCommand('book');showFeedback=r;notify(r.message);renderShows();if(r.ok)$('#main').scrollTop=0;save();}
  if(el.id==='planned-rehearsal'){const r=plannedCommand('rehearse');showFeedback=r;notify(r.message);if(r.ok){setPlaybackSpeed(playback,playback.resumeSpeed);changeView('map');}else renderShows();save();}
  if(el.id==='preview-show')launchPreview();
  if(el.id==='last-show'){showingPerformance=true;changeView('shows');$('#main').scrollTop=0;}
- if(el.hasAttribute('data-return-preparation')){showingPerformance=false;changeView('shows');}
+ if(el.hasAttribute('data-return-preparation')){showingPerformance=false;changeView('shows');$('#main').scrollTop=0;}
  if(el.hasAttribute('data-close-preparation')){changeView('map');setSpeed(playback.resumeSpeed);}
  if(el.id==='stop-show'){const actorId=world.performance?.actors[0]?.id,r=command(world,{type:'cancelPerformance',actorId});showFeedback=r;showingPerformance=false;showPaused=false;showBudget=0;setPlaybackSpeed(playback,0);renderShows();save();}
  if(el.hasAttribute('data-season-bilan')){showingPerformance=false;changeView('shows');$('#main').scrollTop=0;}
  if(el.id==='replay-show')launchPreview(true);
- if(el.dataset.advanceBooking){const r=advanceToBooking(world,el.dataset.advanceBooking);showFeedback=r;notify(r.message);showPaused=false;showBudget=0;setPlaybackSpeed(playback,world.performance?.status==='playing'?1:0);render();changeView('shows');save();}
+ if(el.dataset.advanceBooking){const r=advanceToBooking(world,el.dataset.advanceBooking);showFeedback=r;notify(r.message);showPaused=false;showBudget=0;setPlaybackSpeed(playback,world.performance?.status==='playing'?1:0);render();changeView('shows');if(world.performance?.status==='playing')$('#main').scrollTop=0;save();}
  if(el.dataset.cancelBooking){const b=world.bookings.find(b=>b.id===el.dataset.cancelBooking);if(b){showFeedback=command(world,{type:'cancelBooking',bookingId:b.id,actorId:b.members.find(id=>world.people.some(p=>p.id===id))});Object.assign(showPlan,{groupId:b.groupId,songId:b.songId,actorId:b.members[0],opportunityId:b.opportunityId,intention:b.intention,members:[...b.members]});renderShows();save();}}
  if(el.dataset.archiveSong){submit({type:'archive',songId:Number(el.dataset.archiveSong),restore:el.dataset.restoreSong==='yes'});renderJournal();}
  if(el.dataset.revive){const g=world.groups.find(g=>g.id===el.dataset.revive);submit({type:'revive',groupId:el.dataset.revive,actorId:g?.members.includes(world.playerId)?world.playerId:g?.members[0]});}
