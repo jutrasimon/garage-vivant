@@ -32,7 +32,10 @@ try{
   for(const viewport of [{width:1440,height:900},{width:1200,height:768},{width:900,height:850},{width:390,height:844},{width:390,height:667},{width:844,height:390}]){
     page=await browser.newPage({viewport});page.on('pageerror',e=>errors.push(e.message));
     const selected=viewport.width===1440?samples:[...new Map(samples.map(s=>[CARDS[s.events.filter(e=>e.type==='card').at(-1).cardId].tag+':'+showBeat(s).phase,s])).values(),late];
-    let expected;const captures=new Set();await page.addInitScript(()=>{if(window.name){const save=JSON.parse(window.name);if(save.people)localStorage.setItem('garage-vivant-v1',JSON.stringify(save));}});await page.goto(url);
+    let expected;const captures=new Set();await page.addInitScript(()=>{if(window.name){const save=JSON.parse(window.name);if(save.people)localStorage.setItem('garage-vivant-v1',JSON.stringify(save));}
+      window.bangBounds=[];const draw=CanvasRenderingContext2D.prototype.strokeText;
+      CanvasRenderingContext2D.prototype.strokeText=function(value,x,y,...rest){if(String(value).startsWith('BANG')){const m=this.getTransform(),half=this.measureText(value).width*m.a/2,center=m.a*x+m.c*y+m.e;window.bangBounds.push({left:center-half,right:center+half,width:this.canvas.width});}return draw.call(this,value,x,y,...rest);};
+    });await page.goto(url);
     for(const state of selected){
       const save={...structuredClone(world),performance:state};
       await page.evaluate(save=>window.name=JSON.stringify(save),save);
@@ -40,6 +43,7 @@ try{
       await page.reload();await page.locator(`[data-show-phase="${phase}"]`).waitFor({state:'attached'});await page.waitForTimeout(220);
       assert.equal(await page.locator('.hero-card').count(),phase==='reveal'?1:0,'The card disappears before aiming, firing and the impact');
       assert.equal(await page.locator('.discard-stack,.discard-card').count(),0,'No old cards underneath the reveal');
+      if(phase==='impact'){const bangs=await page.evaluate(()=>window.bangBounds);assert(bangs.length>0);for(const b of bangs)assert(b.left>=0&&b.right<=b.width,'BANG and its combo multiplier fit the canvas, including on a small phone');}
       const layout=await page.evaluate(()=>{
         const box=s=>{const el=document.querySelector(s);if(!el)return null;const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};};
         return {arena:box('.stage-shell'),card:box('.hero-card'),dock:box('.card-foreground'),header:box('header'),field:box('.stage-field'),controls:['#show-status','#show-resources','#show-pause','#show-speed','#skip-show','#sound'].map(box),scroll:document.querySelector('#main').scrollHeight-document.querySelector('#main').clientHeight};

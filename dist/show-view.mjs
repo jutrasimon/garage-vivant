@@ -141,8 +141,13 @@ export function drawShowStage(canvas,show,{reduced=false,selectedFan=null}={},de
         for(let i=0;i<12;i++){const angle=i*Math.PI/6+(e.id%5)*.15,near=(12+a*90)/g.scale,far=near+(12+flash*15)/g.scale;ctx.moveTo(e.x+Math.cos(angle)*near,e.y+Math.sin(angle)*near);ctx.lineTo(e.x+Math.cos(angle)*far,e.y+Math.sin(angle)*far);}ctx.stroke();
       }
       ctx.restore();
-      if(a<.48)pop(ctx,combo?'BANG ! ×'+(combo==='GROOVE + CRESCENDO'?'1,71':combo==='GROOVE'?'1,22':'1,40'):'BANG !',e.x,e.y-(36+(reduced?0:a*16))/g.scale,'#ffe2a1',Math.max(18,28-a*16)/g.scale);
-      if(combo)pop(ctx,combo,e.x,Math.max(239,e.y-e.radius-18),'#f1d487',15);
+      if(a<.48){
+        const label=combo?'BANG ! ×'+(combo==='GROOVE + CRESCENDO'?'1,71':combo==='GROOVE'?'1,22':'1,40'):'BANG !',size=Math.max(16,(g.width<700?20:28)-a*12)/g.scale;
+        ctx.font=`700 ${size}px system-ui`;const half=ctx.measureText(label).width/2,padding=8/g.scale;
+        const x=Math.max((0-g.ox)/g.scale+half+padding,Math.min((g.width-g.ox)/g.scale-half-padding,e.x));
+        const y=Math.max(225+size,e.y-(36+(reduced?0:a*16))/g.scale);
+        pop(ctx,label,x,y,'#ffe2a1',size);
+      }
     }
     if(e.type==='reaction'){if(e.reaction==='euphoria')circle(ctx,e.x,e.y,175*(reduced?1:Math.min(1,a/.7)),'#e6bc7155');for(const n of e.neighbours||[]){const f=show.fans.find(f=>f.id===n.id);if(f&&n.after>n.before)pop(ctx,`+${Math.round(n.after-n.before)}`,f.x-30,f.y-22-(reduced?0:a*10),'#e8d399',14);}}
   }
