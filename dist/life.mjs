@@ -53,7 +53,7 @@ export function acceptance(s,host,target,group=null) {
   return clamp(.53+r.affinity*.004+r.trust*.002-r.tension*.004-target.decadence*.002+(group?.development||0)*.0015,.1,.97);
 }
 export function availability(s,p,time,duration=100,eventId=null,slotId=null) {
-  const conflict=s.bookings.find(b=>['applied','booked','assembling','playing'].includes(b.status)&&b.members.includes(p.id)&&Math.abs(b.time-time)<Math.max(duration,180)&&!(eventId===b.opportunityId&&slotId&&slotId!==b.slotId));
+  const conflict=s.bookings.find(b=>['applied','booked','assembling','playing'].includes(b.status)&&b.members.includes(p.id)&&Math.abs(b.time-time)<Math.max(duration,180)&&!(eventId===b.opportunityId&&(b.status==='applied'||slotId&&slotId!==b.slotId)));
   return conflict?{available:false,reason:`Déjà engagé avec ${s.groups.find(g=>g.id===conflict.groupId)?.name||'un autre band'}`,booking:conflict}:{available:true,reason:p.decadence>=85?'Fiabilité fragile : risque d’absence':'Disponible'};
 }
 function invite(s,cmd) {

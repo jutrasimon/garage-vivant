@@ -116,7 +116,7 @@ function renderShows(){
 }
 function submit(cmd){const r=command(world,cmd);notify(r.message);render();if(view==='groups')renderGroups();if(view==='shows')renderShows();save();return r;}
 function plannedCommand(type){const prep=resolveShowPlan(world,showPlan);if(type==='book'&&!prep.ready)return {ok:false,message:prep.reason};if(!prep.group)return {ok:false,message:prep.reason};showPlan.songId=showPlan.setlist?.[0]??showPlan.songId;for(const id of showPlan.setlist||[]){if(id===null)continue;const r=command(world,{type:'repertoire',groupId:showPlan.groupId,actorId:showPlan.actorId,songId:id});if(!r.ok)return r;}if(showPlan.songId!==null){const r=command(world,{type:'repertoire',groupId:showPlan.groupId,actorId:showPlan.actorId,songId:showPlan.songId});if(!r.ok)return r;}return command(world,{type:type==='book'&&showPlan.editBookingId?'modifyBooking':type,bookingId:showPlan.editBookingId,...showPlan});}
-function launchPreview(replay=false){if(replay&&liveEvent&&!world.performance?.preview)previewReturn=world.livePreviewReturn=structuredClone(world.performance);const r=replay?command(world,{type:'replay'}):plannedCommand('preview');showFeedback=r;notify(r.message);render();save();if(!r.ok){previewReturn=null;delete world.livePreviewReturn;}if(r.ok){showingPerformance=true;showPaused=false;showBudget=0;setPlaybackSpeed(playback,playback.speed||1);changeView('shows');$('#main').scrollTop=0;}}
+function launchPreview(replay=false){if(replay&&liveEvent&&!world.performance?.preview)previewReturn=world.livePreviewReturn=structuredClone(world.performance);const r=replay?command(world,{type:'replay'}):plannedCommand('preview');showFeedback=r;notify(r.message);render();save();if(!r.ok){previewReturn=null;delete world.livePreviewReturn;}if(r.ok){showingPerformance=true;showPaused=false;showBudget=0;showSpeed=1;$('#show-speed').value='1';setPlaybackSpeed(playback,playback.speed||1);changeView('shows');$('#main').scrollTop=0;}}
 $('#version').onclick=e=>{e.stopPropagation();window.open('docs/versions.html#v060','_blank','noopener');};
 $('#brand-home').onclick=e=>{e.preventDefault();changeView('map');};
 $('#new-game').onclick=()=>$('#reset').click();
@@ -163,7 +163,7 @@ document.addEventListener('click',e=>{
  if(el.dataset.setUp!==undefined){const i=Number(el.dataset.setUp);if(i>0)[showPlan.setlist[i-1],showPlan.setlist[i]]=[showPlan.setlist[i],showPlan.setlist[i-1]];renderShows();}
  if(el.id==='skip-show'){skipShow(world);renderShows();save();}
  if(el.id==='skip-evening'){skipShow(world,true);finishLive();renderShows();save();}
- if(el.id==='next-slot'){restorePreview();if(nextSlot(world)){showPaused=false;showBudget=0;lastShowId=null;}else finishLive();renderShows();save();}
+ if(el.id==='next-slot'){restorePreview();if(nextSlot(world)){showPaused=false;showBudget=0;lastShowId=null;showSpeed=1;$('#show-speed').value='1';}else finishLive();renderShows();save();}
  if(el.dataset.historyReplay){if(liveEvent){notify('Termine la soirée avant de revoir un ancien show.');return;}const r=world.showHistory.find(r=>r.id===el.dataset.historyReplay);if(r?.trace){world.performance=JSON.parse(JSON.stringify(r.trace));world.performance.preview=true;world.performance.applied=true;showingPerformance=true;launchPreview(true);}}
  if(el.dataset.avatar){submit({type:'avatar',actorId:el.dataset.avatar});showPlan.groupId=null;showPlan.members=null;if(view==='shows')renderShows();}
  if(el.hasAttribute('data-start-band'))modal(invitationHTML(world));
@@ -184,7 +184,7 @@ document.addEventListener('click',e=>{
  if(el.id==='last-show'){showingPerformance=true;changeView('shows');$('#main').scrollTop=0;}
  if(el.hasAttribute('data-return-preparation')){if(restorePreview()){renderShows();return;}if(liveEvent&&!nextSlot(world))finishLive();showingPerformance=false;changeView('shows');$('#main').scrollTop=0;}
  if(el.hasAttribute('data-close-preparation')){changeView('map');setSpeed(playback.resumeSpeed);}
- if(el.id==='stop-show'){if(restorePreview()){showPaused=true;renderShows();save();return;}const interrupted=world.performance,actorId=world.performance?.actors[0]?.id,r=command(world,{type:'cancelPerformance',actorId});showFeedback=r;showingPerformance=false;showPaused=false;showBudget=0;if(liveEvent){if(!nextSlot(world,interrupted))finishLive();else showingPerformance=true;}else setPlaybackSpeed(playback,0);renderShows();save();}
+ if(el.id==='stop-show'){if(restorePreview()){showPaused=true;renderShows();save();return;}const interrupted=world.performance,actorId=world.performance?.actors[0]?.id,r=command(world,{type:'cancelPerformance',actorId});showFeedback=r;showingPerformance=false;showPaused=false;showBudget=0;if(liveEvent){if(!nextSlot(world,interrupted))finishLive();else{showingPerformance=true;showSpeed=1;$('#show-speed').value='1';}}else setPlaybackSpeed(playback,0);renderShows();save();}
  if(el.hasAttribute('data-season-bilan')){showingPerformance=false;changeView('shows');$('#main').scrollTop=0;}
  if(el.id==='replay-show')launchPreview(true);
  if(el.dataset.advanceBooking){const r=advanceToBooking(world,el.dataset.advanceBooking);showFeedback=r;notify(r.message);showPaused=false;showBudget=0;setPlaybackSpeed(playback,world.performance?.status==='playing'?1:0);render();changeView('shows');if(world.performance?.status==='playing')$('#main').scrollTop=0;save();}
