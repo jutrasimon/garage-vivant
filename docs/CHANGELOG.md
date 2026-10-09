@@ -1,5 +1,16 @@
 # Changements
 
+## 0.5.1 — Préparer, jouer, recommencer
+
+- Dates cliquables; préparation des bands du quartier sans changer de personnage incarné. Organisateur identifié et refus affichés sur place.
+- Compositions accessibles directement et jam libre pour monter sur scène avant d’avoir une chanson terminée. Aucun faux morceau créé dans le catalogue.
+- Préparation en pause, étapes visibles, réservation et annulation pendant les déplacements, arrêt immédiat d’un essai et interruption sans récompense d’un vrai show.
+- Départ trois heures avant la scène et tolérance de vingt minutes : une heure ne suffisait pas pour traverser le quartier. Échecs d’arrivée explicités.
+- Nouvelle saison après les dernières dates; ancien bilan non imposé au chargement; groupes archivés relançables.
+- Curseur de vitesse aimanté sur les valeurs rondes; retour à ×1,0 en cliquant la valeur. Sac Rapin complet dans chaque fiche.
+- Sauvegardes V0.5.0 conservées. Régressions moteur, trajets depuis le fond du quartier et parcours Chromium ordinateur/mobile.
+
+
 ## 0.5.0 · Du garage à la scène
 
 - Navigation dans le header fixe, version cliquable, fiche rapide et vue détaillée.

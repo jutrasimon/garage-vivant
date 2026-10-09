@@ -28,6 +28,8 @@ jobs:
           npm ci --ignore-scripts
           npx playwright install --with-deps chromium
       - name: Vérifier les interactions ordinateur et tactile
+        env:
+          QA_INLINE_IMAGE: ${{ github.event_name == 'pull_request' && '1' || '0' }}
         run: npm run test:browser
       - name: Conserver les captures de validation
         if: always()
