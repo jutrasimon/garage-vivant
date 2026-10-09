@@ -1,7 +1,7 @@
-import {initializeV6Person} from './social.mjs?v=0.6.0';
-import {initializeCalendar,upgradeCalendar,calendarMinute,bookShow,modifyBooking,eventById,rollCalendar,morale,moraleEffect,validateCalendar} from './calendar.mjs?v=0.6.0';
-import {clamp,round,rand,log,feel,decide,relationship,createGroup,formationEligible,PLACES,GENRES,ACTIONS,step,refreshReputation} from './engine.mjs?v=0.6.0';
-import {CARDS,CURSES,INTENTIONS,defaultDeck,availableCards,createPerformance,advancePerformance,validatePerformance} from './stage.mjs?v=0.6.0';
+import {initializeV6Person} from './social.mjs?v=0.6.2';
+import {initializeCalendar,upgradeCalendar,calendarMinute,bookShow,modifyBooking,eventById,rollCalendar,morale,moraleEffect,validateCalendar} from './calendar.mjs?v=0.6.2';
+import {clamp,round,rand,log,feel,decide,relationship,createGroup,formationEligible,PLACES,GENRES,ACTIONS,step,refreshReputation} from './engine.mjs?v=0.6.2';
+import {CARDS,CURSES,INTENTIONS,defaultDeck,availableCards,createPerformance,advancePerformance,validatePerformance} from './stage.mjs?v=0.6.2';
 
 export function initializePerson(p) {
   initializeV6Person(p);const index=Number(p.id.slice(1));
@@ -242,7 +242,7 @@ export function playTicks(s,ticks) {
  if(s.performance?.status!=='playing')return;advancePerformance(s.performance,ticks);if(s.performance.status!=='finished')return;
  const old=s.performance,b=s.bookings.find(b=>b.performanceId===old.id),g=s.groups.find(g=>g.id===old.groupId);
  old.songResults||=[];old.songResults.push({title:old.song.title,id:old.song.id,...old.result});
- if(!old.preview&&b&&old.songIndex+1<(b.setlist||[]).length){const nextIndex=old.songIndex+1,song=performanceSong(s,g,b.setlist[nextIndex]),people=old.actors.map(a=>({...a,needs:{energy:a.energy},skills:{[a.instrument]:a.skill}}));const next=createPerformance({id:old.id,seed:(old.seed+nextIndex*7919)>>>0,people,group:g,song,opportunity:old.sourceOpportunity,intention:old.intention});Object.assign(next,{fans:old.fans.map(f=>({...f})),initialFans:old.fans.map(f=>({...f})),energyLossByActor:Object.fromEntries(old.actors.map(a=>[a.id,(old.energyLossByActor?.[a.id]||0)+a.energyLoss])),setlist:b.setlist,songIndex:nextIndex,songResults:old.songResults,role:old.role});s.performance=next;return;}
+ if(!old.preview&&b&&old.songIndex+1<(b.setlist||[]).length){const nextIndex=old.songIndex+1,song=performanceSong(s,g,b.setlist[nextIndex]),people=old.actors.map(a=>({...a,needs:{energy:a.energy},skills:{[a.instrument]:a.skill}}));const next=createPerformance({id:old.id,seed:(old.seed+nextIndex*7919)>>>0,people,group:g,song,opportunity:old.sourceOpportunity,intention:old.intention});Object.assign(next,{fans:old.fans.map(f=>({...f})),initialFans:old.fans.map(f=>({...f})),energyLossByActor:Object.fromEntries(old.actors.map(a=>[a.id,(old.energyLossByActor?.[a.id]||0)+a.energyLoss])),setlist:b.setlist,songIndex:nextIndex,songResults:old.songResults,role:old.role,presentationStarted:true});s.performance=next;return;}
  if(old.songResults.length>1){const xs=old.songResults;old.result={...old.result,interpretation:round(xs.reduce((n,r)=>n+r.interpretation,0)/xs.length),quality:round(xs.reduce((n,r)=>n+r.quality,0)/xs.length),errors:xs.reduce((n,r)=>n+r.errors,0),combos:xs.reduce((n,r)=>n+r.combos,0)};}
  completePerformance(s);
 }

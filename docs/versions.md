@@ -1,5 +1,14 @@
 # Notes de version
 
+## V0.6.2 — Les cartes prennent la scène {#v062}
+
+- Scène aux proportions correctes, sans panneau latéral qui écrase le canvas.
+- Decks individuels visibles et consultables; cartes pigées depuis leur pile, jouées au premier plan puis conservées dans une défausse consultable.
+- Chansons de 30 secondes à ×1, avec départ explicite et cinq phrases. Les règles et tirages restent identiques à toutes les vitesses et au skip.
+- Zones de groove, charges de crescendo/soutien, bonus de combo, gains locaux et réactions du public visibles. Sons distincts selon l’instrument et l’effet.
+- Inspection des fans, musiciens, decks et cartes : pause temporaire et reprise dans l’état précédent, y compris après plusieurs inspections.
+- Sauvegardes et historiques conservés; bilans attribués au band.
+
 ## V0.6.1 — Une interface qui respire {#v061}
 
 - Recherche documentaire avec champ large, rubriques, extraits lisibles et navigation au clavier.
@@ -28,6 +37,6 @@ Shows automatiques à cartes, foule physique, déchéance, projets de compositio
 <script setup>
 import {onMounted,onUnmounted} from 'vue'
 let observer
-onMounted(()=>{const ids=['v061','v060','v051','v050'];let saved=[];try{const value=JSON.parse(localStorage.getItem('garage-vivant-read-notes')||'[]');if(Array.isArray(value))saved=value;}catch{}const read=new Set(saved);const target=ids.find(id=>!read.has(id));if(target&&!location.hash)document.getElementById(target)?.scrollIntoView();observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){const id=entry.target.id;setTimeout(()=>{if(document.visibilityState==='visible'&&entry.target.getBoundingClientRect().top<innerHeight&&entry.target.getBoundingClientRect().bottom>0){read.add(id);try{localStorage.setItem('garage-vivant-read-notes',JSON.stringify([...read]));}catch{}}},1500);}}, {threshold:1});for(const id of ids){const node=document.getElementById(id);if(node)observer.observe(node);}})
+onMounted(()=>{const ids=['v062','v061','v060','v051','v050'];let saved=[];try{const value=JSON.parse(localStorage.getItem('garage-vivant-read-notes')||'[]');if(Array.isArray(value))saved=value;}catch{}const read=new Set(saved);const target=ids.find(id=>!read.has(id));if(target&&!location.hash)document.getElementById(target)?.scrollIntoView();observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){const id=entry.target.id;setTimeout(()=>{if(document.visibilityState==='visible'&&entry.target.getBoundingClientRect().top<innerHeight&&entry.target.getBoundingClientRect().bottom>0){read.add(id);try{localStorage.setItem('garage-vivant-read-notes',JSON.stringify([...read]));}catch{}}},1500);}}, {threshold:1});for(const id of ids){const node=document.getElementById(id);if(node)observer.observe(node);}})
 onUnmounted(()=>observer?.disconnect())
 </script>

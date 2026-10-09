@@ -1,5 +1,5 @@
-import {initializeV6Person,upgradeV6,bagRows,coolRelation,markGrief,repairGrief,socialMinute,validateV6} from './social.mjs?v=0.6.0';
-import {initializePerson,initializeGroup,initializeLife,upgradeLife,learningGain,changeDecadence,archiveSong,groupRehearsal,travelEngagement,lifeMinute,refreshOpportunity,validateLife} from './life.mjs?v=0.6.0';
+import {initializeV6Person,upgradeV6,bagRows,coolRelation,markGrief,repairGrief,socialMinute,validateV6} from './social.mjs?v=0.6.2';
+import {initializePerson,initializeGroup,initializeLife,upgradeLife,learningGain,changeDecadence,archiveSong,groupRehearsal,travelEngagement,lifeMinute,refreshOpportunity,validateLife} from './life.mjs?v=0.6.2';
 export const VERSION='0.6.0';
 export const NEEDS={energy:'Énergie',social:'Lien social',fun:'Plaisir',expression:'Expression',comfort:'Confort'};
 export const PERSONALITY={creative:'Créativité',outgoing:'Extraversion',kind:'Empathie',discipline:'Discipline',stable:'Stabilité',ambition:'Ambition'};

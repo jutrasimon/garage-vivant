@@ -1,6 +1,6 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.6.1
+# Garage vivant · v0.6.2
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs priorités ou intervenir.
 
@@ -55,3 +55,11 @@ Pour jouer localement après le build documentaire : `python3 -m http.server 800
 Les sept suites couvrent migrations réelles V5.1, sauvegardes actives, compositions, relations, engagements, sélection reproductible, shows, skip/replay sans doubles gains et 100 jours de calendrier. Chromium vérifie les parcours ordinateur et tactile : fiches modulaires, sac, groupes, setlists, réservation réelle, pause du quartier, skip, historique, recherche, notes et scroll. Ce viewport tactile ne remplace pas un test sur iPhone réel.
 
 La CI construit jeu et documentation ensemble et publie `dist/` depuis `main` après validation. Les PR vérifient sans publier. Les captures sont disponibles dans l’artefact `interface-v6`. Voir [le plan V6](docs/PLAN_V6.md), les [GDD par système](docs/gdd/) et [l’historique](docs/CHANGELOG.md). Le test de compréhension et l’équilibrage des probabilités restent à faire avec des joueurs.
+
+## Mise en scène V0.6.2
+
+La scène conserve ses proportions et occupe une seule arène. Le show attend « Lancer le show ». Chaque musicien pige cinq cartes distinctes sans remise; son deck est visible et consultable. Les cartes sortent de leur pile, chevauchent la scène et rejoignent les cartes récemment jouées. Cliquer une carte, un musicien ou un fan suspend la lecture; fermer par X, Échap ou clic extérieur rétablit son état précédent. Les cartes à venir ne sont pas révélées par la consultation du deck.
+
+Chaque chanson se regarde en 30 secondes à ×1. `show-playback.mjs` transforme le temps de présentation en pas musicaux sans modifier les règles ou les résultats. Les anciennes prestations de 2160 pas et les nouvelles de 3600 pas gardent leurs tirages et conséquences. Les accélérations, le skip et le replay restent déterministes. `show-view.mjs` et `show.css` rendent les zones, charges, impacts, gains locaux, réactions et mini-cubes.
+
+`tests/show.test.mjs` vérifie la durée, les événements/résultats à plusieurs vitesses, la reprise et le repérage uniforme du canvas. Les tests navigateur couvrent le départ explicite, les decks, les inspections imbriquées, les proportions et le petit écran.
