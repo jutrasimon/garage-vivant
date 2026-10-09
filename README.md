@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.6.0
+# Garage vivant · v0.6.1
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs priorités ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v060) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v061) · [Contribuer](CONTRIBUTING.md)
 
 ## Prendre la scène
 
@@ -24,7 +24,7 @@ Six actions : récupérer, socialiser, pratiquer, jammer, composer et former un 
 
 Affinité, confiance et tension décrivent un point de vue : Alex → Camille peut différer de Camille → Alex. Un grief permet au conflit de persister après la colère; les amis refroidissent plus vite, l’écoute empathique aide à réparer. Les croisements de trajets peuvent créer des échanges et des moments ensemble. La chimie musicale se découvre par des expériences communes, plutôt que par un chiffre connu d’avance.
 
-La fiche détaillée utilise l’espace central. Ses modules peuvent être réordonnés, élargis ou masqués; les modules masqués restent accessibles en bas. Les souvenirs actifs et terminés sont datés. Le **sac Rapin** distingue les parts de base éditables des chances actuelles, modulées par besoins, émotions et priorités. Les verrous protègent les autres parts pendant une redistribution.
+La fiche détaillée utilise l’espace central. Le bouton **Organiser** expose les commandes de disposition. Ses modules peuvent être réordonnés, élargis ou masqués; les modules masqués restent accessibles en bas. Les souvenirs actifs et terminés sont datés. Le **sac Rapin** distingue les parts de base éditables des chances actuelles, modulées par besoins, émotions et priorités. Les verrous protègent les autres parts pendant une redistribution.
 
 Navigation fixe, slider de vitesse 0–10 aimanté aux valeurs rondes, filtres du journal et positions de lecture conservées. **Ctrl+Espace** ou Recherche ouvre les règles par système. Le numéro de version ouvre les nouveautés dans un autre onglet, à la dernière note non lue.
 

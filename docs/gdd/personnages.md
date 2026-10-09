@@ -6,6 +6,6 @@ Les besoins énergie, lien social, plaisir, expression et confort vont de 0 à 1
 
 Joie, tristesse, colère, peur, affection et enthousiasme ont trois intensités. Plusieurs peuvent coexister; l’émotion dominante colore l’affichage et la composition. L’empathie tempère la détresse. L’âge reste une identité, sans vieillissement automatique.
 
-La fiche rapide accompagne le quartier. Vue détaillée donne deux colonnes sur grand écran. Chaque module peut monter, descendre, prendre toute la largeur ou être masqué. Les modules masqués demeurent consultables en bas. Disposition locale commune aux personnages; bouton de remise à zéro. Les mises à jour conservent le focus et le scroll.
+La fiche rapide accompagne le quartier. Vue détaillée donne deux colonnes sur grand écran. Le bouton **Organiser** affiche les commandes de disposition; **Terminer** les replie. Chaque module peut monter, descendre, prendre toute la largeur ou être masqué. Les modules masqués demeurent consultables en bas. Disposition locale commune aux personnages; bouton de remise à zéro. Les mises à jour conservent le focus et le scroll.
 
 Liens : [actions](./actions.md), [relations](./relations.md), [musique](./musique.md).

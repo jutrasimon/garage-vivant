@@ -2,7 +2,7 @@
 
 [Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-**Version 0.6.0.** Tes voisins font leur vie. Tu peux incarner un musicien, orienter ses priorités, choisir son sac Rapin et préparer un band.
+**Version 0.6.1.** Tes voisins font leur vie. Tu peux incarner un musicien, orienter ses priorités, choisir son sac Rapin et préparer un band.
 
 1. Dans Groupes, choisis un band ou invite un voisin pour en créer un.
 2. Dans Shows, choisis une des quatre prochaines dates, un créneau et ta setlist.
