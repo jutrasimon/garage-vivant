@@ -1,9 +1,9 @@
-import {drawShowStage} from './show-view.mjs?v=0.6.3';
-export {bandsHTML,rapinHTML,showSetupHTML,showStatusHTML,seasonHTML} from './v6-view.mjs?v=0.6.3';
-import {SKILLS,ACTIONS,EMOTIONS,stamp,round,clamp,groupsOf,compositionProject,scores} from './engine.mjs?v=0.6.3';
-import {CARDS,CURSES,INTENTIONS,activeDeck,availableCards,SHOW_TICKS,PHRASE_TICKS} from './stage.mjs?v=0.6.3';
-import {bandStage,nextCurse,eligibleSongs,availability,isArchivedSong,seasonSummary,acceptance} from './life.mjs?v=0.6.3';
-import {resolveShowPlan} from './show-planning.mjs?v=0.6.3';
+import {drawShowStage} from './show-view.mjs?v=0.6.4';
+export {bandsHTML,rapinHTML,showSetupHTML,showStatusHTML,seasonHTML} from './v6-view.mjs?v=0.6.4';
+import {SKILLS,ACTIONS,EMOTIONS,stamp,round,clamp,groupsOf,compositionProject,scores} from './engine.mjs?v=0.6.4';
+import {CARDS,CURSES,INTENTIONS,activeDeck,availableCards,SHOW_TICKS,PHRASE_TICKS} from './stage.mjs?v=0.6.4';
+import {bandStage,nextCurse,eligibleSongs,availability,isArchivedSong,seasonSummary,acceptance} from './life.mjs?v=0.6.4';
+import {resolveShowPlan} from './show-planning.mjs?v=0.6.4';
 export const escapeHTML = x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const esc=escapeHTML;
 const person=(s,id)=>s.people.find(p=>p.id===id);
@@ -77,7 +77,19 @@ let audioContext=null,lastSound=0;
 export async function enableAudio() {try {audioContext ||= new (globalThis.AudioContext||globalThis.webkitAudioContext)();await audioContext.resume();return true;}catch{return false;}}
 export function playSound(event,volume=.18) {
   if(!audioContext||audioContext.state!=='running')return;
-  const now=audioContext.currentTime;if(now-lastSound<.065)return;lastSound=now;
+  const now=audioContext.currentTime;
+  if(!['impact','shot'].includes(event.type)&&now-lastSound<.065)return;lastSound=now;
+  if(['impact','shot'].includes(event.type)){
+    const shot=event.type==='shot',osc=audioContext.createOscillator(),gain=audioContext.createGain(),length=shot?.09:.24;
+    osc.type=shot?'triangle':'sine';osc.frequency.setValueAtTime(shot?760:180,now);osc.frequency.exponentialRampToValueAtTime(shot?180:48,now+length);
+    gain.gain.setValueAtTime(volume*(shot?.3:1.1),now);gain.gain.exponentialRampToValueAtTime(.001,now+length);osc.connect(gain);gain.connect(audioContext.destination);osc.start(now);osc.stop(now+length+.01);
+    if(!shot){
+      const buffer=audioContext.createBuffer(1,Math.floor(audioContext.sampleRate*.1),audioContext.sampleRate),data=buffer.getChannelData(0);
+      for(let i=0;i<data.length;i++)data[i]=Math.sin(i*i*1.7)*(1-i/data.length);
+      const burst=audioContext.createBufferSource(),envelope=audioContext.createGain(),filter=audioContext.createBiquadFilter();burst.buffer=buffer;filter.type='lowpass';filter.frequency.value=1800;
+      envelope.gain.setValueAtTime(volume*.55,now);envelope.gain.exponentialRampToValueAtTime(.001,now+.1);burst.connect(filter);filter.connect(envelope);envelope.connect(audioContext.destination);burst.start(now);
+    }
+  }
   const c=CARDS[event.cardId],combo=event.combo?.some(x=>x.includes('déclenché'));
   const notes=combo?[262,330,392]:event.type==='reaction'?[660,880]:[({bass:110,drums:90,percussion:170,guitar:220,keys:330,voice:440,sax:294,trumpet:349})[event.instrument]||220];
   notes.forEach((base,i)=>{

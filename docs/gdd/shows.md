@@ -14,7 +14,7 @@ Les bands évaluent les dates toutes les trois heures au plus, selon ambition, d
 
 ## Direct et cartes
 
-Le quartier se met en pause quand le spectacle commence. La vue s’ouvre au début à ×1 et attend « Lancer le show ». Chaque musicien possède 8–10 cartes; cinq sont pigées sans remise. Rythme, impact, émotion et soutien produisent des effets réels. La carte mise en avant explique son effet, les fans touchés et le gain de jauge.
+Le quartier se met en pause quand le spectacle commence. La vue s’ouvre au début à ×1 et attend « Lancer le show ». Chaque musicien possède 8–10 cartes; cinq sont pigées sans remise. Rythme, impact, émotion et soutien produisent des effets réels. La carte explique son effet pendant une brève apparition; elle disparaît avant que le musicien vise et tire dans la foule. Les fans touchés et les gains sont visibles au contact et consultables dans l’historique.
 
 Une chanson dure 30 secondes à ×1; ×0,5/1/2/4 changent uniquement la lecture. Pause, inspection et onglet navigateur masqué suspendent le show. Sauter résout le même tirage; Revoir n’ajoute aucune récompense. Le quartier reprend au même instant simulé, sans rattrapage.
 
@@ -28,7 +28,7 @@ Liens : [musique](./musique.md), [relations](./relations.md), [sauvegardes](./te
 
 ## Voir les enchaînements
 
-Les piles sous les musiciens représentent leurs decks. La carte active se déplace de cette origine vers le premier plan. Les cartes précédentes restent consultables. Le deck contient 8 à 10 cartes et la main de cinq cartes est déterminée au début par un mélange reproductible sans remise; seules les cartes déjà jouées sont révélées dans l’inspection.
+Les piles sous les musiciens représentent leurs decks. La carte active apparaît brièvement au même emplacement. Elle disparaît avant la visée; la trajectoire part du musicien vers sa cible dans la foule. Les cartes précédentes restent consultables dans « Cartes jouées », sans pile par-dessus la scène. Le deck contient 8 à 10 cartes et la main de cinq cartes est déterminée au début par un mélange reproductible sans remise; seules les cartes déjà jouées sont révélées dans l’inspection.
 
 Cinq phrases rythment chaque chanson. Pour un quartet, vingt cartes disposent d’environ 26 secondes, plus le départ et les dernières réactions. Le temps de présentation est indépendant du temps musical du moteur : les zones, déplacements et résultats conservent leurs règles. Les animations n’utilisent aucun tirage aléatoire du monde.
 
@@ -40,6 +40,8 @@ Cinq phrases rythment chaque chanson. Pour un quartet, vingt cartes disposent d�
 
 Les zones sont représentées par des cercles de rayon exact, même si des lumières donnent une profondeur à la scène. Les cubes restent carrés. Cliquer une carte donne les cibles et gains enregistrés, pas une estimation. Cliquer un fan, un musicien ou son deck met la lecture en pause; X, Échap ou clic extérieur rétablit l’état précédent, y compris une pause manuelle. Les effets réduits conservent les cibles, jauges, ressources et résultats.
 
-### Présentation intégrée (V0.6.3)
+### Présentation intégrée (V0.6.4)
 
-Le show remplit l’espace sous la navigation. Le nom du groupe et la chanson se trouvent dans l’arène, avec la progression en haut et les ressources et commandes au bas. Le transport du quartier se retire pendant cette vue. La carte garde une taille et un emplacement fixes; sa trajectoire rejoint la cible annoncée dans la foule. Le canvas utilise une transformation uniforme, avec une place réservée à la carte, et le clic utilise la même transformation. Aucun résultat de simulation ne dépend de cette mise en page.
+Le show remplit l’espace sous la navigation. Le nom du groupe et la chanson se trouvent dans l’arène, avec la progression en haut et les ressources et commandes au bas. Le transport du quartier se retire pendant cette vue. La carte garde une taille et un emplacement fixes; elle disparaît avant la trajectoire du musicien vers la cible annoncée dans la foule. Le canvas utilise une transformation uniforme, avec une place réservée à la carte, et le clic utilise la même transformation. Aucun résultat de simulation ne dépend de cette mise en page.
+
+Le bouton **Son : ON/OFF** est visible à côté de la pause, sans ouvrir Options. Le tir a une attaque courte; le contact ajoute un son grave et un claquement. Recul, projectile, flash, onde et « BANG ! » accompagnent le contact sans modifier les règles. « Effets réduits » garde les indications et gains, en retirant secousses, recul et éclats.

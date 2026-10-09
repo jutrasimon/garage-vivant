@@ -1,17 +1,17 @@
-import {createShowClock,advanceShowClock,songSeconds,stagePoint,actorPosition,songKey,stageGeometry} from './show-playback.mjs?v=0.6.3';
-import {showOverlayHTML,showResourcesHTML,deckInspectionHTML,cardInspectionHTML} from './show-view.mjs?v=0.6.3';
-import {setupDocSearch} from './doc-search.mjs?v=0.6.3';
-import {calendarHTML} from './v6-view.mjs?v=0.6.3';
-import {pendingBooking,eventById} from './calendar.mjs?v=0.6.3';
-import {editBag} from './social.mjs?v=0.6.3';
-import {profileMarkup,changeModule,resetLayout} from './profile-layout.mjs?v=0.6.3';
-import {VERSION,NEEDS,PERSONALITY,SKILLS,GENRES,TRAITS,EMOTIONS,PRIORITIES,ACTIONS,PLACES,DEFAULTS,clamp,round,relationship,chemistry,mood,stamp,addPerson,createWorld,scores,step,removePerson,scenario,restore,log,decide,dominantEmotion,isMember,groupsOf,createGroup,liveSessions,formationPlan,refreshReputation,locationReason,feel,compositionProject,journalEntries,chemistryKnowledge} from './engine.mjs?v=0.6.3';
-import {command,bandStage,nextCurse,eligibleSongs,isArchivedSong,acceptance,advanceToBooking,playTicks,seasonSummary,initializeLife,newSeason,nextSlot,skipShow} from './life.mjs?v=0.6.3';
-import {CARDS,CURSES,INTENTIONS,SHOW_TICKS,createPerformance} from './stage.mjs?v=0.6.3';
-import {resolveShowPlan} from './show-planning.mjs?v=0.6.3';
-import {reconcile,createViewPositions,withReadingAnchor} from './ui-state.mjs?v=0.6.3';
-import {quickHTML,skillHTML,decadenceHTML,cardsHTML,deckEditorHTML,bandsHTML,invitationHTML,showSetupHTML,showStatusHTML,seasonHTML,rapinHTML,decorateCube,drawStage,enableAudio,playSound,patchesHTML} from './v5-view.mjs?v=0.6.3';
-import {createPlayback,snapSpeed,setPlaybackSpeed,advancePlayback,updatePositions} from './runtime.mjs?v=0.6.3';
+import {createShowClock,advanceShowClock,songSeconds,stagePoint,actorPosition,songKey,stageGeometry,showBeat} from './show-playback.mjs?v=0.6.4';
+import {showOverlayHTML,showResourcesHTML,deckInspectionHTML,cardInspectionHTML} from './show-view.mjs?v=0.6.4';
+import {setupDocSearch} from './doc-search.mjs?v=0.6.4';
+import {calendarHTML} from './v6-view.mjs?v=0.6.4';
+import {pendingBooking,eventById} from './calendar.mjs?v=0.6.4';
+import {editBag} from './social.mjs?v=0.6.4';
+import {profileMarkup,changeModule,resetLayout} from './profile-layout.mjs?v=0.6.4';
+import {VERSION,NEEDS,PERSONALITY,SKILLS,GENRES,TRAITS,EMOTIONS,PRIORITIES,ACTIONS,PLACES,DEFAULTS,clamp,round,relationship,chemistry,mood,stamp,addPerson,createWorld,scores,step,removePerson,scenario,restore,log,decide,dominantEmotion,isMember,groupsOf,createGroup,liveSessions,formationPlan,refreshReputation,locationReason,feel,compositionProject,journalEntries,chemistryKnowledge} from './engine.mjs?v=0.6.4';
+import {command,bandStage,nextCurse,eligibleSongs,isArchivedSong,acceptance,advanceToBooking,playTicks,seasonSummary,initializeLife,newSeason,nextSlot,skipShow} from './life.mjs?v=0.6.4';
+import {CARDS,CURSES,INTENTIONS,SHOW_TICKS,createPerformance} from './stage.mjs?v=0.6.4';
+import {resolveShowPlan} from './show-planning.mjs?v=0.6.4';
+import {reconcile,createViewPositions,withReadingAnchor} from './ui-state.mjs?v=0.6.4';
+import {quickHTML,skillHTML,decadenceHTML,cardsHTML,deckEditorHTML,bandsHTML,invitationHTML,showSetupHTML,showStatusHTML,seasonHTML,rapinHTML,decorateCube,drawStage,enableAudio,playSound,patchesHTML} from './v5-view.mjs?v=0.6.4';
+import {createPlayback,snapSpeed,setPlaybackSpeed,advancePlayback,updatePositions} from './runtime.mjs?v=0.6.4';
 const playback=createPlayback();
 const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)],esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let world,saveProblem=false,loadFailed=false;try{const saved=localStorage.getItem('garage-vivant-v1');if(saved){const input=JSON.parse(saved);if(input.version!==VERSION){try{if(!localStorage.getItem('garage-vivant-before-v6'))localStorage.setItem('garage-vivant-before-v6',saved);}catch{}}world=restore(input);}else world=createWorld();}catch{world=createWorld();saveProblem=true;loadFailed=true;}
@@ -20,7 +20,7 @@ const viewPositions=createViewPositions(),personPositions=createViewPositions();
 const showPlan={groupId:null,songId:undefined,actorId:null,opportunityId:null,intention:'tight',members:null};
 let showClock=null,stagePresentationKey=null,resumeInspectedShow=null;
 let selectedGroup=null,bandQuery='',bandArchives=false,savedWorldSpeed=playback.speed,liveEvent=!!world.showEventId;let showFeedback=null,speedDragging=false,snappingRange=null;
-let showingPerformance=world.performance?.status==='playing'||!!world.showEventId;let showSpeed=1,showPaused=!!world.performance?.presentationPaused,showBudget=0,showLast=null,soundEnabled=false,reducedEffects=matchMedia('(prefers-reduced-motion: reduce)').matches,selectedFan=null,lastSoundEvent=0,lastShowId=null,previewReturn=world.livePreviewReturn||null,showArchives=false,journalPinnedIds=null,journalPending=0,journalTypes=new Set(['music','relations','groups','shows','life']),hideRest=true,catalogueLimit=50,profileSongLimit=30;
+let showingPerformance=world.performance?.status==='playing'||!!world.showEventId;let showSpeed=1,showPaused=!!world.performance?.presentationPaused,showBudget=0,showLast=null,soundEnabled=false,reducedEffects=matchMedia('(prefers-reduced-motion: reduce)').matches,selectedFan=null,lastSoundEvent=0,lastShotEvent=null,lastShowId=null,previewReturn=world.livePreviewReturn||null,showArchives=false,journalPinnedIds=null,journalPending=0,journalTypes=new Set(['music','relations','groups','shows','life']),hideRest=true,catalogueLimit=50,profileSongLimit=30;
 try{const settings=JSON.parse(localStorage.getItem('garage-vivant-ui')||'null');if(settings){showArchives=!!settings.showArchives;hideRest=settings.hideRest!==false;reducedEffects=settings.reducedEffects??reducedEffects;if(Array.isArray(settings.journalTypes))journalTypes=new Set(settings.journalTypes);}}catch{}
 function saveUI(){try{localStorage.setItem('garage-vivant-ui',JSON.stringify({showArchives,hideRest,reducedEffects,journalTypes:[...journalTypes]}));}catch{}}
 const params={drain:['Usure des besoins','Vitesse à laquelle la fatigue et les autres besoins augmentent.'],music:['Attrait de la musique','Poids de la pratique, de la composition et des jams dans les décisions.'],social:['Attrait des rencontres','Poids des activités sociales dans les décisions.'],conflict:['Risque d’accrochage','Amplifie l’effet de l’humeur, de l’impulsivité et des tensions sur les disputes.'],learning:['Apprentissage','Vitesse de progression des compétences musicales.'],randomness:['Spontanéité','Variation ajoutée au score ; 0 donne toujours le choix le mieux coté.'],relations:['Évolution des liens','Amplitude des changements d’affinité, de confiance, de tension et d’amour.'],emotionDecay:['Retour au calme','Vitesse à laquelle les émotions s’atténuent naturellement ; 0 les maintient jusqu’à une nouvelle expérience.'],compositionPace:['Progression des compositions','Vitesse du travail sur les projets. ×1 demande environ quatre à six séances ; ×0 suspend la progression.'],romance:['Avances amoureuses','Fréquence des avances spontanées entre adultes attirés. 0 désactive les avances autonomes.']};
@@ -116,17 +116,17 @@ function renderShows(){
  const show=world.performance;$('.workspace').classList.toggle('show-layout',!!show&&showingPerformance&&view==='shows');document.body.classList.toggle('show-mode',!!show&&showingPerformance&&view==='shows');$('.stage-shell').classList.toggle('show-finished',show?.status==='finished');if(show?.status==='playing'||liveEvent)showingPerformance=true;const feedback=$('#show-feedback');if(feedback){feedback.hidden=!showFeedback;feedback.innerHTML=showFeedback?`<b>${esc(showFeedback.message)}</b>${showFeedback.refused?.length?`<ul>${showFeedback.refused.map(r=>`<li>${esc(world.people.find(p=>p.id===r.id)?.name)} : ${esc(r.reason)}</li>`).join('')}</ul>`:''}`:'';}$('#performance-wrap').hidden=!show||!showingPerformance;$('#show-setup').hidden=!!show&&showingPerformance;$('#season-report').hidden=!!show&&showingPerformance;$('.topline').hidden=!!show&&showingPerformance;
  if(!show)return;$('#stop-show').hidden=show.status!=='playing';$('#skip-show').hidden=show.status!=='playing';$('#skip-evening').hidden=show.preview||show.status!=='playing';$('#stop-show').textContent=show.preview?'Arrêter l’essai':'Interrompre le show';
  replacePreserving('#show-status',showStatusHTML(world));$('#show-pause').textContent=showReady(show)?'▶ Lancer le show':showPaused?'▶ Reprendre':'Ⅱ Pause';$('#show-pause').disabled=show.status!=='playing';
- replacePreserving('#show-feed',show.events.filter(e=>['impact','reaction','curse','final'].includes(e.type)).slice(-5).map(e=>`<p data-stable="show-event-${e.id}">${esc(e.text)}</p>`).join('')||'<p>Le band se prépare. Les cartes arrivent dans leur ordre musical.</p>');
+ replacePreserving('#show-feed',show.events.filter(e=>e.type==='card').map(e=>`<button class="show-history-card" data-inspect-card="${e.id}">${esc(show.actors.find(a=>a.id===e.actorId)?.name)} · ${esc(CARDS[e.cardId].name)}</button>`).join('')||'<p>Le band se prépare. Les cartes arrivent dans leur ordre musical.</p>');
  replacePreserving('#show-explanation',show.events.filter(e=>e.type!=='card').map(e=>`<p data-stable="show-cause-${e.id}"><b>${songSeconds(show,e.tick).toFixed(1)} s</b> · ${esc(e.text)}${e.type==='impact'?` · ${e.touched} touchés, +${e.gain} points de jauges`:''}</p>`).join(''));
- document.body.classList.toggle('reduce-effects',reducedEffects);$('#sound').checked=soundEnabled;$('#reduced-effects').checked=reducedEffects;
+ document.body.classList.toggle('reduce-effects',reducedEffects);updateSoundButton();$('#reduced-effects').checked=reducedEffects;
  if(selectedFan){const fan=show.fans.find(f=>f.id===selectedFan);if(fan)$('#fan-detail').textContent=`${fan.name} · aime ${fan.style} · sensible à ${SKILLS[fan.instrument]} · ${round(fan.meter)}/100 · ${EMOTIONS[fan.emotion].label} · ${fan.reacted?'conquis':'encore à toucher'} · réaction : ${({euphoria:'euphorie',emotion:'émotion',trance:'transe'})[fan.reaction]}`;}
  renderLivePresentation(show);
  drawStage($('#stage'),show,{reduced:reducedEffects,selectedFan});
 }
 function submit(cmd){const r=command(world,cmd);notify(r.message);render();if(view==='groups')renderGroups();if(view==='shows')renderShows();save();return r;}
 function plannedCommand(type){const prep=resolveShowPlan(world,showPlan);if(type==='book'&&!prep.ready)return {ok:false,message:prep.reason};if(!prep.group)return {ok:false,message:prep.reason};showPlan.songId=showPlan.setlist?.[0]??showPlan.songId;for(const id of showPlan.setlist||[]){if(id===null)continue;const r=command(world,{type:'repertoire',groupId:showPlan.groupId,actorId:showPlan.actorId,songId:id});if(!r.ok)return r;}if(showPlan.songId!==null){const r=command(world,{type:'repertoire',groupId:showPlan.groupId,actorId:showPlan.actorId,songId:showPlan.songId});if(!r.ok)return r;}return command(world,{type:type==='book'&&showPlan.editBookingId?'modifyBooking':type,bookingId:showPlan.editBookingId,...showPlan});}
-function launchPreview(replay=false){if(replay&&liveEvent&&!world.performance?.preview)previewReturn=world.livePreviewReturn=structuredClone(world.performance);const r=replay?command(world,{type:'replay'}):plannedCommand('preview');showFeedback=r;notify(r.message);render();save();if(!r.ok){previewReturn=null;delete world.livePreviewReturn;}if(r.ok){showingPerformance=true;showPaused=true;showClock=null;stagePresentationKey=null;showBudget=0;showSpeed=1;$('#show-speed').value='1';setPlaybackSpeed(playback,playback.speed||1);changeView('shows');$('#main').scrollTop=0;}}
-$('#version').onclick=e=>{e.stopPropagation();window.open('docs/versions.html#v062','_blank','noopener');};
+function launchPreview(replay=false){if(replay&&liveEvent&&!world.performance?.preview)previewReturn=world.livePreviewReturn=structuredClone(world.performance);const r=replay?command(world,{type:'replay'}):plannedCommand('preview');showFeedback=r;if(!r.ok)notify(r.message);else{clearTimeout(notify.timer);$('#toast').style.display='none';}render();save();if(!r.ok){previewReturn=null;delete world.livePreviewReturn;}if(r.ok){showingPerformance=true;showPaused=true;showClock=null;stagePresentationKey=null;showBudget=0;showSpeed=1;$('#show-speed').value='1';setPlaybackSpeed(playback,playback.speed||1);changeView('shows');$('#main').scrollTop=0;}}
+$('#version').onclick=e=>{e.stopPropagation();window.open('docs/versions.html#v064','_blank','noopener');};
 $('#brand-home').onclick=e=>{e.preventDefault();changeView('map');};
 $('#new-game').onclick=()=>$('#reset').click();
 $('#new-events').onclick=()=>{journalPinnedIds=null;$('#main').scrollTop=0;renderJournal();};
@@ -137,7 +137,8 @@ $('#show-archives').onchange=e=>{showArchives=e.target.checked;catalogueLimit=50
 $('#archive-threshold').onchange=e=>{world.archiveThreshold=clamp(Number(e.target.value));e.target.value=world.archiveThreshold;save();notify('Seuil appliqué aux prochaines chansons. Les anciennes restent conservées.');};
 $('#show-speed').onchange=e=>showSpeed=Number(e.target.value);
 $('#show-pause').onclick=()=>{if(showReady(world.performance)){world.performance.presentationStarted=true;showPaused=false;save();}else showPaused=!showPaused;showBudget=0;renderShows();save();};
-$('#sound').onchange=async e=>{soundEnabled=e.target.checked&&await enableAudio();e.target.checked=soundEnabled;};
+function updateSoundButton(){$('#sound-state').textContent=soundEnabled?'Son : ON':'Son : OFF';$('#sound').setAttribute('aria-pressed',String(soundEnabled));$('#sound').setAttribute('aria-label',soundEnabled?'Couper le son':'Activer le son');}
+$('#sound').onclick=async()=>{soundEnabled=!soundEnabled&&await enableAudio();updateSoundButton();if(soundEnabled)playSound({type:'card',instrument:'keys'});};
 $('#reduced-effects').onchange=e=>{reducedEffects=e.target.checked;document.body.classList.toggle('reduce-effects',reducedEffects);saveUI();};
 $('#stage').onclick=e=>{const show=world.performance;if(!show)return;const {x,y}=stagePoint(e.currentTarget,e.clientX,e.clientY);if(y<220){const index=show.actors.findIndex((a,i)=>{const p=actorPosition(show,i);return Math.hypot(p.x-x,p.y-p.size/2-y)<32;});if(index>=0){inspectActor(show.actors[index].id);return;}}const fan=[...show.fans].sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];if(fan&&Math.hypot(fan.x-x,fan.y-y)<45){selectedFan=fan.id;inspectFan(fan);renderShows();}};
 $('#stage').onkeydown=e=>{if(!world.performance)return;if(e.key==='Enter'&&selectedFan){inspectFan(world.performance.fans.find(f=>f.id===selectedFan));return;}if(!['ArrowRight','ArrowLeft'].includes(e.key))return;e.preventDefault();const fans=world.performance.fans,index=fans.findIndex(f=>f.id===selectedFan);selectedFan=fans[(index+(e.key==='ArrowRight'?1:fans.length-1)+fans.length)%fans.length].id;renderShows();};
@@ -218,7 +219,11 @@ if(world.performance?.status==='playing'){
  if(!world.performance.preview&&!liveEvent){savedWorldSpeed=playback.speed;liveEvent=true;world.showEventId=world.performance.opportunityId;showingPerformance=true;showPaused=showReady(world.performance);showClock=null;showSpeed=1;$('#show-speed').value='1';changeView('shows');$('#main').scrollTop=0;}
  if(!tabInactive&&!showPaused&&!showReady(world.performance)&&!$('#dialog').open&&view==='shows'){showClock ||= createShowClock(world.performance);const ticks=advanceShowClock(showClock,world.performance,dt,showSpeed);if(ticks)playTicks(world,ticks);}
  if(lastShowId!==world.performance.id+':'+(world.performance.songIndex||0)){lastShowId=world.performance.id+':'+(world.performance.songIndex||0);lastSoundEvent=0;showBudget=0;selectedFan=null;}
- for(const event of world.performance.events.filter(e=>e.id>lastSoundEvent)){if(soundEnabled&&['card','impact','reaction','curse'].includes(event.type))playSound({...event,instrument:world.performance.actors.find(a=>a.id===event.actorId)?.instrument});lastSoundEvent=event.id;}
+ const freshSounds=world.performance.events.filter(e=>e.id>lastSoundEvent);
+ for(const event of freshSounds.toSorted((a,b)=>(b.type==='impact')-(a.type==='impact'))){if(soundEnabled&&['card','impact','reaction','curse'].includes(event.type))playSound({...event,instrument:world.performance.actors.find(a=>a.id===event.actorId)?.instrument});}
+ if(freshSounds.length)lastSoundEvent=Math.max(...freshSounds.map(e=>e.id));
+ const beat=showBeat(world.performance,stageGeometry($('#stage'))),shotKey=beat.event?`${songKey(world.performance)}:${beat.event.id}`:null;
+ if(beat.phase==='shot'&&!showPaused&&lastShotEvent!==shotKey){lastShotEvent=shotKey;if(soundEnabled&&!showPaused)playSound({type:'shot',cardId:beat.event.cardId,instrument:world.performance.actors.find(a=>a.id===beat.event.actorId)?.instrument});}
  if(world.performance.status==='finished'){showPaused=true;save();if(view==='shows')renderShows();}
 }
 updatePositions(world.people,displayPos,{visible:view==='map'&&!tabInactive,paused:playback.speed===0||liveEvent||world.performance?.status==='playing',dt});
@@ -234,7 +239,7 @@ function finishLive(){previewReturn=null;delete world.livePreviewReturn;world.sh
 function showReady(show){return show?.status==='playing'&&show.tick===0&&!show.presentationStarted;}
 function renderLivePresentation(show){
  const geometry=stageGeometry($('#stage'));const field=$('.stage-field');field.style.setProperty('--show-card-width',geometry.cardWidth+'px');field.style.setProperty('--show-card-height',geometry.cardHeight+'px');
- const signature=`${geometry.width}:${geometry.height}:${songKey(show)}:${show.events.length}:${show.status}:${showReady(show)}:${show.events.length?Math.floor(songSeconds(show)*2):0}`;
+ const signature=`${geometry.width}:${geometry.height}:${songKey(show)}:${show.events.length}:${show.status}:${showReady(show)}:${showBeat(show,geometry).phase}`;
  if(signature!==stagePresentationKey){stagePresentationKey=signature;replacePreserving('#show-overlay',show.status==='playing'?showOverlayHTML(show,{ready:showReady(show),geometry}):'');replacePreserving('#show-resources',showResourcesHTML(show));}
  const counter=$('[data-song-time]');if(counter)counter.textContent=`${Math.floor(songSeconds(show))} / 30 s`;
  const progress=$('.song-progress .bar i');if(progress)progress.style.width=songSeconds(show)/30*100+'%';

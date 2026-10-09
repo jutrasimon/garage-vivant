@@ -4,7 +4,14 @@ const cache = new WeakMap();
 function timeline(show) {
   if (cache.has(show)) return cache.get(show);
   const cues = show.cues || [], total = show.totalTicks || 2160;
-  const points = [{tick:0, seconds:0}, ...cues.map((cue,i) => ({tick:cue.tick, seconds:1+i*26/Math.max(1,cues.length)})), {tick:total, seconds:SONG_SECONDS}];
+  const slot=26/Math.max(1,cues.length),points=[{tick:0,seconds:0}];
+  cues.forEach((cue,i)=>{
+    const seconds=1+i*slot;points.push({tick:cue.tick,seconds});
+    // Reserve a readable reveal, an aim and a quick shot before the real hit.
+    // Dense ensembles can have overlapping engine cues; keep their tick order.
+    if(cue.tick+30<(cues[i+1]?.tick??total))points.push({tick:cue.tick+30,seconds:seconds+slot*.72});
+  });
+  points.push({tick:total,seconds:SONG_SECONDS});
   cache.set(show, points); return points;
 }
 function interpolate(show, value, from, to) {
@@ -31,7 +38,7 @@ export function stageGeometry(canvas) {
   const cardWidth=compact?Math.min(204,Math.max(156,width*.46)):Math.min(280,Math.max(230,width*.21));
   const cardHeight=compact?Math.min(214,Math.max(170,height*.42)):Math.min(366,Math.max(120,height-24));
   const availableWidth=integrated&&!compact?Math.max(120,width-cardWidth-36):width;
-  const availableHeight=integrated&&compact?Math.max(100,height-cardHeight*.5):height;
+  const availableHeight=integrated&&compact?Math.max(60,height-cardHeight-24):height;
   const scale=Math.min(availableWidth/900,availableHeight/650);
   return {width,height,scale,ox:(availableWidth-900*scale)/2,oy:integrated?(compact?0:Math.min(12,(availableHeight-650*scale)/2)):(height-650*scale)/2,cardWidth,cardHeight,cardX:width-cardWidth-12,cardY:height-cardHeight-12};
 }
@@ -48,4 +55,18 @@ export function cardContext(show,event) {
   const curse=show.events.find(e=>e.type==='curse'&&e.actorId===event.actorId&&e.cardId===event.cardId&&e.tick===event.tick);
   const pending=show.impacts.find(e=>e.actorId===event.actorId&&e.cardId===event.cardId&&e.phrase===event.phrase);
   return {impact,curse,target:impact||pending||event.target};
+}
+export function actorSize(show,geometry,position) {
+  const minimum=show.actors.length<=4?(geometry.width<700?30:44):show.actors.length<=8?(geometry.width<700?22:34):18;
+  return Math.max(position.size,Math.min(minimum,geometry.scale*90)/geometry.scale);
+}
+export function showBeat(show,geometry={width:900,scale:1}) {
+  const event=show.events.filter(e=>e.type==='card').at(-1);
+  if(!event)return {phase:'waiting',event:null};
+  const context=cardContext(show,event),start=songSeconds(show,event.tick),hit=songSeconds(show,context.target?.tick??event.tick+30);
+  const duration=Math.max(.001,hit-start),shotAt=hit-Math.min(.18,duration*.22),aimAt=shotAt-Math.min(.24,duration*.28),now=songSeconds(show);
+  const actorIndex=show.actors.findIndex(a=>a.id===event.actorId),position=actorPosition(show,actorIndex);
+  const origin={x:position.x,y:position.y-actorSize(show,geometry,position)/2};
+  const phase=now<aimAt?'reveal':now<shotAt&&context.target?'aim':now<hit&&context.target?'shot':context.impact&&now-hit<.48?'impact':context.curse&&now-hit<.48?'error':'rest';
+  return {phase,event,...context,origin,aimAt,shotAt,hit,revealSeconds:aimAt-start,shotProgress:Math.max(0,Math.min(1,(now-shotAt)/(hit-shotAt))),impactAge:now-hit};
 }

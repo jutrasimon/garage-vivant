@@ -1,9 +1,9 @@
-import {showTitleHTML} from './show-view.mjs?v=0.6.3';
-import {ACTIONS,SKILLS,EMOTIONS,stamp,round,scores} from './engine.mjs?v=0.6.3';
-import {bandStage,eligibleSongs,availability,acceptance} from './life.mjs?v=0.6.3';
-import {pendingBooking,eventById,morale,assess} from './calendar.mjs?v=0.6.3';
-import {CARDS,INTENTIONS} from './stage.mjs?v=0.6.3';
-import {resolveShowPlan} from './show-planning.mjs?v=0.6.3';
+import {showTitleHTML} from './show-view.mjs?v=0.6.4';
+import {ACTIONS,SKILLS,EMOTIONS,stamp,round,scores} from './engine.mjs?v=0.6.4';
+import {bandStage,eligibleSongs,availability,acceptance} from './life.mjs?v=0.6.4';
+import {pendingBooking,eventById,morale,assess} from './calendar.mjs?v=0.6.4';
+import {CARDS,INTENTIONS} from './stage.mjs?v=0.6.4';
+import {resolveShowPlan} from './show-planning.mjs?v=0.6.4';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const person=(s,id)=>s.people.find(p=>p.id===id);
 export function calendarHTML(s,selected=null){return `<div class="season-slots">${s.season.opportunities.map(o=>`<button class="season-slot ${selected===o.id?'selected':''}" data-opportunity="${o.id}" data-key="date-${o.id}"><span>${o.final?'★ GROS SHOW · SÉLECTION':'SCÈNE LOCALE · PREMIER ARRIVÉ'}</span><b>${esc(o.name)}</b><small>${stamp(o.time)} · ${o.crowd} fans · ${o.slots.filter(x=>!x.bookingId).length}/${o.slots.length} créneaux</small><small>${esc(o.styles.join(' / '))}</small><em>${o.final?o.selected?'Affiche choisie':`Résultats ${stamp(o.selectionAt)}`:'Réserver →'}</em></button>`).join('')}</div>`;}

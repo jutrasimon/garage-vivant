@@ -1,7 +1,7 @@
-import {initializeV6Person} from './social.mjs?v=0.6.3';
-import {initializeCalendar,upgradeCalendar,calendarMinute,bookShow,modifyBooking,eventById,rollCalendar,morale,moraleEffect,validateCalendar} from './calendar.mjs?v=0.6.3';
-import {clamp,round,rand,log,feel,decide,relationship,createGroup,formationEligible,PLACES,GENRES,ACTIONS,step,refreshReputation} from './engine.mjs?v=0.6.3';
-import {CARDS,CURSES,INTENTIONS,defaultDeck,availableCards,createPerformance,advancePerformance,validatePerformance} from './stage.mjs?v=0.6.3';
+import {initializeV6Person} from './social.mjs?v=0.6.4';
+import {initializeCalendar,upgradeCalendar,calendarMinute,bookShow,modifyBooking,eventById,rollCalendar,morale,moraleEffect,validateCalendar} from './calendar.mjs?v=0.6.4';
+import {clamp,round,rand,log,feel,decide,relationship,createGroup,formationEligible,PLACES,GENRES,ACTIONS,step,refreshReputation} from './engine.mjs?v=0.6.4';
+import {CARDS,CURSES,INTENTIONS,defaultDeck,availableCards,createPerformance,advancePerformance,validatePerformance} from './stage.mjs?v=0.6.4';
 
 export function initializePerson(p) {
   initializeV6Person(p);const index=Number(p.id.slice(1));
