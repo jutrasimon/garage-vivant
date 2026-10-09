@@ -18,7 +18,7 @@ const base=`http://127.0.0.1:${server.address().port}`;
 await mkdir('test-results',{recursive:true});
 const browser=await chromium.launch();
 const errors=[];
-async function load(page,world){page.on('pageerror',error=>errors.push(error.message));await page.addInitScript(save=>localStorage.setItem('garage-vivant-v1',JSON.stringify(save)),world);await page.goto(base);await page.waitForSelector('#profile .profile-head');}
+async function load(page,world){page.on('pageerror',error=>errors.push(error.message));await page.addInitScript(save=>localStorage.setItem('garage-vivant-v1',JSON.stringify(save)),world);await page.goto(base);await page.waitForSelector('#profile .profile-head',{state:'attached'});}
 const s=createWorld(205,8);step(s,1440*3);const band=createGroup(s,s.people.slice(0,4).map(p=>p.id),{manual:true,name:'Les Cubes du Canal'});
 let song=s.songs.find(song=>song.authors.some(id=>band.members.includes(id)));if(!song){const p=s.people[0];for(let n=0;n<10&&!song;n++){p.needs.energy=100;decide(s,p,'write');step(s,200);song=s.songs.find(song=>song.authors.includes(p.id));}}
 assert(song);command(s,{type:'repertoire',groupId:band.id,songId:song.id});band.repertoire[0].mastery=65;band.development=55;
