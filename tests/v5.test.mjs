@@ -3,6 +3,9 @@ import {readFileSync} from 'node:fs';
 import {createWorld,createGroup,restore,step,decide,relationship,compositionProject,VERSION,removePerson} from '../dist/engine.mjs';
 import {CARDS,CURSES,activeDeck,createPerformance,advancePerformance,SHOW_TICKS,validatePerformance} from '../dist/stage.mjs';
 import {command,playTicks,completePerformance,advanceToBooking,groupRehearsal,lifeMinute,newSeason,learningGain,isArchivedSong} from '../dist/life.mjs';
+import {resolveShowPlan} from '../dist/show-planning.mjs';
+import {snapSpeed} from '../dist/runtime.mjs';
+import {showSetupHTML,rapinHTML} from '../dist/v5-view.mjs';
 const copy=x=>JSON.parse(JSON.stringify(x));
 // A real V4 save preserves skills, project progress, music-session knowledge and history.
 const legacy=JSON.parse(readFileSync(new URL('./v04-world.json',import.meta.url)));
@@ -74,4 +77,20 @@ const loner=alone.people[0];loner.needs.social=20;decide(alone,loner,'social');l
 const archive=restore(snapshot),historicalCount=archive.songs.length;assert(command(archive,{type:'archive',songId:archive.songs[0].id}).ok);assert(isArchivedSong(archive,archive.songs[0].id));assert.equal(archive.songs.length,historicalCount);assert(command(archive,{type:'archive',songId:archive.songs[0].id,restore:true}).ok);assert(!isArchivedSong(archive,archive.songs[0].id));
 for(const o of archive.season.opportunities)o.status='missed';archive.season.ended=true;const oldCatalogue=copy(archive.songs),oldSkills=copy(archive.people[0].skills);assert(newSeason(archive).ok);assert.deepEqual(archive.songs,oldCatalogue);assert.deepEqual(archive.people[0].skills,oldSkills);assert(!archive.season.ended);restore(archive);
 const broken=copy(archive);broken.people[0].decadence=101;assert.throws(()=>restore(broken));const badHand=copy(booked.s);badHand.performance.actors[0].hand[1]=badHand.performance.actors[0].hand[0];assert.throws(()=>restore(badHand));
+// V5.1: the complete preparation path works without a finished song, for an NPC band.
+const fresh=createWorld(705,4),npcBand=createGroup(fresh,fresh.people.slice(1,3).map(p=>p.id),{manual:true});
+for(const a of fresh.people)for(const b of fresh.people)if(a!==b)Object.assign(relationship(fresh,a,b),{affinity:90,trust:90,tension:0});
+const plan={groupId:npcBand.id,songId:undefined,members:null,intention:'tight',opportunityId:null};
+let prep=resolveShowPlan(fresh,plan);assert(prep.ready);assert.equal(plan.songId,null);assert.notEqual(plan.actorId,fresh.playerId);assert(showSetupHTML(fresh,plan).includes('Jam libre'));assert(showSetupHTML(fresh,plan).includes('data-opportunity="o1"'));
+assert(command(fresh,{type:'preview',...plan}).ok);playTicks(fresh,100);const fameBefore=fresh.people.map(p=>p.showFame);assert(command(fresh,{type:'cancelPerformance'}).ok);assert.equal(fresh.performance,null);assert.deepEqual(fresh.people.map(p=>p.showFame),fameBefore);assert.equal(fresh.showHistory.length,0);
+let freeBooking;for(let n=0;n<10&&!freeBooking?.ok;n++)freeBooking=command(fresh,{type:'book',...plan});assert(freeBooking.ok);assert.equal(fresh.bookings[0].songId,null);restore(fresh);
+step(fresh,fresh.bookings[0].time-fresh.time-45);assert.equal(fresh.bookings[0].status,'assembling');assert(fresh.people.some(p=>p.engagement));assert(command(fresh,{type:'cancelBooking',actorId:plan.actorId,bookingId:freeBooking.bookingId}).ok);assert(fresh.people.every(p=>!p.engagement));assert.equal(fresh.season.opportunities[0].status,'open');restore(fresh);
+prep=resolveShowPlan(fresh,plan);assert(prep.ready);freeBooking=null;for(let n=0;n<10&&!freeBooking?.ok;n++)freeBooking=command(fresh,{type:'book',...plan});assert(freeBooking.ok);assert(advanceToBooking(fresh,freeBooking.bookingId).ok);assert.equal(fresh.performance.status,'playing');const catalogueBeforeShow=fresh.songs.length;playTicks(fresh,SHOW_TICKS);assert.equal(fresh.showHistory.length,1);assert.equal(fresh.songs.length,catalogueBeforeShow,'Improvisation must not manufacture catalogue songs');restore(fresh);
+// A band at the far end of town must have time to walk to the venue.
+const far=createWorld(9,2),farBand=createGroup(far,far.people.map(p=>p.id),{manual:true});for(const a of far.people)for(const b of far.people)if(a!==b)Object.assign(relationship(far,a,b),{affinity:90,trust:90,tension:0});let farBooking;
+for(let n=0;n<10&&!farBooking?.ok;n++)farBooking=command(far,{type:'book',groupId:farBand.id,songId:null,opportunityId:'o1',intention:'tight'});assert(farBooking.ok);const fb=far.bookings[0];far.time=fb.time-181;for(const p of far.people){p.x=1090;p.y=650;p.needs.energy=95;decide(far,p,'sleep');p.action.route=[];}assert(advanceToBooking(far,fb.id).ok);assert.equal(far.performance.status,'playing');assert(far.people.every(p=>p.engagement.arrived));playTicks(far,180);assert(command(far,{type:'cancelPerformance'}).ok);assert.equal(far.performance,null);assert.equal(far.showHistory.length,0);assert.equal(fb.status,'cancelled');assert(far.people.every(p=>!p.engagement));restore(far);
+const v50=copy(fresh);v50.version='0.5.0';const upgraded=restore(v50);assert.equal(upgraded.version,VERSION);assert.deepEqual(upgraded.people,fresh.people);assert.deepEqual(upgraded.bookings,fresh.bookings);assert.deepEqual(upgraded.showHistory,fresh.showHistory);
+step(fresh,1440*10);assert(newSeason(fresh).ok);assert(fresh.season.opportunities.every(o=>o.time>fresh.time));assert.equal(fresh.showHistory.length,1);restore(fresh);
+assert.equal(snapSpeed(.9),1);assert.equal(snapSpeed(1.1),1);assert.equal(snapSpeed(.5),.5);assert.equal(snapSpeed(1.3),1.3);assert.equal(snapSpeed(0),0);
+fresh.decisionMode='bag';const bag=rapinHTML(fresh,fresh.people[0]);for(const action of Object.values((await import('../dist/engine.mjs')).ACTIONS))assert(bag.includes(action.label));assert(bag.includes('Dernière pige')||bag.includes('un autre mode'));
 console.log('V5 passed: V4 preservation, deterministic 2–24-member shows, physical bounded chains, actual preparation effects, replay, live save, no double reward, competing commitments, rehearsal ownership, group archives, curses/recovery, social presence and reversible catalogue.');

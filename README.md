@@ -1,20 +1,22 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.5.0
+# Garage vivant · v0.5.1
 
 Une simulation de musiciens de banlieue : incarner un voisin, monter son band, préparer une chanson et regarder un show automatique. Les autres cubes font leur vie, entretiennent leurs relations et peuvent refuser une proposition. Application web statique en français, sans API ni dépendance à l’exécution.
 
 ## Jouer
 
-1. Choisir son musicien dans la fiche, avec **Incarner**. Les actions reprennent ensuite leur autonomie.
-2. Dans **Groupes** ou **Shows**, **Monter un band** propose une invitation. Affinité, confiance, tension et déchéance influencent l’acceptation. Un refus impose six heures avant une nouvelle invitation au même band.
-3. **Composer** avance une idée persistante en plusieurs séances. Dans la fiche du band, sélectionner une composition d’un membre pour le répertoire.
-4. Répéter cette chanson, préparer les decks et l’énergie, puis réserver une occasion dans **Shows**. Les partenaires doivent confirmer; leurs engagements peuvent être incompatibles.
-5. Le show se résout automatiquement en cinq phrases. Lire le bilan et les enchaînements pour préparer le suivant.
+1. Ouvrir **Shows**, puis cliquer une date. La préparation met le quartier en pause pour laisser le temps de décider.
+2. Choisir un band actif. Tous les bands peuvent être préparés : un membre est identifié comme organisateur, et ses partenaires gardent leur possibilité de refus.
+3. Choisir **Jam libre** pour jouer sans chanson terminée, ou une composition d’un membre. Une chanson choisie est ajoutée au répertoire à la réservation; sa qualité et sa maîtrise offrent davantage de préparation qu’une improvisation. La jam libre ne crée pas de chanson dans le catalogue.
+4. Choisir l’intention et les musiciens, puis **Demander la réservation**. La réponse et les éventuels refus restent affichés. Au moins deux confirmations, dont l’organisateur, sont nécessaires.
+5. Dans la réservation confirmée, **Avancer jusqu’au show** simule le quartier et les déplacements. Le spectacle joue ensuite cinq phrases automatiques; lire le bilan pour préparer le suivant.
 
-**Répétition générale** permet d’observer les cartes sans récompense de show. **Aller jusqu’au show** simule la préparation et les déplacements; ce bouton ne recharge pas gratuitement les musiciens. Un replay conserve le même tirage et n’applique aucune conséquence supplémentaire.
+**Essayer le show maintenant** montre les cartes et la foule sans attendre une date, sans récompense. **Arrêter l’essai** retourne immédiatement aux choix. **Annuler la réservation** fonctionne avant la date et pendant les déplacements; **Interrompre le show** arrête une prestation commencée sans récompense et coûte cinq points d’énergie. Une réservation annulée libère ses musiciens et permet de modifier les choix.
 
-La saison comporte trois occasions aux jours 2, 4 et 6, puis une finale au jour 8. Les occasions manquées font partie de l’histoire. Le bilan clôt la saison; le quartier reste jouable et une nouvelle saison conserve ses personnages, ses chansons et ses bands.
+Les départs commencent trois heures avant le show, avec vingt minutes de tolérance à l’arrivée. Deux musiciens doivent être sur place avec au moins huit points d’énergie. En cas d’échec, la préparation affiche pourquoi la scène n’a pas démarré. Un replay conserve le même tirage et n’applique aucune conséquence supplémentaire.
+
+La saison comporte trois occasions aux jours 2, 4 et 6, puis une finale au jour 8. Après les dernières dates, **Nouvelle saison** crée un nouveau calendrier et conserve personnages, chansons, bands et bilans. Un band archivé peut être relancé depuis **Groupes**. Un ancien bilan ne masque plus le calendrier au chargement.
 
 ## Personnages, actions et progression
 
@@ -46,7 +48,7 @@ La formation autonome conserve ses conditions : affinité mutuelle ≥22, confia
 
 **Développement** : coordination actuelle, entretenue par la musique commune. Stades 0–24 embryonnaire, 25–49 en place, 50–74 rodé, 75–100 affirmé. Après 48 heures sans entretien, baisse de 0,24 par heure. À zéro, le band s’archive avec son histoire. **Réputation** : reconnaissance acquise par les shows, distincte du développement. Les départs restent dans l’histoire du band, même lorsqu’il n’a plus de membres.
 
-Le répertoire est un sous-ensemble des compositions des membres. Chaque chanson garde une maîtrise collective et un nombre de répétitions. Les bands des NPC choisissent progressivement des morceaux selon style et qualité. Les bands du musicien joueur conservent son choix explicite. Les tensions entre bands découlent des engagements incompatibles, pas de la simple appartenance multiple.
+Le répertoire est un sous-ensemble des compositions des membres. Chaque chanson garde une maîtrise collective et un nombre de répétitions. Les bands des NPC choisissent progressivement des morceaux selon style et qualité. Le choix explicite reste disponible dans la préparation, pour chaque band. Les tensions entre bands découlent des engagements incompatibles, pas de la simple appartenance multiple.
 
 ## Shows, cartes et public physique
 
@@ -71,11 +73,11 @@ Ces cartes remplacent des emplacements du deck; modifier les cartes musicales ne
 
 ## Temps, interface et sauvegardes
 
-Header fixe avec navigation, temps, slider 0–10 par pas de 0,1 et version cliquable pour les patch notes. Zéro met en pause; **+1 h** avance une heure puis reste en pause. À ×1, une seconde réelle vaut huit minutes de quartier. Pendant un show, l’horloge du quartier attend la résolution; les contrôles du spectacle règlent sa lecture.
+Header fixe avec navigation, temps, slider 0–10 par pas de 0,1, aimanté pendant le glissement sur 0,5 et les valeurs entières; cliquer sa valeur revient à ×1,0 et version cliquable pour les patch notes. Zéro met en pause; **+1 h** avance une heure puis reste en pause. À ×1, une seconde réelle vaut huit minutes de quartier. Pendant un show, l’horloge du quartier attend la résolution; les contrôles du spectacle règlent sa lecture.
 
-La simulation continue dans les panneaux internes; masquer l’onglet navigateur suspend quartier et spectacle. Aucun rattrapage au retour. Les contrôles et détails sont conservés par une réconciliation du DOM, plutôt que par des reconstructions des panneaux. Positions de lecture par vue et personnage, focus et défilement horizontal sont conservés. Le journal propose des types cumulables, un masquage du repos et un indicateur de nouvelles entrées pendant la lecture. Ses détails exposent des effets déjà appliqués; les consulter ne les répète pas.
+La simulation continue dans les panneaux internes; masquer l’onglet navigateur suspend quartier et spectacle. Aucun rattrapage au retour. La fiche affiche le **sac Rapin complet** : probabilités actuelles des sept actions, priorités, causes, exclusions et dernière pige. Les poids restent recalculés à chaque décision. Les contrôles et détails sont conservés par une réconciliation du DOM, plutôt que par des reconstructions des panneaux. Positions de lecture par vue et personnage, focus et défilement horizontal sont conservés. Le journal propose des types cumulables, un masquage du repos et un indicateur de nouvelles entrées pendant la lecture. Ses détails exposent des effets déjà appliqués; les consulter ne les répète pas.
 
-Sauvegarde locale automatique, export/import JSON, et migration V0.1 à V0.4 sans suppression de personnages, chansons, compétences, relations, groupes ou projets. Copie avant migration sous `garage-vivant-before-v5`; copie avant nouvelle partie sous `garage-vivant-before-new-game`. Une sauvegarde illisible n’est pas écrasée automatiquement. Les projets, les archives et les shows en cours se restaurent; une conséquence ne s’applique qu’une fois.
+Sauvegarde locale automatique, export/import JSON, et migration V0.1 à V0.5.0 sans suppression de personnages, chansons, compétences, relations, groupes ou projets. Copie avant migration sous `garage-vivant-before-v5`; copie avant nouvelle partie sous `garage-vivant-before-new-game`. Une sauvegarde illisible n’est pas écrasée automatiquement. Les projets, les archives et les shows en cours se restaurent; une conséquence ne s’applique qu’une fois.
 
 Les sauvegardes dépendent du navigateur et de l’origine web. Pour passer de l’ancien site ChatGPT à GitHub Pages, exporter puis importer le monde.
 
@@ -85,6 +87,6 @@ Les sauvegardes dépendent du navigateur et de l’origine web. Pour passer de l
 
 `npm test` vérifie le déterminisme, les 39 jours simulés, les populations jusqu’à 24, les migrations V1–V4, les jams et départs, les compositions persistantes, les catalogues de plus de 100, les relations, les shows de 2 à 24 membres, les engagements, les archives, la déchéance et les replays.
 
-La CI installe les seules dépendances de test avec `npm ci`, puis Chromium via `npx playwright install --with-deps chromium`. `npm run test:browser` vérifie les interactions réelles à 1440×960 et en viewport tactile 390×844 : scroll, focus, curseurs à ×0,5/1/10, sélection, navigation, fenêtres, shows et pause/replay. Les captures sont conservées dans l’artefact `interface-v5`. Le viewport tactile Chromium ne remplace pas un test sur un téléphone iOS réel.
+La CI installe les seules dépendances de test avec `npm ci`, puis Chromium via `npx playwright install --with-deps chromium`. `npm run test:browser` vérifie les interactions réelles à 1440×960 et en viewport tactile 390×844 : scroll, focus, curseurs à ×0,5/1/10, sélection, navigation, fenêtres, shows et pause/replay, puis le parcours date → band NPC sans chanson → essai/arrêt → refus visible → réservation/annulation → vrai show → nouvelle saison. Les captures sont conservées dans l’artefact `interface-v5`. Le viewport tactile Chromium ne remplace pas un test sur un téléphone iOS réel.
 
 Le workflow `.github/workflows/pages.yml` publie `dist/` depuis `main` après réussite de tous les tests. Les pull requests exécutent les vérifications sans publier. Voir [CONTRIBUTING.md](CONTRIBUTING.md), le [plan V5](docs/PLAN_V5.md) et [les changements](docs/CHANGELOG.md).

@@ -1,5 +1,5 @@
-import {clamp,round,rand,log,feel,decide,relationship,createGroup,formationEligible,PLACES,GENRES,ACTIONS,step,refreshReputation} from './engine.mjs';
-import {CARDS,CURSES,INTENTIONS,defaultDeck,availableCards,createPerformance,advancePerformance,validatePerformance} from './stage.mjs';
+import {clamp,round,rand,log,feel,decide,relationship,createGroup,formationEligible,PLACES,GENRES,ACTIONS,step,refreshReputation} from './engine.mjs?v=0.5.1';
+import {CARDS,CURSES,INTENTIONS,defaultDeck,availableCards,createPerformance,advancePerformance,validatePerformance} from './stage.mjs?v=0.5.1';
 
 export function initializePerson(p) {
   const index=Number(p.id.slice(1));
@@ -87,9 +87,10 @@ function rehearse(s,cmd) {
   log(s,'jam',`${g.name} se donne rendez-vous : ${chosen.length+1} musiciens, ${j.songId?s.songs.find(x=>x.id===j.songId)?.title:'jam libre'}.`,[host.id,...chosen.map(p=>p.id)],{activityId:sid,groupId:g.id});
   return result(true,'Rendez-vous lancé. La répétition commence avec deux membres sur place.');
 }
+export function performanceSong(s,g,id){if(id!==null)return s.songs.find(song=>song.id===Number(id));const skill=g.members.map(id=>s.people.find(p=>p.id===id)).filter(Boolean).reduce((n,p)=>n+p.skills[p.instrument],0)/Math.max(1,g.members.length);return {id:null,title:'Jam libre · '+g.genre,genre:g.genre,quality:round(clamp(skill*.35+g.development*.15,10,45)),intensity:40,emotion:'excitement',tone:'improvisée'};}
 function book(s,cmd) {
-  const g=s.groups.find(g=>g.id===cmd.groupId&&g.archivedAt===null),host=s.people.find(p=>p.id===cmd.actorId),o=s.season.opportunities.find(o=>o.id===cmd.opportunityId),song=s.songs.find(song=>song.id===Number(cmd.songId));
-  if(!host||!g||!g.members.includes(host.id)||!o||!['open','booked'].includes(o.status)||o.time<=s.time||!INTENTIONS[cmd.intention]||!song||!g.repertoire.some(r=>r.songId===song.id)) return result(false,'Choisis un band actif, une chanson de son répertoire et une occasion à venir.');
+  const g=s.groups.find(g=>g.id===cmd.groupId&&g.archivedAt===null),host=s.people.find(p=>p.id===cmd.actorId),o=s.season.opportunities.find(o=>o.id===cmd.opportunityId),song=g&&performanceSong(s,g,cmd.songId);
+  if(!host||!g||!g.members.includes(host.id)||!o||!['open','booked'].includes(o.status)||o.time<=s.time||!INTENTIONS[cmd.intention]||!song||song.id!==null&&!g.repertoire.some(r=>r.songId===song.id)) return result(false,'Choisis un band actif, une chanson de son répertoire et une occasion à venir.');
   if(s.bookings.some(b=>b.groupId===g.id&&b.opportunityId===o.id&&['booked','assembling','playing'].includes(b.status)))return result(false,'Ce band a déjà un engagement sur cette occasion.');
   const requested=[...new Set(cmd.members||g.members)].filter(id=>g.members.includes(id));
   if(!requested.includes(host.id)||requested.length<2) return result(false,'Il faut ton musicien et au moins un partenaire.');
@@ -109,7 +110,7 @@ function book(s,cmd) {
 }
 export function command(s,cmd) {
   if(!cmd||typeof cmd.type!=='string') return result(false,'Commande invalide.');
-  if(s.performance?.status==='playing' && !['avatar'].includes(cmd.type)) return result(false,'Le show est en cours. Les décisions reprennent au bilan.');
+  if(s.performance?.status==='playing' && !['avatar','cancelBooking','cancelPerformance'].includes(cmd.type)) return result(false,'Le show est en cours. Les décisions reprennent au bilan.');
   const actor=s.people.find(p=>p.id===(cmd.actorId||s.playerId));
   if(!actor) return result(false,'Musicien introuvable.');
   cmd={...cmd,actorId:actor.id};
@@ -148,8 +149,14 @@ export function command(s,cmd) {
       g.archivedAt=null;g.development=10;g.lastWorked=s.time;log(s,'group',`${g.name} reprend vie.`,g.members);return result(true,'Band relancé. Il faudra entretenir sa coordination.');
     }
     case 'cancelBooking': {
-      const b=s.bookings.find(b=>b.id===cmd.bookingId&&b.members.includes(actor.id)&&b.status==='booked');if(!b)return result(false,'Cet engagement ne peut plus être annulé.');
-      b.status='cancelled';refreshOpportunity(s,b.opportunityId);return result(true,'Engagement annulé.');
+      const b=s.bookings.find(b=>b.id===cmd.bookingId&&b.members.includes(actor.id)&&['booked','assembling','playing'].includes(b.status));if(!b)return result(false,'Cet engagement ne peut plus être annulé.');
+      cancelBooking(s,b);return result(true,'Engagement annulé. Les musiciens reprennent leur vie.');
+    }
+    case 'cancelPerformance': {
+      const show=s.performance;if(!show||show.status!=='playing')return result(false,'Aucun spectacle en cours.');
+      if(show.preview){s.performance=null;return result(true,'Essai arrêté. Aucune conséquence de show.');}
+      const b=s.bookings.find(b=>b.performanceId===show.id&&b.members.includes(actor.id));if(!b)return result(false,'Choisis un membre du band sur scène.');
+      cancelBooking(s,b);return result(true,'Show interrompu, sans récompense.');
     }
     case 'replay': {
       const old=s.performance;if(!old||old.status!=='finished')return result(false,'Le show doit être terminé.');
@@ -159,8 +166,8 @@ export function command(s,cmd) {
       return result(true,'Replay du même tirage, sans appliquer les conséquences une deuxième fois.');
     }
     case 'preview': {
-      const g=s.groups.find(g=>g.id===cmd.groupId&&g.members.includes(actor.id)),song=s.songs.find(x=>x.id===Number(cmd.songId));
-      if(!g||g.archivedAt!==null||!song||!g.repertoire.some(r=>r.songId===song.id))return result(false,'Choisis une chanson du répertoire de ton band.');
+      const g=s.groups.find(g=>g.id===cmd.groupId&&g.members.includes(actor.id)),song=g&&performanceSong(s,g,cmd.songId);
+      if(!g||g.archivedAt!==null||!song||song.id!==null&&!g.repertoire.some(r=>r.songId===song.id))return result(false,'Choisis une chanson du répertoire de ton band.');
       const members=(cmd.members||g.members).filter(id=>g.members.includes(id)).map(id=>s.people.find(p=>p.id===id)).filter(Boolean);
       if(members.length<2)return result(false,'Il faut au moins deux musiciens.');
       s.performance=createPerformance({id:`p-show${s.nextPerformanceId++}`,seed:Math.floor(rand(s)*4294967296),people:members,group:g,song,opportunity:{id:'preview',name:'Répétition générale',styles:[g.genre,'Indie'],crowd:8},intention:cmd.intention||'tight',preview:true});
@@ -168,6 +175,12 @@ export function command(s,cmd) {
     }
     default:return result(false,'Commande inconnue.');
   }
+}
+function cancelBooking(s,b){
+  const live=s.performance?.status==='playing'&&!s.performance.preview&&s.performance.id===b.performanceId;
+  if(live){for(const a of s.performance.actors){const p=s.people.find(p=>p.id===a.id);if(p)p.needs.energy=clamp(p.needs.energy-5);}s.performance=null;}
+  b.status='cancelled';refreshOpportunity(s,b.opportunityId);for(const p of s.people)if(p.engagement?.bookingId===b.id){p.engagement=null;decide(s,p);}
+  log(s,'booking',`${s.groups.find(g=>g.id===b.groupId)?.name||'Le band'} annule son engagement${live?' après le début du show':''}.`,b.members,{bookingId:b.id});
 }
 function assemble(s,b) {
   b.status='assembling';const o=s.season.opportunities.find(o=>o.id===b.opportunityId),place=PLACES.find(p=>p.id===o.venue);
@@ -204,10 +217,11 @@ export function lifeMinute(s) {
   if(s.time%60===0)for(const g of s.groups)if(g.archivedAt===null&&!g.members.includes(s.playerId)&&g.repertoire.length<3){const candidate=eligibleSongs(s,g).filter(song=>!isArchivedSong(s,song.id)&&!g.repertoire.some(r=>r.songId===song.id)).sort((a,b)=>(b.quality+(b.genre===g.genre?20:0))-(a.quality+(a.genre===g.genre?20:0)))[0];if(candidate){g.repertoire.push({songId:candidate.id,mastery:0,rehearsals:0});log(s,'group',`${g.name} retient « ${candidate.title} » dans son répertoire.`,g.members,{groupId:g.id,explanation:'Choix autonome selon le style et la qualité; seules les compositions des membres sont admissibles.'});}}
   if(s.time%60===0)for(const g of s.groups)if(g.archivedAt===null&&s.time-g.lastWorked>2880){const before=g.development;g.development=clamp(g.development-.24);if(before>0&&g.development===0){g.archivedAt=s.time;log(s,'group',`${g.name} s’éteint faute d’activités communes. Son histoire est conservée.`,g.members,{groupId:g.id});}}
   for(const b of s.bookings) {
-    if(b.status==='booked'&&s.time>=b.time-60) assemble(s,b);
+    if(b.status==='booked'&&s.time>=b.time-180) assemble(s,b);
     if(b.status==='assembling'&&s.time>=b.time) {
-      const g=s.groups.find(g=>g.id===b.groupId),song=s.songs.find(x=>x.id===b.songId),o=s.season.opportunities.find(o=>o.id===b.opportunityId);
+      const g=s.groups.find(g=>g.id===b.groupId),song=g&&performanceSong(s,g,b.songId),o=s.season.opportunities.find(o=>o.id===b.opportunityId);
       const present=b.members.map(id=>s.people.find(p=>p.id===id)).filter(p=>p?.engagement?.bookingId===b.id&&p.engagement.arrived&&p.needs.energy>=8);
+      if(present.length<2&&g&&song&&s.time<b.time+20)continue;
       if(!g||!song||present.length<2){cancelAtDoor(s,b,'moins de deux musiciens présents et fonctionnels');continue;}
       s.performance=createPerformance({id:`p-show${s.nextPerformanceId++}`,seed:Math.floor(rand(s)*4294967296),people:present,group:g,song,opportunity:o,intention:b.intention});b.status='playing';b.performanceId=s.performance.id;break;
     }
@@ -239,13 +253,16 @@ export function completePerformance(s) {
 export function playTicks(s,ticks) {if(s.performance?.status!=='playing')return;advancePerformance(s.performance,ticks);if(s.performance.status==='finished')completePerformance(s);}
 export function advanceToBooking(s,id) {
   const b=s.bookings.find(b=>b.id===id&&['booked','assembling'].includes(b.status));if(!b)return result(false,'Aucun engagement à venir.');
-  step(s,Math.max(0,b.time-s.time));return result(true,'Préparation et déplacements simulés jusqu’au show.');
+  step(s,Math.max(1,b.time+20-s.time));if(s.performance?.status==='playing')return result(true,s.performance.id===b.performanceId?'Le band est sur scène. Le spectacle se joue automatiquement.':'Un autre band passe avant : son show démarre maintenant.');return result(false,b.status==='missed'?'Show manqué : moins de deux musiciens sont arrivés avec assez d’énergie. Choisis une autre date ou une nouvelle saison.':'Cet engagement n’a pas atteint la scène. Tu peux l’annuler et choisir une autre date.');
 }
 export function seasonSummary(s) {
   const shows=s.showHistory.filter(show=>show.time>=s.season.started),best=[...shows].sort((a,b)=>b.score-a.score)[0];
   return {shows:shows.length,fans:shows.reduce((n,r)=>n+r.conquered,0),average:shows.length?round(shows.reduce((n,r)=>n+r.score,0)/shows.length):0,best,bands:s.groups.filter(g=>g.created>=s.season.started).length};
 }
 export function newSeason(s) {
+  if(s.performance?.status==='playing'||s.bookings.some(b=>['booked','assembling','playing'].includes(b.status)))return result(false,'Annule ou termine les engagements en cours avant la nouvelle saison.');
+  for(const o of s.season.opportunities)if(o.time+100<s.time&&o.status==='open')o.status='missed';
+  if(s.season.opportunities.every(o=>['played','missed'].includes(o.status))){s.season.ended=true;s.season.endedAt??=s.time;}
   if(!s.season.ended)return result(false,'La saison actuelle n’est pas terminée.');
   s.seasonHistory||=[];s.seasonHistory.push({...seasonSummary(s),started:s.season.started,endedAt:s.season.endedAt});
   const fresh={time:s.time,people:s.people};initializeLife(fresh);s.season=fresh.season;
@@ -261,7 +278,7 @@ export function validateLife(s) {
   }
   for(const g of s.groups)if(!num(g.development)||!num(g.reputation)||!Number.isFinite(g.lastWorked)||g.archivedAt!==null&&!Number.isFinite(g.archivedAt)||!Array.isArray(g.repertoire)||new Set(g.repertoire.map(r=>r.songId)).size!==g.repertoire.length||g.repertoire.some(r=>!s.songs.some(song=>song.id===r.songId)||!num(r.mastery)||!Number.isInteger(r.rehearsals)||r.rehearsals<0)||!Array.isArray(g.moments)||!Array.isArray(g.shows))throw Error('Développement de band invalide.');
   for(const o of s.season.opportunities)if(typeof o.id!=='string'||!Number.isInteger(o.time)||!['open','booked','played','missed'].includes(o.status)||!Array.isArray(o.styles)||o.styles.some(g=>!GENRES.includes(g))||!PLACES.some(l=>l.id===o.venue)||!num(o.crowd,8,12))throw Error('Occasion invalide.');
-  const ids=new Set();for(const b of s.bookings){if(typeof b.id!=='string'||ids.has(b.id)||!s.groups.some(g=>g.id===b.groupId)||!s.songs.some(song=>song.id===b.songId)||!s.season.opportunities.some(o=>o.id===b.opportunityId)||!Number.isInteger(b.time)||!Array.isArray(b.members)||b.members.length<2||new Set(b.members).size!==b.members.length||!INTENTIONS[b.intention]||!['booked','assembling','playing','played','cancelled','missed'].includes(b.status))throw Error('Réservation invalide.');ids.add(b.id);}
+  const ids=new Set();for(const b of s.bookings){if(typeof b.id!=='string'||ids.has(b.id)||!s.groups.some(g=>g.id===b.groupId)||b.songId!==null&&!s.songs.some(song=>song.id===b.songId)||!s.season.opportunities.some(o=>o.id===b.opportunityId)||!Number.isInteger(b.time)||!Array.isArray(b.members)||b.members.length<2||new Set(b.members).size!==b.members.length||!INTENTIONS[b.intention]||!['booked','assembling','playing','played','cancelled','missed'].includes(b.status))throw Error('Réservation invalide.');ids.add(b.id);}
   for(const row of s.songArchive)if(!s.songs.some(song=>song.id===row.id)||typeof row.reason!=='string'||!Number.isFinite(row.time))throw Error('Archive invalide.');
   for(const r of s.showHistory)if(typeof r.id!=='string'||typeof r.groupName!=='string'||typeof r.songTitle!=='string'||typeof r.opportunityName!=='string'||!Number.isFinite(r.time)||!Array.isArray(r.members)||!num(r.score)||!num(r.quality)||!num(r.interpretation)||!num(r.conquered,0,12)||!num(r.total,8,12)||r.conquered>r.total||!num(r.combos,0,120)||!num(r.errors,0,120))throw Error('Historique de show invalide.');
   if(s.nextBookingId<=Math.max(0,...s.bookings.map(b=>Number(b.id.slice(1)))))throw Error('Identifiant de réservation invalide.');
