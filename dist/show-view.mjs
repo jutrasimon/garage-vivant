@@ -1,5 +1,5 @@
-import {CARDS} from './stage.mjs?v=0.6.2';
-import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext} from './show-playback.mjs?v=0.6.2';
+import {CARDS} from './stage.mjs?v=0.6.3';
+import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext} from './show-playback.mjs?v=0.6.3';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={guitar:'Guitare',bass:'Basse',drums:'Batterie',voice:'Chant',keys:'Clavier',sax:'Saxophone',trumpet:'Trompette',percussion:'Percussions'};
 const colors={rhythm:'#a9c995',impact:'#e4bd75',emotion:'#d3a8c3',support:'#9fc8d2',curse:'#d39280'};
@@ -47,15 +47,17 @@ export function showTitleHTML(show) {
   const cards=cardEvents(show),phrase=cards.at(-1)?.phrase??0;
   return `<div class="live-show-title"><span class="eyebrow">${show.preview?'ESSAI':'EN DIRECT'} · ${esc(show.role||'Prestation')} · ${esc(show.opportunityName)}</span><h2>${esc(show.groupName)}</h2><p>♫ ${esc(show.song.title)} <span>· morceau ${(show.songIndex||0)+1}/${show.setlist?.length||1} · phrase ${phrase+1}/5</span></p><div class="song-progress"><div class="bar"><i style="width:${songSeconds(show)/30*100}%"></i></div><b data-song-time>${Math.floor(songSeconds(show))} / 30 s</b></div></div>`;
 }
-export function showOverlayHTML(show,{ready=false}={}) {
+export function showOverlayHTML(show,{ready=false,geometry={width:900,height:650,scale:1,ox:0,oy:0}}={}) {
   const cards=cardEvents(show),event=cards.at(-1),recent=cards.slice(-4,-1).reverse();
-  const decks=show.actors.map((a,i)=>{const pos=actorPosition(show,i);return `<button class="stage-deck" data-stage-deck="${a.id}" data-key="deck-${a.id}" style="left:${pos.x/9}%;top:${pos.deckY/6.5}%" aria-label="Voir le deck de ${esc(a.name)} : ${a.played.length} sur 5 cartes jouées"><span class="deck-backs"><i></i><i></i><i></i></span><small>${a.played.length}/5</small></button>`;}).join('');
-  if(ready)return `${decks}<div class="show-ready"><span class="eyebrow">LE QUARTIER ATTEND</span><h3>${esc(show.groupName)}</h3><p>5 cartes par musicien · 30 secondes par chanson.<br>Inspecte les decks, puis lance le show.</p><button id="start-show" class="primary">▶ Lancer le show</button></div>`;
-  if(!event)return `${decks}<div class="show-count-in">Place à la musique…</div>`;
+  const position=(x,y)=>`left:${(geometry.ox+x*geometry.scale)/geometry.width*100}%;top:${(geometry.oy+y*geometry.scale)/geometry.height*100}%`;
+  const actors=show.actors.map((a,i)=>{const pos=actorPosition(show,i);return `<button class="stage-actor-anchor" data-stage-actor="${a.id}" style="${position(pos.x,pos.y-18)}" aria-label="Inspecter ${esc(a.name)}"></button>`;}).join('');
+  const decks=show.actors.map((a,i)=>{const pos=actorPosition(show,i);return `<button class="stage-deck" data-stage-deck="${a.id}" data-key="deck-${a.id}" style="${position(pos.x,pos.deckY)}" aria-label="Voir le deck de ${esc(a.name)} : ${a.played.length} sur 5 cartes jouées"><span class="deck-backs"><i></i><i></i><i></i></span><small>${a.played.length}/5</small></button>`;}).join('');
+  if(ready)return `${actors}${decks}<div class="show-ready"><span class="eyebrow">LE QUARTIER ATTEND</span><h3>${esc(show.groupName)}</h3><p>5 cartes par musicien · 30 secondes par chanson.<br>Inspecte les decks, puis lance le show.</p><button id="start-show" class="primary">▶ Lancer le show</button></div>`;
+  if(!event)return `${actors}${decks}<div class="show-count-in">Place à la musique…</div>`;
   const c=CARDS[event.cardId],actor=show.actors.find(a=>a.id===event.actorId),{impact,target}=cardContext(show,event),combo=comboLabel(impact||target),age=eventAge(show,event);
-  const side=(target?.x??550)<450?'right':'left',phase=age<.2?'drawing':impact||c.tag==='curse'?'resolved':'targeting';
+  const phase=age<.2?'drawing':impact||c.tag==='curse'?'resolved':'targeting';
   const previous=recent.map(e=>`<button class="discard-card ${CARDS[e.cardId].tag}" data-inspect-card="${e.id}" title="Revoir ${esc(CARDS[e.cardId].name)}"><small>${esc(show.actors.find(a=>a.id===e.actorId)?.name)}</small><b>${esc(CARDS[e.cardId].name)}</b></button>`).join('');
-  return `${decks}<div class="card-foreground ${side} ${age>1.6?'settled':''}"><div class="discard-stack">${previous}</div><button class="hero-card ${c.tag} ${combo?'combo-card':''} ${phase}" data-key="card-${show.id}-${show.songIndex||0}-${event.id}" data-inspect-card="${event.id}" aria-label="Inspecter ${esc(c.name)}"><small>${esc(actor.name)} · ${names[actor.instrument]}</small><strong>${esc(c.name)}</strong>${instrumentArt(actor.instrument,c.tag)}${combo?`<span class="combo-badge">${combo}</span>`:''}<p>${esc(rule(c))}</p>${c.tag==='emotion'?`<span class="emotion-badge">Intensité ${show.song.intensity}/100 · puissance +${Math.round(show.song.intensity*.7)} %</span>`:''}${combo?`<b class="combo-value">Puissance +${combo==='GROOVE + CRESCENDO'?'71':combo==='GROOVE'?'22':'40'} %</b>`:''}<span class="card-outcome">${esc(outcome(show,event))}</span></button></div>`;
+  return `${actors}${decks}<div class="card-foreground"><div class="discard-stack">${previous}</div><button class="hero-card ${c.tag} ${combo?'combo-card':''} ${phase}" data-key="card-${show.id}-${show.songIndex||0}-${event.id}" data-inspect-card="${event.id}" aria-label="Inspecter ${esc(c.name)}"><small>${esc(actor.name)} · ${names[actor.instrument]}</small><strong>${esc(c.name)}</strong>${instrumentArt(actor.instrument,c.tag)}<div class="card-modifier">${combo?`<span class="combo-badge">${combo} · +${combo==='GROOVE + CRESCENDO'?'71':combo==='GROOVE'?'22':'40'} %</span>`:c.tag==='emotion'?`<span class="emotion-badge">Intensité ${show.song.intensity}/100 · +${Math.round(show.song.intensity*.7)} %</span>`:`<span class="card-type">${tags[c.tag]}</span>`}</div><p class="card-rule">${esc(rule(c))}</p><span class="card-outcome">${esc(outcome(show,event))}</span></button></div>`;
 }
 export function showResourcesHTML(show) {
   const cards=cardEvents(show),next=show.cues[show.nextCue],actor=show.actors.find(a=>a.id===next?.actorId);
@@ -74,7 +76,7 @@ export function cardInspectionHTML(show,id) {
 
 const box=(ctx,x,y,w,h,c,r=0)=>{ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();};
 let labelScale=1;
-const text=(ctx,t,x,y,size=12,c='#e9eedf')=>{ctx.font=`600 ${Math.max(size,9/labelScale)}px system-ui`;ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText(t,x,y);};
+const text=(ctx,t,x,y,size=12,c='#e9eedf')=>{ctx.font=`600 ${Math.max(size,10/labelScale)}px system-ui`;ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText(t,x,y);};
 function circle(ctx,x,y,r,stroke,fill=null,width=2){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.lineWidth=width;ctx.strokeStyle=stroke;if(fill){ctx.fillStyle=fill;ctx.fill();}ctx.stroke();}
 function pop(ctx,t,x,y,color='#f2dfaa',size=16){ctx.font=`700 ${Math.max(size,11/labelScale)}px system-ui`;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#16352b';ctx.strokeText(t,x,y);ctx.fillStyle=color;ctx.fillText(t,x,y);}
 export function drawShowStage(canvas,show,{reduced=false,selectedFan=null}={},decorateCube=()=>{}) {
@@ -87,19 +89,28 @@ export function drawShowStage(canvas,show,{reduced=false,selectedFan=null}={},de
   ['#b4d998','#cba0d9','#e8c278'].forEach((c,i)=>{ctx.fillStyle=c+'12';ctx.beginPath();ctx.moveTo(210+i*235,15);ctx.lineTo(50+i*280,600);ctx.lineTo(280+i*260,600);ctx.fill();box(ctx,196+i*235,20,28,9,c,4);});
   text(ctx,'GARAGE VIVANT · LIVE',450,36,10,'#8fba99');
   const cards=cardEvents(show),latest=cards.at(-1),context=latest?cardContext(show,latest):{},age=latest?eventAge(show,latest):100;
+  const shotOrigin={x:(g.cardX+g.cardWidth*.18-g.ox)/g.scale,y:(g.cardY+g.cardHeight*.28-g.oy)/g.scale};
   for(const z of show.zones){const trance=z.kind==='trance',remaining=Math.max(0,songSeconds(show,Math.min(z.until,show.totalTicks||2160))-songSeconds(show));circle(ctx,z.x,z.y,z.radius,trance?'#c9a8da99':'#a5d58cbb',trance?'#c7a4ed0d':'#9fd29612');text(ctx,`${trance?'TRANSE':'GROOVE'} · ${remaining.toFixed(1)} s`,z.x,Math.max(232,z.y-z.radius-8),12,trance?'#d7c5e5':'#c4e6b0');}
-  if(context.target&&!context.impact&&CARDS[latest.cardId].tag!=='curse'){const t=context.target;ctx.setLineDash([7,6]);circle(ctx,t.x,t.y,t.radius,'#d6e8bd');ctx.setLineDash([]);text(ctx,'ZONE VISÉE',t.x,Math.max(234,t.y-t.radius-10),12);}
-  show.actors.forEach((a,i)=>{const pos=actorPosition(show,i),active=latest?.actorId===a.id&&age<1.3,played=cards.filter(e=>e.actorId===a.id).at(-1),bounce=reduced?0:Math.sin(show.tick*.05+i)*1.5+(active?Math.sin(Math.min(1,age/.3)*Math.PI)*5:0),x=pos.x,y=pos.y-bounce,size=Math.max(pos.size,18/g.scale);
+  if(context.target&&CARDS[latest.cardId].tag!=='curse'&&age<1.3){
+    const t=context.target,c=colors[CARDS[latest.cardId].tag],pending=!context.impact;
+    ctx.save();ctx.strokeStyle=c;ctx.globalAlpha=pending?.85:Math.max(0,1-age/1.3);ctx.lineWidth=2/g.scale;ctx.setLineDash([6/g.scale,6/g.scale]);ctx.beginPath();ctx.moveTo(shotOrigin.x,shotOrigin.y);ctx.lineTo(t.x,t.y);ctx.stroke();ctx.setLineDash([]);
+    circle(ctx,t.x,t.y,t.radius,c,pending?c+'12':null,2/g.scale);circle(ctx,t.x,t.y,12/g.scale,c,null,2/g.scale);
+    ctx.beginPath();ctx.moveTo(t.x-19/g.scale,t.y);ctx.lineTo(t.x+19/g.scale,t.y);ctx.moveTo(t.x,t.y-19/g.scale);ctx.lineTo(t.x,t.y+19/g.scale);ctx.stroke();
+    text(ctx,pending?'ZONE VISÉE':'IMPACT',t.x,Math.max(234,t.y-t.radius-12/g.scale),13,c);
+    if(pending&&!reduced){const duration=Math.max(.08,songSeconds(show,context.target.tick??latest.tick+30)-songSeconds(show,latest.tick)),p=Math.min(1,age/duration);circle(ctx,shotOrigin.x+(t.x-shotOrigin.x)*p,shotOrigin.y+(t.y-shotOrigin.y)*p,5/g.scale,c,c,1/g.scale);}
+    ctx.restore();
+  }
+  show.actors.forEach((a,i)=>{const pos=actorPosition(show,i),active=latest?.actorId===a.id&&age<1.3,played=cards.filter(e=>e.actorId===a.id).at(-1),bounce=reduced?0:Math.sin(show.tick*.05+i)*1.5+(active?Math.sin(Math.min(1,age/.3)*Math.PI)*5:0),x=pos.x,y=pos.y-bounce,size=Math.max(pos.size,Math.min(show.actors.length<=4?(g.width<700?30:44):show.actors.length<=8?(g.width<700?22:34):18,g.scale*90)/g.scale);
     if(active)circle(ctx,x,y-size/2,size*.8,CARDS[latest.cardId].tag==='curse'?'#d59280':'#d9e7b7',null,2);
     ctx.save();ctx.translate(x,y);if(!reduced&&a.identity?.movement==='flamboyant')ctx.rotate(Math.sin(show.tick*.06)*.035);box(ctx,-size/2,-size,size,size,a.color,4);box(ctx,-size/2,-size,size,5,'#ffffff30',3);box(ctx,-6,-size*.55,3,3,'#f4f2df');box(ctx,4,-size*.55,3,3,'#f4f2df');decorateCube(ctx,0,0,size,a);ctx.restore();text(ctx,a.name,x,y+16,show.actors.length>12?8:11);text(ctx,({guitar:'♫',bass:'♬',drums:'●',voice:'♪',keys:'▥',sax:'♮',trumpet:'♯',percussion:'✦'})[a.instrument],x+size/2+12,y-10,18,'#ecc786');
-    if(active&&context.target&&!reduced){const targetX=(context.target.x<450?790:110),targetY=470;ctx.strokeStyle=colors[CARDS[played.cardId].tag];ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,pos.deckY);ctx.quadraticCurveTo(x,targetY-100,targetX,targetY);ctx.stroke();const t=Math.min(1,age/.2),px=(1-t)**2*x+2*(1-t)*t*x+t*t*targetX,py=(1-t)**2*pos.deckY+2*(1-t)*t*(targetY-100)+t*t*targetY;if(age<.2){box(ctx,px-9,py-14,18,27,colors[CARDS[played.cardId].tag],3);}}
+    if(active&&age<.2&&!reduced){const t=Math.min(1,age/.2),px=x+(shotOrigin.x-x)*t,py=pos.deckY+(shotOrigin.y-pos.deckY)*t;box(ctx,px-9,py-14,18,27,colors[CARDS[played.cardId].tag],3);}
   });
   for(const f of show.fans){const reaction=show.events.find(e=>e.type==='reaction'&&e.fanId===f.id),ra=reaction?eventAge(show,reaction):100,fragmented=(f.fragmented||f.reacted&&f.reaction==='euphoria')&&ra>.12,bounce=reduced?0:Math.sin(show.tick*.045+Number(f.id.slice(1)))*f.meter/65,x=f.x,y=f.y-bounce;
     ctx.fillStyle='#071a1e55';ctx.beginPath();ctx.ellipse(x,y+5,20,6,0,0,Math.PI*2);ctx.fill();
     if(fragmented){for(let i=0;i<5;i++){const angle=i*Math.PI/2.5,d=reduced?20:Math.min(38,Math.max(0,ra)*55),px=x+Math.cos(angle)*d,py=y-12+Math.sin(angle)*d*.65;box(ctx,px-5,py-8,10,10,f.color,2);box(ctx,px-2,py-4,1.5,1.5,'#223932');box(ctx,px+2,py-4,1.5,1.5,'#223932');decorateCube(ctx,px,py+2,10,{identity:{accessory:['hair','glasses','cap'][Number(f.id.slice(1))%3]}});}}
-    else{const size=Math.max(28,16/g.scale);box(ctx,x-size/2,y-size,size,size,f.color,4);box(ctx,x-size/2,y-size,size,5,'#ffffff35',3);box(ctx,x-size*.18,y-size*.65,size*.1,size*.1,'#223932');box(ctx,x+size*.14,y-size*.65,size*.1,size*.1,'#223932');decorateCube(ctx,x,y,size,{identity:{accessory:['hair','glasses','cap'][Number(f.id.slice(1))%3]}});if(f.reacted)text(ctx,f.reaction==='trance'?'♬':'♡',x+23,y-24,18,f.reaction==='trance'?'#d7b8e3':'#e6b0d0');}
+    else{const size=Math.max(38,Math.min(g.width<700?(show.fans.length>12?16:24):show.fans.length>12?30:40,g.scale*(show.fans.length>12?44:68))/g.scale);box(ctx,x-size/2,y-size,size,size,f.color,4);box(ctx,x-size/2,y-size,size,5,'#ffffff35',3);box(ctx,x-size*.18,y-size*.65,size*.1,size*.1,'#223932');box(ctx,x+size*.14,y-size*.65,size*.1,size*.1,'#223932');decorateCube(ctx,x,y,size,{identity:{accessory:['hair','glasses','cap'][Number(f.id.slice(1))%3]}});if(f.reacted)text(ctx,f.reaction==='trance'?'♬':'♡',x+23,y-24,18,f.reaction==='trance'?'#d7b8e3':'#e6b0d0');}
     const hit=show.events.filter(e=>e.type==='impact'&&e.targets?.some(t=>t.id===f.id)).at(-1),target=hit?.targets.find(t=>t.id===f.id),ha=hit?eventAge(show,hit):100,displayMeter=target&&ha<.3?target.before+(target.after-target.before)*Math.max(0,ha/.3):f.meter;
-    box(ctx,x-25,y+13,50,6,'#294740',3);box(ctx,x-25,y+13,50*displayMeter/100,6,f.reacted?'#e7c96f':'#94bd98',3);text(ctx,f.name,x,y+33,11,'#c7d2c3');
+    const meterWidth=Math.max(50,32/g.scale),meterHeight=Math.max(6,4/g.scale);box(ctx,x-meterWidth/2,y+13,meterWidth,meterHeight,'#294740',3);box(ctx,x-meterWidth/2,y+13,meterWidth*displayMeter/100,meterHeight,f.reacted?'#e7c96f':'#94bd98',3);text(ctx,f.name,x,y+33,11,'#c7d2c3');
     if(target&&ha<.85&&target.emotion>1)circle(ctx,x,y-14,23,'#dfb8cf');
     if(target&&ha<.85&&target.after>target.before)pop(ctx,`+${Math.round(target.after-target.before)}`,x+32,y-24-(reduced?0:ha*12),'#d9edbb');
     if(ra<1)pop(ctx,reactions[f.reaction].toUpperCase(),x,y-48-(reduced?0:ra*12),f.reaction==='euphoria'?'#f2d27f':'#e6bbd5',14);

@@ -1,4 +1,4 @@
-import {RELEASE_VERSION,PATCH_NOTES} from './release.mjs?v=0.6.2';
+import {RELEASE_VERSION,PATCH_NOTES} from './release.mjs?v=0.6.3';
 const normalize=x=>x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const topics={shows:['Shows et public','scène'],actions:['Actions et sac Rapin','dé'],musique:['Chansons et bands','note'],personnages:['Personnages et émotions','cube'],relations:['Relations et souvenirs','liens'],temps:['Temps et vitesse','horloge'],technique:['Sauvegardes','fichier'],guide:['Prendre la scène','scène']};
 const paths={search:'M21 21l-5-5m2-6a7 7 0 1 1-14 0 7 7 0 0 1 14 0',scène:'M3 17h18M5 17V7l7-4 7 4v10M9 10v3m6-3v3M7 21h10',dé:'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2M7 7h.01M12 12h.01M17 17h.01',note:'M9 18V5l11-2v13M9 8l11-2M9 18c0 2-6 3-6 0s6-3 6 0m11-2c0 2-6 3-6 0s6-3 6 0',cube:'M12 3l9 5v8l-9 5-9-5V8l9-5m-9 5 9 5 9-5m-9 5v8',liens:'M10 8 7 5a3 3 0 0 0-4 4l4 4m7 3 3 3a3 3 0 0 0 4-4l-4-4M8 8l8 8',horloge:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18m0 4v5l4 2',fichier:'M14 3H5v18h14V8l-5-5m0 0v5h5M8 13h8M8 17h5',flèche:'M7 17 17 7M7 7h10v10'};

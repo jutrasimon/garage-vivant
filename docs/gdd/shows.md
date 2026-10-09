@@ -39,3 +39,7 @@ Cinq phrases rythment chaque chanson. Pour un quartet, vingt cartes disposent d�
 - **Public** : gains affichés près des jauges. Une euphorie donne jusqu’à +13 aux voisins dans 175 unités; une émotion donne jusqu’à +5 et +0,18 de réceptivité; une transe crée une zone rythmique de bonus ×1,40. Les jauges plafonnent à 100.
 
 Les zones sont représentées par des cercles de rayon exact, même si des lumières donnent une profondeur à la scène. Les cubes restent carrés. Cliquer une carte donne les cibles et gains enregistrés, pas une estimation. Cliquer un fan, un musicien ou son deck met la lecture en pause; X, Échap ou clic extérieur rétablit l’état précédent, y compris une pause manuelle. Les effets réduits conservent les cibles, jauges, ressources et résultats.
+
+### Présentation intégrée (V0.6.3)
+
+Le show remplit l’espace sous la navigation. Le nom du groupe et la chanson se trouvent dans l’arène, avec la progression en haut et les ressources et commandes au bas. Le transport du quartier se retire pendant cette vue. La carte garde une taille et un emplacement fixes; sa trajectoire rejoint la cible annoncée dans la foule. Le canvas utilise une transformation uniforme, avec une place réservée à la carte, et le clic utilise la même transformation. Aucun résultat de simulation ne dépend de cette mise en page.

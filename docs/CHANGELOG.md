@@ -1,5 +1,12 @@
 # Changements
 
+## 0.6.3 — Tout le show dans le jeu
+
+- Le show occupe toute la largeur et la hauteur disponibles. Nom du groupe, chanson, progression, jauges et commandes sont intégrés à l’arène; aucun défilement extérieur nécessaire.
+- Cartes de même taille, dans un emplacement fixe, y compris les erreurs et les combos. La taille ne change plus à la résolution de l’effet.
+- La trajectoire relie la carte à la zone visée dans la foule, marquée avant l’impact. Musiciens, fans, decks et jauges sont agrandis.
+- Lecture, pause, inspection, résultats et sauvegardes conservés sur ordinateur et téléphone.
+
 ## 0.6.2 — Les cartes prennent la scène
 
 - Scène aux proportions correctes, sans panneau latéral qui écrase le canvas.

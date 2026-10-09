@@ -1,6 +1,6 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.6.2
+# Garage vivant · v0.6.3
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs priorités ou intervenir.
 
@@ -56,7 +56,7 @@ Les sept suites couvrent migrations réelles V5.1, sauvegardes actives, composit
 
 La CI construit jeu et documentation ensemble et publie `dist/` depuis `main` après validation. Les PR vérifient sans publier. Les captures sont disponibles dans l’artefact `interface-v6`. Voir [le plan V6](docs/PLAN_V6.md), les [GDD par système](docs/gdd/) et [l’historique](docs/CHANGELOG.md). Le test de compréhension et l’équilibrage des probabilités restent à faire avec des joueurs.
 
-## Mise en scène V0.6.2
+## Mise en scène V0.6.3
 
 La scène conserve ses proportions et occupe une seule arène. Le show attend « Lancer le show ». Chaque musicien pige cinq cartes distinctes sans remise; son deck est visible et consultable. Les cartes sortent de leur pile, chevauchent la scène et rejoignent les cartes récemment jouées. Cliquer une carte, un musicien ou un fan suspend la lecture; fermer par X, Échap ou clic extérieur rétablit son état précédent. Les cartes à venir ne sont pas révélées par la consultation du deck.
 

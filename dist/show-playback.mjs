@@ -27,8 +27,13 @@ export function advanceShowClock(clock,show,dt,speed=1) {
   return Math.max(0,Math.floor(musicalTick(show,clock.seconds)+1e-7)-show.tick);
 }
 export function stageGeometry(canvas) {
-  const width=canvas.clientWidth||900,height=canvas.clientHeight||650,scale=Math.min(width/900,height/650);
-  return {width,height,scale,ox:(width-900*scale)/2,oy:(height-650*scale)/2};
+  const width=canvas.clientWidth||900,height=canvas.clientHeight||650,integrated=canvas.dataset?.showLayout==='integrated',compact=width<700;
+  const cardWidth=compact?Math.min(204,Math.max(156,width*.46)):Math.min(280,Math.max(230,width*.21));
+  const cardHeight=compact?Math.min(214,Math.max(170,height*.42)):Math.min(366,Math.max(120,height-24));
+  const availableWidth=integrated&&!compact?Math.max(120,width-cardWidth-36):width;
+  const availableHeight=integrated&&compact?Math.max(100,height-cardHeight*.5):height;
+  const scale=Math.min(availableWidth/900,availableHeight/650);
+  return {width,height,scale,ox:(availableWidth-900*scale)/2,oy:integrated?(compact?0:Math.min(12,(availableHeight-650*scale)/2)):(height-650*scale)/2,cardWidth,cardHeight,cardX:width-cardWidth-12,cardY:height-cardHeight-12};
 }
 export function stagePoint(canvas,clientX,clientY) {
   const r=canvas.getBoundingClientRect(),g=stageGeometry(canvas);

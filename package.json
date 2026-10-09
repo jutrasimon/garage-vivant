@@ -1,11 +1,11 @@
 {
   "name": "garage-vivant",
   "private": true,
-  "version": "0.6.2",
+  "version": "0.6.3",
   "type": "module",
   "scripts": {
     "test": "node --test tests/engine.test.mjs tests/systems.test.mjs tests/v4.test.mjs tests/v5.test.mjs tests/runtime.test.mjs tests/interface.test.mjs tests/v6.test.mjs tests/show.test.mjs",
-    "test:browser": "node tests/browser.test.mjs",
+    "test:browser": "node tests/browser.test.mjs && node tests/show-layout.test.mjs",
     "docs:build": "node scripts/build-docs.mjs"
   },
   "devDependencies": {
