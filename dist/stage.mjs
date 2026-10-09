@@ -185,13 +185,21 @@ export function validatePerformance(s) {
   const number=(v,min,max)=>Number.isFinite(v)&&v>=min&&v<=max;
   if(!s || !['playing','finished'].includes(s.status) || !Number.isInteger(s.tick) || !number(s.tick,0,SHOW_TICKS) || !Number.isInteger(s.rng) || !INTENTIONS[s.intention] || !Array.isArray(s.actors) || s.actors.length<2 || s.actors.length>24 || !Array.isArray(s.fans) || s.fans.length<8 || s.fans.length>12 || !Array.isArray(s.cues) || s.cues.length!==s.actors.length*5 || !Number.isInteger(s.nextCue) || !number(s.nextCue,0,s.cues.length) || !Array.isArray(s.events) || !Array.isArray(s.zones) || !Array.isArray(s.impacts) || !s.song || !number(s.mastery,0,100) || !number(s.development,0,100) || !number(s.song.quality,0,100)) throw Error('Spectacle invalide.');
   const ids=new Set();
+  if(typeof s.applied!=='boolean'||typeof s.preview!=='boolean'||!s.sourceOpportunity||!number(s.song.intensity,0,100)||!styles.includes(s.genre)||typeof s.song.title!=='string')throw Error('État de spectacle invalide.');
   for(const p of s.actors) {
     if(typeof p.id!=='string'||ids.has(p.id)||typeof p.name!=='string'||!instruments.includes(p.instrument)||!number(p.energy,0,100)||!number(p.skill,0,100)||!number(p.decadence,0,100)||!Array.isArray(p.deck)||p.deck.length<8||p.deck.length>10||new Set(p.deck).size!==p.deck.length||p.deck.some(id=>!CARDS[id])||!Array.isArray(p.hand)||p.hand.length!==5||new Set(p.hand).size!==5||p.hand.some(id=>!p.deck.includes(id))||!Array.isArray(p.played)||p.played.some(id=>!p.hand.includes(id))||!number(p.errors,0,5)||!number(p.energyLoss,0,100)) throw Error('Deck de spectacle invalide.');
     ids.add(p.id);
+    const expected=s.cues.filter(c=>c.actorId===p.id&&c.tick<=s.tick).map(c=>c.cardId);
+    if(p.played.length!==expected.length||p.played.some((id,i)=>id!==expected[i]))throw Error('Cartes jouées incohérentes.');
   }
   const fanIds=new Set();
   for(const f of s.fans) {if(typeof f.id!=='string'||fanIds.has(f.id)||!number(f.x,135,875)||!number(f.y,250,600)||!number(f.meter,0,100)||!number(f.vx,-10000,10000)||!number(f.vy,-10000,10000)||!number(f.homeX,100,900)||!number(f.homeY,200,650)||!number(f.receptivity,1,1.45)||!styles.includes(f.style)||!instruments.includes(f.instrument)||!['euphoria','emotion','trance'].includes(f.reaction)) throw Error('Public invalide.');fanIds.add(f.id);}
   for(const c of s.cues) if(!ids.has(c.actorId)||!CARDS[c.cardId]||!Number.isInteger(c.phrase)||!number(c.phrase,0,4)||!number(c.tick,0,SHOW_TICKS)) throw Error('Phrase musicale invalide.');
+  if(s.nextCue!==s.cues.filter(c=>c.tick<=s.tick).length)throw Error('Position de lecture incohérente.');
+  if(s.events.length>s.actors.length*10+13||s.events.some((e,i)=>e.id!==i+1||!Number.isInteger(e.tick)||!number(e.tick,0,s.tick)||typeof e.text!=='string'||!['card','impact','curse','reaction','final'].includes(e.type)))throw Error('Déroulement de spectacle invalide.');
+  for(const z of s.zones)if(!['groove','trance'].includes(z.kind)||!number(z.x,0,900)||!number(z.y,0,650)||!number(z.radius,0,400)||!number(z.until,0,SHOW_TICKS*3))throw Error('Zone musicale invalide.');
+  for(const h of s.impacts)if(!ids.has(h.actorId)||!CARDS[h.cardId]||!number(h.tick,0,SHOW_TICKS)||!number(h.x,0,900)||!number(h.y,0,650)||!number(h.radius,0,400)||!number(h.power,0,10000)||!Array.isArray(h.combo))throw Error('Impact musical invalide.');
   if(s.status==='finished' && (!s.result || s.tick!==SHOW_TICKS)) throw Error('Bilan de spectacle manquant.');
+  if(s.status==='finished') {const expected=performanceResult(s);for(const key of Object.keys(expected))if(typeof expected[key]==='object'?Object.keys(expected[key]).some(k=>expected[key][k]!==s.result[key]?.[k]):expected[key]!==s.result[key])throw Error('Bilan de spectacle incohérent.');}
   return s;
 }
