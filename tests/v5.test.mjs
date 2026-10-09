@@ -47,6 +47,17 @@ const overlap=prepared(222,4),[a,b,c,d]=overlap.s.people;const other=createGroup
 for(let n=0;n<8&&!first?.ok;n++)first=command(overlap.s,{type:'book',groupId:overlap.g.id,songId:overlap.song.id,opportunityId:occasion.id,intention:'tight',members:[a.id,b.id]});assert(first.ok);
 const refused=command(overlap.s,{type:'book',groupId:other.id,songId:overlap.song.id,opportunityId:occasion.id,intention:'tight',members:[a.id,c.id]});assert(!refused.ok);assert(refused.refused.some(r=>r.id===a.id&&r.reason.includes('engagé')));assert(overlap.s.events.some(e=>e.type==='conflict'&&e.text.includes('incompatible')));
 
+// Several independent bands share a local bill. A first set cannot close the season
+// or erase another band's confirmed booking; departures preserve that same bill.
+assert(command(overlap.s,{type:'avatar',actorId:c.id}).ok);let second;
+for(let n=0;n<8&&!second?.ok;n++)second=command(overlap.s,{type:'book',groupId:other.id,songId:overlap.song.id,opportunityId:occasion.id,intention:'tight',members:[c.id,d.id]});assert(second.ok);
+const departure=restore(copy(overlap.s));removePerson(departure,a.id);assert.equal(departure.bookings.find(b=>b.id===first.bookingId).status,'cancelled');assert.equal(departure.season.opportunities.find(o=>o.id===occasion.id).status,'booked');restore(departure);
+for(const o of overlap.s.season.opportunities)if(o!==occasion)o.status='missed';
+assert(advanceToBooking(overlap.s,first.bookingId).ok);playTicks(overlap.s,SHOW_TICKS);assert.equal(occasion.status,'booked');assert.equal(overlap.s.season.ended,false);assert(!newSeason(overlap.s).ok);
+step(overlap.s,1);assert.equal(overlap.s.performance.status,'playing');playTicks(overlap.s,SHOW_TICKS);assert.equal(overlap.s.showHistory.length,2);assert.equal(occasion.status,'played');assert.equal(overlap.s.season.ended,true);restore(overlap.s);
+
+const emptyBand=createWorld(63,3),former=emptyBand.people.slice(0,2).map(p=>p.id),oldBand=createGroup(emptyBand,former,{manual:true});for(const id of former)removePerson(emptyBand,id);assert(emptyBand.groups.includes(oldBand));assert.equal(oldBand.members.length,0);assert.equal(oldBand.alumni.length,2);assert(oldBand.archivedAt!==null);restore(emptyBand);
+
 // Group credit needs actual presence and an unambiguous group. A multi-band pair cannot credit both.
 const rehearsal=prepared(555,3),pair=rehearsal.s.people.slice(0,2),band2=createGroup(rehearsal.s,pair.map(p=>p.id),{manual:true});const j={id:'isolated',groupId:null,songId:null,elapsed:1};const before=rehearsal.g.development;groupRehearsal(rehearsal.s,j,pair);assert.equal(rehearsal.g.development,before);assert.equal(j.groupId,null);j.groupId=rehearsal.g.id;j.songId=rehearsal.song.id;groupRehearsal(rehearsal.s,j,pair);assert(rehearsal.g.development>before);assert(rehearsal.g.repertoire[0].mastery>0);const mastery=rehearsal.g.repertoire[0].mastery;groupRehearsal(rehearsal.s,j,pair.slice(0,1));assert.equal(rehearsal.g.repertoire[0].mastery,mastery);
 rehearsal.g.development=.1;rehearsal.g.lastWorked=0;rehearsal.s.time=60*100;lifeMinute(rehearsal.s);assert(rehearsal.g.archivedAt!==null);assert(rehearsal.s.groups.includes(rehearsal.g));assert(command(rehearsal.s,{type:'revive',groupId:rehearsal.g.id}).ok);assert.equal(rehearsal.g.archivedAt,null);

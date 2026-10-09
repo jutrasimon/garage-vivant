@@ -149,7 +149,7 @@ export function command(s,cmd) {
     }
     case 'cancelBooking': {
       const b=s.bookings.find(b=>b.id===cmd.bookingId&&b.members.includes(actor.id)&&b.status==='booked');if(!b)return result(false,'Cet engagement ne peut plus être annulé.');
-      b.status='cancelled';const o=s.season.opportunities.find(o=>o.id===b.opportunityId);const other=s.bookings.find(x=>x!==b&&x.opportunityId===o.id&&['booked','assembling','playing'].includes(x.status));o.status=other?'booked':o.time>s.time?'open':'missed';o.bookingId=other?.id||null;return result(true,'Engagement annulé.');
+      b.status='cancelled';refreshOpportunity(s,b.opportunityId);return result(true,'Engagement annulé.');
     }
     case 'replay': {
       const old=s.performance;if(!old||old.status!=='finished')return result(false,'Le show doit être terminé.');
@@ -184,8 +184,14 @@ export function travelEngagement(s,p) {
   if(!a.route.length){p.place=a.dest;a.arrived=true;p.needs.energy=clamp(p.needs.energy+.1);}
   return true;
 }
+export function refreshOpportunity(s,id) {
+  const o=s.season.opportunities.find(o=>o.id===id);if(!o)return;
+  const bookings=s.bookings.filter(b=>b.opportunityId===id),active=bookings.find(b=>['booked','assembling','playing'].includes(b.status));
+  o.bookingId=active?.id||null;
+  o.status=active?'booked':bookings.some(b=>b.status==='played')?'played':s.time>=o.time?'missed':'open';
+}
 function cancelAtDoor(s,b,reason) {
-  b.status='missed';const o=s.season.opportunities.find(o=>o.id===b.opportunityId);if(o)o.status='missed';
+  b.status='missed';refreshOpportunity(s,b.opportunityId);
   log(s,'show',`Show reporté : ${reason}.`,b.members,{bookingId:b.id});for(const p of s.people)if(p.engagement?.bookingId===b.id){p.engagement=null;decide(s,p);}
 }
 export function lifeMinute(s) {
@@ -216,7 +222,7 @@ export function completePerformance(s) {
   show.applied=true;if(show.preview)return true;
   const b=s.bookings.find(b=>b.performanceId===show.id),g=s.groups.find(g=>g.id===show.groupId),o=s.season.opportunities.find(o=>o.id===show.opportunityId),r=show.result;
   const record={id:show.id,time:s.time,groupId:show.groupId,groupName:show.groupName,songId:show.song.id,songTitle:show.song.title,opportunityId:show.opportunityId,opportunityName:show.opportunityName,intention:show.intention,members:show.actors.map(p=>p.id),...r};s.showHistory.push(record);
-  if(b)b.status='played';if(o)o.status='played';
+  if(b){b.status='played';refreshOpportunity(s,b.opportunityId);}else if(o)o.status='played';
   if(g){g.development=clamp(g.development+2+r.score*.055);g.reputation=clamp(g.reputation+r.score*.16);g.lastWorked=s.time;g.shows.push(show.id);g.moments.unshift({time:s.time,type:'show',text:`${show.opportunityName} · ${r.score}/100`,participants:record.members});g.moments=g.moments.slice(0,12);const song=g.repertoire.find(x=>x.songId===show.song.id);if(song)song.mastery=clamp(song.mastery+3);}
   const event=log(s,'show',`${show.groupName} joue « ${show.song.title} » : ${r.conquered}/${r.total} fans conquis, accueil ${r.score}/100.`,record.members,{groupId:show.groupId,showId:show.id,explanation:`Écriture ${r.quality}, interprétation ${r.interpretation}, ${r.combos} combos, ${r.errors} erreurs. Les goûts du public et les zones d’impact ont compté.`});
   for(const actor of show.actors) {
