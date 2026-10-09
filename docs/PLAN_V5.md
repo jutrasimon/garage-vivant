@@ -1,6 +1,6 @@
 # Garage vivant — Plan V5
 
-Statut : plan de conception, non implémenté. Base : V0.4.0, source Sites `e57388010c37dda631668b9533af29537e404a29`.
+Statut : implémenté en V0.5.0. Les seuils et choix du premier prototype sont documentés dans le README; les interactions passent par les vérifications Chromium de la CI avant publication. Base : V0.4.0, source Sites `e57388010c37dda631668b9533af29537e404a29`.
 
 ## Préalable : GitHub et stabilité des interactions
 
@@ -151,3 +151,11 @@ Ne pas construire de nouveaux outils génériques ou éditeurs de systèmes pend
 Non-régression : pause et vitesses, onglets internes/navigateur, migrations, déterminisme, comptes d’actions, jams à deux présents, départs, appartenances multiples, catalogue complet et absence de doubles effets. Tests de gameplay ciblés par étape et validation réelle des interactions UI.
 
 Test de conception final : après un show, le joueur peut expliquer ce qui s’est passé et décider ce qu’il veut changer pour le prochain.
+
+## Livraison V0.5.0
+
+Le plan est livré en une version jouable : stabilisation des panneaux, header fixe, personnage joueur et propositions, répertoire et répétitions, shows à cartes et foule physique, développement/réputation des bands, déchéance, saison complète, archives réversibles et patch notes. La CI bloque Pages si le moteur ou les interactions Chromium échouent.
+
+Le premier équilibrage utilise quatre occasions relatives aux jours 2/4/6/8, 36 secondes de show, des seuils de déchéance 25/50/70/85, 48 heures de grâce avant le déclin des bands, et un seuil de qualité d’archive de 25. Les paramètres restent des hypothèses de prototype. Le multi, la carrière mondiale et les outils génériques restent hors de cette livraison.
+
+La validation tactile est réalisée dans un viewport Chromium mobile, pas sur du matériel iOS/Android réel. Les sauvegardes V4 conservent leurs compétences, projets, catalogue et connaissance des relations. Le replay réutilise le même seed et le même tirage, sans réappliquer les conséquences.
