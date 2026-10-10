@@ -6,7 +6,7 @@ Une simulation autonome de musiciens dans une banlieue. Les personnages sont des
 
 [Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v071) · [Contribuer](CONTRIBUTING.md)
 
-**V7.1 — implémentée sur branche, en revue :** [plan et arbitrages de réalisation](docs/PLAN_V7_1.md).
+**V7.1 — réalisée :** [plan et arbitrages de réalisation](docs/PLAN_V7_1.md). Les règles, coefficients et raccords débranchés sont documentés dans les quatorze DDD.
 
 ## Prendre la scène
 

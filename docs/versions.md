@@ -2,6 +2,8 @@
 
 ## V0.7.1 — Actions et identité musicale {#v071}
 
+Réalisation du 10 octobre 2026. Le [plan V7.1](./PLAN_V7_1.md) conserve les décisions de conception et détaille les arbitrages de la version livrée ; les quatorze DDD décrivent son fonctionnement actuel.
+
 - Six actions : Détente, Socialiser, Pratiquer, Jam, Composer et Déchéance ; fourchettes personnelles et contenu par cycles.
 - Jeton défaussé dès la pige, aucun remboursement après recherche ; acquisition dans le sac, retraits depuis la défausse et remplissage sans résurrection.
 - Admission sociale initiale unique, résultats directs, intensité, départs et rare proposition d’activité.

@@ -1,6 +1,6 @@
 # Plan V7.1 — Actions, compositions et identité musicale
 
-**Statut : réalisation 0.7.1 sur branche, soumise à revue.** Compilation et réalisation du 10 octobre 2026. Le texte de conception reste conservé ci-dessous ; les [DDD](./gdd/documentation.md) décrivent les règles codées. La section 20 indique les arbitrages et limites.
+**Statut : réalisation 0.7.1 terminée.** Compilation et réalisation du 10 octobre 2026. Le texte de conception reste conservé ci-dessous ; les [DDD](./gdd/documentation.md) décrivent les règles codées. La section 20 indique les arbitrages et limites. L’intégration à `main` publie le jeu et la documentation ensemble après validation automatique.
 
 Les mentions **Validé** reprennent les décisions de Simon. Les mentions **Proposition** sont des propositions historiques ; elles n’indiquent pas à elles seules un effet actif. Les valeurs effectivement retenues sont celles des DDD et du bilan de réalisation.
 
@@ -439,4 +439,4 @@ Le mandat « code ce plan, design les trous » autorise les détails de réalisa
 
 Aucun nouveau trait, besoin, rendez-vous général, fan, récompense, maladie ou jauge d’addiction. Inspiration, souvenirs/chimie vers les plateaux et pression spécifique de recherche sociale restent débranchés. Le registre [Raccords](./gdd/raccords-v7.md) énumère aussi les limites héritées de V7 et l’ancien seuil absolu d’archivage.
 
-La version est vérifiée par simulations, imports réels, reprise exacte, tests de moteur et de navigateur, build VitePress et contrôle des recherches. Les coefficients restent de l’équilibrage à éprouver en jeu, pas une nouvelle validation rétroactive des propositions. Publication principale après revue et fusion.
+La version est vérifiée par simulations, imports réels, reprise exacte, tests de moteur et de navigateur, build VitePress et contrôle des recherches. Les coefficients restent de l’équilibrage à éprouver en jeu, pas une nouvelle validation rétroactive des propositions. La publication depuis `main` passe les mêmes vérifications que la PR et déploie le jeu et la documentation ensemble.
