@@ -1,5 +1,5 @@
-import {CARDS} from './stage.mjs?v=0.6.4';
-import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext,showBeat,actorSize} from './show-playback.mjs?v=0.6.4';
+import {CARDS} from './stage.mjs?v=0.7.0';
+import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext,showBeat,actorSize} from './show-playback.mjs?v=0.7.0';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={guitar:'Guitare',bass:'Basse',drums:'Batterie',voice:'Chant',keys:'Clavier',sax:'Saxophone',trumpet:'Trompette',percussion:'Percussions'};
 const colors={rhythm:'#a9c995',impact:'#e4bd75',emotion:'#d3a8c3',support:'#9fc8d2',curse:'#d39280'};

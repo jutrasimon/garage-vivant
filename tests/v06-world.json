@@ -1,0 +1,1713 @@
+{
+  "version": "0.6.0",
+  "time": 600,
+  "rng": 213432035,
+  "seed": 42,
+  "nextId": 4,
+  "eventId": 9,
+  "nextSongId": 1,
+  "nextGroupId": 1,
+  "nextJamId": 1,
+  "nextActivityId": 6,
+  "nextProjectId": 1,
+  "activities": [
+    {
+      "id": "a5",
+      "key": "sleep",
+      "time": 590,
+      "end": null,
+      "place": "park",
+      "ids": [
+        "p3"
+      ],
+      "status": "travel",
+      "activeMinutes": 0,
+      "events": [
+        {
+          "id": 9,
+          "time": 590,
+          "type": "decision",
+          "text": "Jo choisit : récupérer. Énergie 73/100.",
+          "ids": [
+            "p3"
+          ],
+          "causes": [],
+          "activityId": "a5"
+        }
+      ]
+    },
+    {
+      "id": "a4",
+      "key": "social",
+      "time": 545,
+      "end": null,
+      "place": "park",
+      "ids": [
+        "p2"
+      ],
+      "status": "active",
+      "activeMinutes": 13,
+      "events": [
+        {
+          "id": 7,
+          "time": 545,
+          "type": "decision",
+          "text": "Sam choisit : socialiser. Lien social 64 · extraversion 65 · émotion +1.",
+          "ids": [
+            "p2"
+          ],
+          "causes": [],
+          "activityId": "a4"
+        }
+      ]
+    },
+    {
+      "id": "a1",
+      "key": "sleep",
+      "time": 480,
+      "end": null,
+      "place": "park",
+      "ids": [
+        "p1",
+        "p2"
+      ],
+      "status": "active",
+      "activeMinutes": 71,
+      "events": [
+        {
+          "id": 4,
+          "time": 480,
+          "type": "decision",
+          "text": "Alex choisit : récupérer. Énergie 51/100.",
+          "ids": [
+            "p1"
+          ],
+          "causes": [],
+          "activityId": "a1"
+        },
+        {
+          "id": 8,
+          "time": 589,
+          "type": "social",
+          "text": "Alex et Sam se rapprochent.",
+          "ids": [
+            "p1",
+            "p2"
+          ],
+          "causes": [],
+          "activityId": "a1"
+        }
+      ]
+    },
+    {
+      "id": "a3",
+      "key": "practice",
+      "time": 480,
+      "end": 590,
+      "place": "g2",
+      "ids": [
+        "p3"
+      ],
+      "status": "completed",
+      "activeMinutes": 65,
+      "events": [
+        {
+          "id": 6,
+          "time": 480,
+          "type": "decision",
+          "text": "Jo choisit : pratiquer. Expression 63 · discipline 65 · émotion +3.",
+          "ids": [
+            "p3"
+          ],
+          "causes": [],
+          "activityId": "a3"
+        }
+      ]
+    },
+    {
+      "id": "a2",
+      "key": "practice",
+      "time": 480,
+      "end": 545,
+      "place": "g1",
+      "ids": [
+        "p2"
+      ],
+      "status": "completed",
+      "activeMinutes": 65,
+      "events": [
+        {
+          "id": 5,
+          "time": 480,
+          "type": "decision",
+          "text": "Sam choisit : pratiquer. Expression 62 · discipline 67 · émotion +3.",
+          "ids": [
+            "p2"
+          ],
+          "causes": [],
+          "activityId": "a2"
+        }
+      ]
+    }
+  ],
+  "projects": [],
+  "people": [
+    {
+      "id": "p1",
+      "name": "Alex",
+      "color": "#d67753",
+      "age": 43,
+      "instrument": "trumpet",
+      "genre": "Métal",
+      "personality": {
+        "creative": 36,
+        "outgoing": 26,
+        "kind": 58,
+        "discipline": 34,
+        "stable": 44,
+        "ambition": 22
+      },
+      "traits": [
+        "friendly",
+        "shy"
+      ],
+      "skills": {
+        "guitar": 16,
+        "bass": 5,
+        "drums": 17,
+        "voice": 16,
+        "keys": 7,
+        "sax": 8,
+        "trumpet": 34,
+        "percussion": 16,
+        "writing": 5
+      },
+      "needs": {
+        "energy": 54.56000000000003,
+        "social": 72.25399999999934,
+        "fun": 100,
+        "expression": 78.00000000000034,
+        "comfort": 100
+      },
+      "x": 455,
+      "y": 403,
+      "home": "home1",
+      "place": "park",
+      "action": {
+        "key": "sleep",
+        "dest": "park",
+        "remaining": 39,
+        "elapsed": 71,
+        "started": 480,
+        "why": "Énergie 51/100",
+        "route": [],
+        "quality": 0,
+        "partners": [],
+        "solo": false,
+        "decision": [
+          {
+            "key": "sleep",
+            "base": 61,
+            "emotion": 0,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 61.25,
+            "why": "Énergie 51/100",
+            "blocked": null,
+            "chance": 54.21068433292441
+          },
+          {
+            "key": "social",
+            "base": 28,
+            "emotion": 1,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 29.59,
+            "why": "Lien social 71 · extraversion 26",
+            "blocked": null,
+            "chance": 12.652100526401568
+          },
+          {
+            "key": "jam",
+            "base": 25,
+            "emotion": 5,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 29.3,
+            "why": "Expression 84 · lien social 71",
+            "blocked": null,
+            "chance": 12.40531922178353
+          },
+          {
+            "key": "write",
+            "base": 23,
+            "emotion": 4,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 27.657600000000002,
+            "why": "Créativité 36 · expression 84",
+            "blocked": null,
+            "chance": 11.053547611305628
+          },
+          {
+            "key": "practice",
+            "base": 23,
+            "emotion": 3,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 25.88,
+            "why": "Expression 84 · discipline 34",
+            "blocked": null,
+            "chance": 9.678348307584864
+          },
+          {
+            "key": "form",
+            "base": 68,
+            "emotion": 1,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 0,
+            "why": "Un lien réciproque et une envie de jouer ensemble",
+            "blocked": "Aucun nouveau partenaire admissible ou délai de 12 h",
+            "chance": 0
+          }
+        ],
+        "mode": "utility",
+        "waited": 0,
+        "sessionId": null,
+        "recovery": "pause",
+        "formation": null,
+        "activityId": "a1"
+      },
+      "candidates": [
+        {
+          "key": "sleep",
+          "base": 61,
+          "emotion": 0,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 61.25,
+          "why": "Énergie 51/100",
+          "blocked": null,
+          "chance": 54.21068433292441
+        },
+        {
+          "key": "social",
+          "base": 28,
+          "emotion": 1,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 29.59,
+          "why": "Lien social 71 · extraversion 26",
+          "blocked": null,
+          "chance": 12.652100526401568
+        },
+        {
+          "key": "jam",
+          "base": 25,
+          "emotion": 5,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 29.3,
+          "why": "Expression 84 · lien social 71",
+          "blocked": null,
+          "chance": 12.40531922178353
+        },
+        {
+          "key": "write",
+          "base": 23,
+          "emotion": 4,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 27.657600000000002,
+          "why": "Créativité 36 · expression 84",
+          "blocked": null,
+          "chance": 11.053547611305628
+        },
+        {
+          "key": "practice",
+          "base": 23,
+          "emotion": 3,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 25.88,
+          "why": "Expression 84 · discipline 34",
+          "blocked": null,
+          "chance": 9.678348307584864
+        },
+        {
+          "key": "form",
+          "base": 68,
+          "emotion": 1,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 0,
+          "why": "Un lien réciproque et une envie de jouer ensemble",
+          "blocked": "Aucun nouveau partenaire admissible ou délai de 12 h",
+          "chance": 0
+        }
+      ],
+      "memories": [
+        {
+          "id": "p1-memory-1",
+          "created": 589,
+          "text": "Bon moment avec Sam",
+          "effect": 2.2,
+          "until": 949,
+          "sourceId": 8
+        }
+      ],
+      "history": [
+        {
+          "time": 510,
+          "mood": 73,
+          "emotion": "excitement"
+        },
+        {
+          "time": 540,
+          "mood": 75,
+          "emotion": "excitement"
+        },
+        {
+          "time": 570,
+          "mood": 81,
+          "emotion": "excitement"
+        },
+        {
+          "time": 600,
+          "mood": 84,
+          "emotion": "excitement"
+        }
+      ],
+      "songProgress": 0,
+      "emotions": {
+        "joy": 10.584666666666703,
+        "sadness": 0,
+        "anger": 0,
+        "fear": 0,
+        "affection": 2.420400000000001,
+        "excitement": 11.568000000000069
+      },
+      "emotionSources": {
+        "joy": [
+          {
+            "id": 8,
+            "time": 589,
+            "text": "Alex et Sam se rapprochent."
+          }
+        ],
+        "affection": [
+          {
+            "id": 8,
+            "time": 589,
+            "text": "Alex et Sam se rapprochent."
+          }
+        ]
+      },
+      "priorities": {
+        "sleep": 2,
+        "social": 2,
+        "practice": 2,
+        "jam": 2,
+        "write": 2,
+        "form": 2
+      },
+      "draft": {
+        "projectId": null,
+        "samples": 0,
+        "emotions": {
+          "joy": 0,
+          "sadness": 0,
+          "anger": 0,
+          "fear": 0,
+          "affection": 0,
+          "excitement": 0
+        },
+        "sources": [],
+        "authors": [],
+        "jamQuality": 0,
+        "jamSamples": 0
+      },
+      "lastFormation": -1440,
+      "actionCounts": {
+        "sleep": {
+          "started": 1,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "social": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "practice": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "jam": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "write": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "form": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        }
+      },
+      "countsSince": 480,
+      "reputation": {
+        "score": 9,
+        "skill": 9,
+        "catalogue": 0,
+        "recognition": 0,
+        "collaboration": 0
+      },
+      "bag": {
+        "custom": false,
+        "weights": {
+          "sleep": 16.666666666666668,
+          "social": 16.666666666666668,
+          "practice": 16.666666666666668,
+          "jam": 16.666666666666668,
+          "write": 16.666666666666668,
+          "form": 16.666666666666668
+        },
+        "locked": []
+      },
+      "memoryArchive": [
+        {
+          "id": "p1-memory-1",
+          "created": 589,
+          "text": "Bon moment avec Sam",
+          "effect": 2.2,
+          "until": 949,
+          "sourceId": 8
+        }
+      ],
+      "nextMemoryId": 2,
+      "togetherId": null,
+      "identity": {
+        "accessory": "glasses",
+        "accent": null,
+        "movement": "shy"
+      },
+      "decadence": 0,
+      "decadenceHistory": [],
+      "deck": [
+        "pulse",
+        "accent",
+        "breath",
+        "listen",
+        "crescendo",
+        "trumpet-0",
+        "trumpet-1",
+        "trumpet-2",
+        "empathy"
+      ],
+      "showFame": 0,
+      "invitationCooldown": {},
+      "engagement": null
+    },
+    {
+      "id": "p2",
+      "name": "Sam",
+      "color": "#7192b3",
+      "age": 41,
+      "instrument": "voice",
+      "genre": "Jazz",
+      "personality": {
+        "creative": 58,
+        "outgoing": 65,
+        "kind": 66,
+        "discipline": 67,
+        "stable": 84,
+        "ambition": 49
+      },
+      "traits": [
+        "night",
+        "shy"
+      ],
+      "skills": {
+        "guitar": 9,
+        "bass": 8,
+        "drums": 8,
+        "voice": 35.40593903399712,
+        "keys": 7,
+        "sax": 12,
+        "trumpet": 8,
+        "percussion": 18,
+        "writing": 26
+      },
+      "needs": {
+        "energy": 70.62499999999983,
+        "social": 77.83500000000025,
+        "fun": 94.64999999999951,
+        "expression": 95,
+        "comfort": 51.399999999999864
+      },
+      "x": 483,
+      "y": 403,
+      "home": "home1",
+      "place": "park",
+      "action": {
+        "key": "social",
+        "dest": "park",
+        "remaining": 37,
+        "elapsed": 13,
+        "started": 545,
+        "why": "Lien social 64 · extraversion 65 · émotion +1",
+        "route": [],
+        "quality": 0,
+        "partners": [],
+        "solo": false,
+        "decision": [
+          {
+            "key": "social",
+            "base": 37,
+            "emotion": 1,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 37.5012874999998,
+            "why": "Lien social 64 · extraversion 65",
+            "blocked": null,
+            "chance": 27.16044263419087
+          },
+          {
+            "key": "jam",
+            "base": 32,
+            "emotion": 3,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 34.803550000000016,
+            "why": "Expression 98 · lien social 64",
+            "blocked": null,
+            "chance": 23.393304631047066
+          },
+          {
+            "key": "sleep",
+            "base": 32,
+            "emotion": 0,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 32.25000000000037,
+            "why": "Énergie 74/100",
+            "blocked": null,
+            "chance": 20.086484076664142
+          },
+          {
+            "key": "practice",
+            "base": 26,
+            "emotion": 2,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 27.72716000000012,
+            "why": "Expression 98 · discipline 67",
+            "blocked": null,
+            "chance": 14.847565981629437
+          },
+          {
+            "key": "write",
+            "base": 23,
+            "emotion": 4,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 27.412233600000107,
+            "why": "Créativité 58 · expression 98",
+            "blocked": null,
+            "chance": 14.512202676468492
+          },
+          {
+            "key": "form",
+            "base": 72,
+            "emotion": 1,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 0,
+            "why": "Un lien réciproque et une envie de jouer ensemble",
+            "blocked": "Aucun nouveau partenaire admissible ou délai de 12 h",
+            "chance": 0
+          }
+        ],
+        "mode": "utility",
+        "waited": 0,
+        "sessionId": null,
+        "recovery": null,
+        "formation": null,
+        "activityId": "a4"
+      },
+      "candidates": [
+        {
+          "key": "social",
+          "base": 37,
+          "emotion": 1,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 37.5012874999998,
+          "why": "Lien social 64 · extraversion 65",
+          "blocked": null,
+          "chance": 27.16044263419087
+        },
+        {
+          "key": "jam",
+          "base": 32,
+          "emotion": 3,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 34.803550000000016,
+          "why": "Expression 98 · lien social 64",
+          "blocked": null,
+          "chance": 23.393304631047066
+        },
+        {
+          "key": "sleep",
+          "base": 32,
+          "emotion": 0,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 32.25000000000037,
+          "why": "Énergie 74/100",
+          "blocked": null,
+          "chance": 20.086484076664142
+        },
+        {
+          "key": "practice",
+          "base": 26,
+          "emotion": 2,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 27.72716000000012,
+          "why": "Expression 98 · discipline 67",
+          "blocked": null,
+          "chance": 14.847565981629437
+        },
+        {
+          "key": "write",
+          "base": 23,
+          "emotion": 4,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 27.412233600000107,
+          "why": "Créativité 58 · expression 98",
+          "blocked": null,
+          "chance": 14.512202676468492
+        },
+        {
+          "key": "form",
+          "base": 72,
+          "emotion": 1,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 0,
+          "why": "Un lien réciproque et une envie de jouer ensemble",
+          "blocked": "Aucun nouveau partenaire admissible ou délai de 12 h",
+          "chance": 0
+        }
+      ],
+      "memories": [
+        {
+          "id": "p2-memory-1",
+          "created": 589,
+          "text": "Bon moment avec Alex",
+          "effect": 1.8,
+          "until": 949,
+          "sourceId": 8
+        }
+      ],
+      "history": [
+        {
+          "time": 510,
+          "mood": 73,
+          "emotion": "excitement"
+        },
+        {
+          "time": 540,
+          "mood": 77,
+          "emotion": "excitement"
+        },
+        {
+          "time": 570,
+          "mood": 76,
+          "emotion": "excitement"
+        },
+        {
+          "time": 600,
+          "mood": 80,
+          "emotion": "excitement"
+        }
+      ],
+      "songProgress": 0,
+      "emotions": {
+        "joy": 6.79800000000003,
+        "sadness": 0,
+        "anger": 0,
+        "fear": 0,
+        "affection": 1.654799999999998,
+        "excitement": 8.448000000000093
+      },
+      "emotionSources": {
+        "joy": [
+          {
+            "id": 8,
+            "time": 589,
+            "text": "Alex et Sam se rapprochent."
+          }
+        ],
+        "affection": [
+          {
+            "id": 8,
+            "time": 589,
+            "text": "Alex et Sam se rapprochent."
+          }
+        ]
+      },
+      "priorities": {
+        "sleep": 2,
+        "social": 2,
+        "practice": 2,
+        "jam": 2,
+        "write": 2,
+        "form": 2
+      },
+      "draft": {
+        "projectId": null,
+        "samples": 0,
+        "emotions": {
+          "joy": 0,
+          "sadness": 0,
+          "anger": 0,
+          "fear": 0,
+          "affection": 0,
+          "excitement": 0
+        },
+        "sources": [],
+        "authors": [],
+        "jamQuality": 0,
+        "jamSamples": 0
+      },
+      "lastFormation": -1440,
+      "actionCounts": {
+        "sleep": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "social": {
+          "started": 1,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "practice": {
+          "started": 1,
+          "completed": 1,
+          "interrupted": 0
+        },
+        "jam": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "write": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "form": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        }
+      },
+      "countsSince": 480,
+      "reputation": {
+        "score": 9,
+        "skill": 9,
+        "catalogue": 0,
+        "recognition": 0,
+        "collaboration": 0
+      },
+      "bag": {
+        "custom": false,
+        "weights": {
+          "sleep": 16.666666666666668,
+          "social": 16.666666666666668,
+          "practice": 16.666666666666668,
+          "jam": 16.666666666666668,
+          "write": 16.666666666666668,
+          "form": 16.666666666666668
+        },
+        "locked": []
+      },
+      "memoryArchive": [
+        {
+          "id": "p2-memory-1",
+          "created": 589,
+          "text": "Bon moment avec Alex",
+          "effect": 1.8,
+          "until": 949,
+          "sourceId": 8
+        }
+      ],
+      "nextMemoryId": 2,
+      "togetherId": null,
+      "identity": {
+        "accessory": "cap",
+        "accent": null,
+        "movement": "shy"
+      },
+      "decadence": 0,
+      "decadenceHistory": [],
+      "deck": [
+        "pulse",
+        "accent",
+        "breath",
+        "listen",
+        "crescendo",
+        "voice-0",
+        "voice-1",
+        "voice-2",
+        "steady"
+      ],
+      "showFame": 0,
+      "invitationCooldown": {},
+      "engagement": null
+    },
+    {
+      "id": "p3",
+      "name": "Jo",
+      "color": "#9a79ad",
+      "age": 39,
+      "instrument": "percussion",
+      "genre": "Ska",
+      "personality": {
+        "creative": 28,
+        "outgoing": 36,
+        "kind": 59,
+        "discipline": 65,
+        "stable": 52,
+        "ambition": 34
+      },
+      "traits": [
+        "hot",
+        "virtuoso"
+      ],
+      "skills": {
+        "guitar": 6,
+        "bass": 12,
+        "drums": 18,
+        "voice": 14,
+        "keys": 5,
+        "sax": 16,
+        "trumpet": 15,
+        "percussion": 23.652908088392216,
+        "writing": 16
+      },
+      "needs": {
+        "energy": 72.62499999999983,
+        "social": 82.04399999999919,
+        "fun": 70.09999999999991,
+        "expression": 96.00000000000001,
+        "comfort": 67.39999999999986
+      },
+      "x": 841,
+      "y": 340,
+      "home": "home1",
+      "place": "g2",
+      "action": {
+        "key": "sleep",
+        "dest": "park",
+        "remaining": 110,
+        "elapsed": 0,
+        "started": 590,
+        "why": "Énergie 73/100",
+        "route": [
+          {
+            "x": 511,
+            "y": 340
+          },
+          {
+            "x": 511,
+            "y": 403
+          }
+        ],
+        "quality": 0,
+        "partners": [],
+        "solo": false,
+        "decision": [
+          {
+            "key": "sleep",
+            "base": 33,
+            "emotion": 0,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 33.40625000000024,
+            "why": "Énergie 73/100",
+            "blocked": null,
+            "chance": 40.56339133329825
+          },
+          {
+            "key": "practice",
+            "base": 24,
+            "emotion": 2,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 25.645120000000006,
+            "why": "Expression 96 · discipline 65",
+            "blocked": null,
+            "chance": 23.904973948889094
+          },
+          {
+            "key": "jam",
+            "base": 17,
+            "emotion": 3,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 20.2768000000003,
+            "why": "Expression 96 · lien social 82",
+            "blocked": null,
+            "chance": 14.944370934046367
+          },
+          {
+            "key": "social",
+            "base": 18,
+            "emotion": 1,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 18.27163000000076,
+            "why": "Lien social 82 · extraversion 36",
+            "blocked": null,
+            "chance": 12.13482137806033
+          },
+          {
+            "key": "write",
+            "base": 13,
+            "emotion": 3,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 15.249363200000003,
+            "why": "Créativité 28 · expression 96",
+            "blocked": null,
+            "chance": 8.45244240570595
+          },
+          {
+            "key": "form",
+            "base": 70,
+            "emotion": 1,
+            "priority": 2,
+            "factor": 1,
+            "bandBoost": 1,
+            "invite": 0,
+            "score": 0,
+            "why": "Un lien réciproque et une envie de jouer ensemble",
+            "blocked": "Aucun nouveau partenaire admissible ou délai de 12 h",
+            "chance": 0
+          }
+        ],
+        "mode": "utility",
+        "waited": 0,
+        "sessionId": null,
+        "recovery": "pause",
+        "formation": null,
+        "activityId": "a5"
+      },
+      "candidates": [
+        {
+          "key": "sleep",
+          "base": 33,
+          "emotion": 0,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 33.40625000000024,
+          "why": "Énergie 73/100",
+          "blocked": null,
+          "chance": 40.56339133329825
+        },
+        {
+          "key": "practice",
+          "base": 24,
+          "emotion": 2,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 25.645120000000006,
+          "why": "Expression 96 · discipline 65",
+          "blocked": null,
+          "chance": 23.904973948889094
+        },
+        {
+          "key": "jam",
+          "base": 17,
+          "emotion": 3,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 20.2768000000003,
+          "why": "Expression 96 · lien social 82",
+          "blocked": null,
+          "chance": 14.944370934046367
+        },
+        {
+          "key": "social",
+          "base": 18,
+          "emotion": 1,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 18.27163000000076,
+          "why": "Lien social 82 · extraversion 36",
+          "blocked": null,
+          "chance": 12.13482137806033
+        },
+        {
+          "key": "write",
+          "base": 13,
+          "emotion": 3,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 15.249363200000003,
+          "why": "Créativité 28 · expression 96",
+          "blocked": null,
+          "chance": 8.45244240570595
+        },
+        {
+          "key": "form",
+          "base": 70,
+          "emotion": 1,
+          "priority": 2,
+          "factor": 1,
+          "bandBoost": 1,
+          "invite": 0,
+          "score": 0,
+          "why": "Un lien réciproque et une envie de jouer ensemble",
+          "blocked": "Aucun nouveau partenaire admissible ou délai de 12 h",
+          "chance": 0
+        }
+      ],
+      "memories": [],
+      "history": [
+        {
+          "time": 510,
+          "mood": 72,
+          "emotion": "excitement"
+        },
+        {
+          "time": 540,
+          "mood": 73,
+          "emotion": "excitement"
+        },
+        {
+          "time": 570,
+          "mood": 77,
+          "emotion": "excitement"
+        },
+        {
+          "time": 600,
+          "mood": 78,
+          "emotion": "excitement"
+        }
+      ],
+      "songProgress": 0,
+      "emotions": {
+        "joy": 4.944000000000031,
+        "sadness": 0,
+        "anger": 0,
+        "fear": 0,
+        "affection": 0,
+        "excitement": 10.94399999999997
+      },
+      "emotionSources": {},
+      "priorities": {
+        "sleep": 2,
+        "social": 2,
+        "practice": 2,
+        "jam": 2,
+        "write": 2,
+        "form": 2
+      },
+      "draft": {
+        "projectId": null,
+        "samples": 0,
+        "emotions": {
+          "joy": 0,
+          "sadness": 0,
+          "anger": 0,
+          "fear": 0,
+          "affection": 0,
+          "excitement": 0
+        },
+        "sources": [],
+        "authors": [],
+        "jamQuality": 0,
+        "jamSamples": 0
+      },
+      "lastFormation": -1440,
+      "actionCounts": {
+        "sleep": {
+          "started": 1,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "social": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "practice": {
+          "started": 1,
+          "completed": 1,
+          "interrupted": 0
+        },
+        "jam": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "write": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        },
+        "form": {
+          "started": 0,
+          "completed": 0,
+          "interrupted": 0
+        }
+      },
+      "countsSince": 480,
+      "reputation": {
+        "score": 6,
+        "skill": 6,
+        "catalogue": 0,
+        "recognition": 0,
+        "collaboration": 0
+      },
+      "bag": {
+        "custom": false,
+        "weights": {
+          "sleep": 16.666666666666668,
+          "social": 16.666666666666668,
+          "practice": 16.666666666666668,
+          "jam": 16.666666666666668,
+          "write": 16.666666666666668,
+          "form": 16.666666666666668
+        },
+        "locked": []
+      },
+      "memoryArchive": [],
+      "nextMemoryId": 1,
+      "togetherId": null,
+      "identity": {
+        "accessory": "brows",
+        "accent": "scarf",
+        "movement": "calm"
+      },
+      "decadence": 0,
+      "decadenceHistory": [],
+      "deck": [
+        "pulse",
+        "accent",
+        "breath",
+        "listen",
+        "crescendo",
+        "percussion-0",
+        "percussion-1",
+        "percussion-2",
+        "steady"
+      ],
+      "showFame": 0,
+      "invitationCooldown": {},
+      "engagement": null
+    }
+  ],
+  "rels": {
+    "p2>p1": {
+      "affinity": 4.568636363636363,
+      "trust": 11.5,
+      "tension": 0,
+      "collaboration": 0,
+      "attraction": 26,
+      "love": 0,
+      "meetings": 1,
+      "last": 589,
+      "lastAdvance": -1440,
+      "musicSessions": 0,
+      "grief": {
+        "strength": 0,
+        "time": 480,
+        "cause": null
+      }
+    },
+    "p1>p2": {
+      "affinity": 4.328636363636363,
+      "trust": 11.5,
+      "tension": 0,
+      "collaboration": 0,
+      "attraction": 33,
+      "love": 0,
+      "meetings": 1,
+      "last": 589,
+      "lastAdvance": -1440,
+      "musicSessions": 0,
+      "grief": {
+        "strength": 0,
+        "time": 480,
+        "cause": null
+      }
+    },
+    "p3>p1": {
+      "affinity": 0,
+      "trust": 10,
+      "tension": 0,
+      "collaboration": 0,
+      "attraction": 36,
+      "love": 0,
+      "meetings": 0,
+      "last": 0,
+      "lastAdvance": -1440,
+      "musicSessions": 0,
+      "grief": {
+        "strength": 0,
+        "time": 480,
+        "cause": null
+      }
+    },
+    "p1>p3": {
+      "affinity": 0,
+      "trust": 10,
+      "tension": 0,
+      "collaboration": 0,
+      "attraction": 55,
+      "love": 0,
+      "meetings": 0,
+      "last": 0,
+      "lastAdvance": -1440,
+      "musicSessions": 0,
+      "grief": {
+        "strength": 0,
+        "time": 480,
+        "cause": null
+      }
+    },
+    "p3>p2": {
+      "affinity": 0,
+      "trust": 10,
+      "tension": 0,
+      "collaboration": 0,
+      "attraction": 51,
+      "love": 0,
+      "meetings": 0,
+      "last": 0,
+      "lastAdvance": -1440,
+      "musicSessions": 0,
+      "grief": {
+        "strength": 0,
+        "time": 480,
+        "cause": null
+      }
+    },
+    "p2>p3": {
+      "affinity": 0,
+      "trust": 10,
+      "tension": 0,
+      "collaboration": 0,
+      "attraction": 13,
+      "love": 0,
+      "meetings": 0,
+      "last": 0,
+      "lastAdvance": -1440,
+      "musicSessions": 0,
+      "grief": {
+        "strength": 0,
+        "time": 480,
+        "cause": null
+      }
+    }
+  },
+  "events": [
+    {
+      "id": 9,
+      "time": 590,
+      "type": "decision",
+      "text": "Jo choisit : récupérer. Énergie 73/100.",
+      "ids": [
+        "p3"
+      ],
+      "causes": [],
+      "activityId": "a5"
+    },
+    {
+      "id": 8,
+      "time": 589,
+      "type": "social",
+      "text": "Alex et Sam se rapprochent.",
+      "ids": [
+        "p1",
+        "p2"
+      ],
+      "causes": [],
+      "activityId": "a1"
+    },
+    {
+      "id": 7,
+      "time": 545,
+      "type": "decision",
+      "text": "Sam choisit : socialiser. Lien social 64 · extraversion 65 · émotion +1.",
+      "ids": [
+        "p2"
+      ],
+      "causes": [],
+      "activityId": "a4"
+    },
+    {
+      "id": 6,
+      "time": 480,
+      "type": "decision",
+      "text": "Jo choisit : pratiquer. Expression 63 · discipline 65 · émotion +3.",
+      "ids": [
+        "p3"
+      ],
+      "causes": [],
+      "activityId": "a3"
+    },
+    {
+      "id": 5,
+      "time": 480,
+      "type": "decision",
+      "text": "Sam choisit : pratiquer. Expression 62 · discipline 67 · émotion +3.",
+      "ids": [
+        "p2"
+      ],
+      "causes": [],
+      "activityId": "a2"
+    },
+    {
+      "id": 4,
+      "time": 480,
+      "type": "decision",
+      "text": "Alex choisit : récupérer. Énergie 51/100.",
+      "ids": [
+        "p1"
+      ],
+      "causes": [],
+      "activityId": "a1"
+    },
+    {
+      "id": 3,
+      "time": 480,
+      "type": "system",
+      "text": "Jo s’installe dans le quartier.",
+      "ids": [
+        "p3"
+      ]
+    },
+    {
+      "id": 2,
+      "time": 480,
+      "type": "system",
+      "text": "Sam s’installe dans le quartier.",
+      "ids": [
+        "p2"
+      ]
+    },
+    {
+      "id": 1,
+      "time": 480,
+      "type": "system",
+      "text": "Alex s’installe dans le quartier.",
+      "ids": [
+        "p1"
+      ]
+    }
+  ],
+  "songs": [],
+  "groups": [],
+  "jams": [],
+  "params": {
+    "drain": 1,
+    "music": 1,
+    "social": 1,
+    "conflict": 1,
+    "learning": 1,
+    "randomness": 0.3,
+    "relations": 1,
+    "emotionDecay": 1,
+    "romance": 1,
+    "compositionPace": 1
+  },
+  "scenario": "Équilibre",
+  "history": [
+    {
+      "time": 540,
+      "mood": 75
+    },
+    {
+      "time": 600,
+      "mood": 81
+    }
+  ],
+  "decisionMode": "utility",
+  "playerId": "p1",
+  "bookings": [],
+  "nextBookingId": 1,
+  "nextPerformanceId": 1,
+  "performance": null,
+  "showHistory": [],
+  "archiveThreshold": 25,
+  "songArchive": [],
+  "showEventId": null,
+  "together": [],
+  "encounters": {
+    "p1/p2": {
+      "near": false,
+      "next": 706
+    },
+    "p1/p3": {
+      "near": false,
+      "next": 621
+    },
+    "p2/p3": {
+      "near": false,
+      "next": 0
+    }
+  },
+  "nextTogetherId": 1,
+  "calendarVersion": 1,
+  "eventArchive": [],
+  "nextEventOrdinal": 5,
+  "season": {
+    "started": 480,
+    "ended": false,
+    "opportunities": [
+      {
+        "id": "event-1",
+        "ordinal": 1,
+        "name": "La cour des voisins · 1",
+        "venue": "g1",
+        "day": 4,
+        "time": 4800,
+        "styles": [
+          "Indie",
+          "Folk",
+          "Pop"
+        ],
+        "crowd": 12,
+        "final": false,
+        "status": "open",
+        "bookingId": null,
+        "opened": 480,
+        "selectionAt": 1920,
+        "selected": false,
+        "slots": [
+          {
+            "id": "event-1-slot-0",
+            "role": "Première partie",
+            "duration": 10,
+            "bookingId": null
+          },
+          {
+            "id": "event-1-slot-1",
+            "role": "Tête d’affiche",
+            "duration": 20,
+            "bookingId": null
+          }
+        ],
+        "organizer": {
+          "discovery": false,
+          "exigence": 30
+        }
+      },
+      {
+        "id": "event-2",
+        "ordinal": 2,
+        "name": "Les Amplis au parc · 2",
+        "venue": "park",
+        "day": 6,
+        "time": 7680,
+        "styles": [
+          "Ska",
+          "Jazz",
+          "Électro"
+        ],
+        "crowd": 12,
+        "final": false,
+        "status": "open",
+        "bookingId": null,
+        "opened": 480,
+        "selectionAt": 4800,
+        "selected": false,
+        "slots": [
+          {
+            "id": "event-2-slot-0",
+            "role": "Première partie",
+            "duration": 10,
+            "bookingId": null
+          },
+          {
+            "id": "event-2-slot-1",
+            "role": "Tête d’affiche",
+            "duration": 20,
+            "bookingId": null
+          }
+        ],
+        "organizer": {
+          "discovery": true,
+          "exigence": 30
+        }
+      },
+      {
+        "id": "event-3",
+        "ordinal": 3,
+        "name": "Une nuit au Canal · 3",
+        "venue": "g2",
+        "day": 8,
+        "time": 10560,
+        "styles": [
+          "Punk",
+          "Métal",
+          "Indie"
+        ],
+        "crowd": 12,
+        "final": false,
+        "status": "open",
+        "bookingId": null,
+        "opened": 480,
+        "selectionAt": 7680,
+        "selected": false,
+        "slots": [
+          {
+            "id": "event-3-slot-0",
+            "role": "Première partie",
+            "duration": 10,
+            "bookingId": null
+          },
+          {
+            "id": "event-3-slot-1",
+            "role": "Tête d’affiche",
+            "duration": 20,
+            "bookingId": null
+          }
+        ],
+        "organizer": {
+          "discovery": false,
+          "exigence": 30
+        }
+      },
+      {
+        "id": "event-4",
+        "ordinal": 4,
+        "name": "★ Fête des Érables · 4",
+        "venue": "g1",
+        "day": 10,
+        "time": 13440,
+        "styles": [
+          "Pop",
+          "Indie",
+          "Ska",
+          "Folk"
+        ],
+        "crowd": 24,
+        "final": true,
+        "status": "open",
+        "bookingId": null,
+        "opened": 480,
+        "selectionAt": 10560,
+        "selected": false,
+        "slots": [
+          {
+            "id": "event-4-slot-0",
+            "role": "Première partie",
+            "duration": 10,
+            "bookingId": null
+          },
+          {
+            "id": "event-4-slot-1",
+            "role": "Première partie",
+            "duration": 10,
+            "bookingId": null
+          },
+          {
+            "id": "event-4-slot-2",
+            "role": "Tête d’affiche",
+            "duration": 20,
+            "bookingId": null
+          }
+        ],
+        "organizer": {
+          "discovery": true,
+          "exigence": 60
+        }
+      }
+    ]
+  }
+}

@@ -1,9 +1,9 @@
-import {drawShowStage} from './show-view.mjs?v=0.6.4';
-export {bandsHTML,rapinHTML,showSetupHTML,showStatusHTML,seasonHTML} from './v6-view.mjs?v=0.6.4';
-import {SKILLS,ACTIONS,EMOTIONS,stamp,round,clamp,groupsOf,compositionProject,scores} from './engine.mjs?v=0.6.4';
-import {CARDS,CURSES,INTENTIONS,activeDeck,availableCards,SHOW_TICKS,PHRASE_TICKS} from './stage.mjs?v=0.6.4';
-import {bandStage,nextCurse,eligibleSongs,availability,isArchivedSong,seasonSummary,acceptance} from './life.mjs?v=0.6.4';
-import {resolveShowPlan} from './show-planning.mjs?v=0.6.4';
+import {drawShowStage} from './show-view.mjs?v=0.7.0';
+export {bandsHTML,rapinHTML,showSetupHTML,showStatusHTML,seasonHTML} from './v6-view.mjs?v=0.7.0';
+import {SKILLS,ACTIONS,EMOTIONS,stamp,round,clamp,groupsOf,compositionProject,scores} from './engine.mjs?v=0.7.0';
+import {CARDS,CURSES,INTENTIONS,activeDeck,availableCards,SHOW_TICKS,PHRASE_TICKS} from './stage.mjs?v=0.7.0';
+import {bandStage,nextCurse,eligibleSongs,availability,isArchivedSong,seasonSummary,acceptance} from './life.mjs?v=0.7.0';
+import {resolveShowPlan} from './show-planning.mjs?v=0.7.0';
 export const escapeHTML = x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const esc=escapeHTML;
 const person=(s,id)=>s.people.find(p=>p.id===id);
@@ -13,7 +13,7 @@ export function skillHTML(p) {
 }
 export function quickHTML(s,p) {
   const next=nextCurse(p),booking=s.bookings.find(b=>['applied','booked','assembling','playing'].includes(b.status)&&b.members.includes(p.id));
-  return `<section class="quick-profile" data-stable="quick"><div class="player-row"><span class="pill ${s.playerId===p.id?'member':''}">${s.playerId===p.id?'Ton musicien':'Autonome'}</span>${s.playerId!==p.id?`<button class="text-button" data-avatar="${p.id}">Incarner ↗</button>`:''}</div><div class="quick-needs"><span>Énergie <b>${round(p.needs.energy)}</b></span><span>Déchéance <b>${round(p.decadence)}</b></span></div><div class="engagement-note">${booking?`Prochain engagement : ${esc([...s.season.opportunities,...(s.eventArchive||[])].find(o=>o.id===booking.opportunityId)?.name)} · ${stamp(booking.time)}`:'Aucun engagement. Choisis une occasion dans Shows.'}</div><div class="quick-actions">${['sleep','practice','write','social'].map(key=>`<button data-force="${key}">${ACTIONS[key].icon} ${ACTIONS[key].label}</button>`).join('')}</div></section>`;
+  return `<section class="quick-profile" data-stable="quick"><div class="player-row"><span class="pill ${s.playerId===p.id?'member':''}">${s.playerId===p.id?'Ton musicien':'Autonome'}</span>${s.playerId!==p.id?`<button class="text-button" data-avatar="${p.id}">Incarner ↗</button>`:''}</div><div class="quick-needs"><span>Énergie <b>${round(p.needs.energy)}</b></span><span>Déchéance <b>${round(p.decadence)}</b></span></div><div class="engagement-note">${booking?`Prochain engagement : ${esc([...s.season.opportunities,...(s.eventArchive||[])].find(o=>o.id===booking.opportunityId)?.name)} · ${stamp(booking.time)}`:'Aucun engagement. Choisis une occasion dans Shows.'}</div><div class="quick-actions">${['relax','practice','write','social'].map(key=>`<button data-force="${key}">${ACTIONS[key].icon} ${ACTIONS[key].label}</button>`).join('')}</div></section>`;
 }
 export function decadenceHTML(p) {
   const next=nextCurse(p),curses=CURSES.filter(c=>p.decadence>=c.threshold);
@@ -35,10 +35,6 @@ function legacy_bandsHTML(s) {
 export function invitationHTML(s,groupId=null) {
   const host=person(s,s.playerId),g=s.groups.find(g=>g.id===groupId);
   return `<h2>${g?`Inviter dans ${esc(g.name)}`:`Monter un band avec ${esc(host.name)}`}</h2><p>Chaque voisin garde ses préférences. Un refus impose six heures avant une nouvelle invitation.</p><div class="invitation-list">${s.people.filter(p=>p!==host&&!g?.members.includes(p.id)).map(p=>{const cooldown=(p.invitationCooldown[groupId||host.id]||0)-s.time;return `<div class="invitation-row"><span><b>${esc(p.name)}</b><small>${SKILLS[p.instrument]} · ${esc(p.genre)} · ${round(acceptance(s,host,p,g)*100)} % d’acceptation</small></span><button data-invite="${p.id}:${groupId||''}" ${cooldown>0?'disabled':''}>${cooldown>0?`Dans ${round(cooldown/60*10)/10} h`:'Proposer'}</button></div>`;}).join('')}</div>`;
-}
-function legacy_rapinHTML(s,p){
- const rows=scores(s,p),last=p.action?.mode==='bag'?p.action.decision:[],colors={sleep:'#87a2bb',social:'#d18baa',practice:'#cfab5e',jam:'#8bad83',write:'#a28aba',relax:'#9cae9b',form:'#ca9779'};
- return `<section class="rapin-pool"><div class="section-head">LE SAC RAPIN · ${esc(p.name)}</div><p class="muted">${s.decisionMode==='bag'?'Pige active':'Aperçu du sac · active le mode Rapin dans Réglages'}. Les poids sont recalculés à chaque nouvelle activité.</p><div class="bag-strip" aria-label="Répartition du sac actuel">${rows.filter(r=>r.chance>0).map(r=>`<span style="width:${r.chance}%;background:${colors[r.key]}" title="${ACTIONS[r.key].label} : ${r.chance.toFixed(1)} %"></span>`).join('')}</div><div class="bag-rows">${rows.map(r=>`<div class="bag-row" data-stable="bag-${r.key}"><span class="bag-color" style="background:${colors[r.key]}"></span><span>${ACTIONS[r.key].icon} ${ACTIONS[r.key].label}<small>${esc(r.blocked||r.why)} · priorité ${r.priority||'interdite'}</small></span><b>${r.chance.toFixed(1)} %</b></div>`).join('')}</div><p class="muted">Plus le score est haut, plus l’action pèse dans le sac. L’énergie critique impose le repos. ${last.length?`Dernière pige : <b>${ACTIONS[p.action.key].label}</b> à ${stamp(p.action.started)} (${last.find(r=>r.key===p.action.key)?.chance.toFixed(1)||'0'} % au moment du choix).`:'La dernière activité a été choisie par un autre mode.'}</p></section>`;
 }
 function legacy_showSetupHTML(s,plan,feedback=null){
  const {groups,group,songs,openings,opportunity:o,booking,members,song,host,ready,reason}=resolveShowPlan(s,plan),pending=s.bookings.filter(b=>['booked','assembling','playing'].includes(b.status));

@@ -1,5 +1,18 @@
 # Changements
 
+## 0.7.0 — Personnages et relations
+
+- Cinq actions d’éveil dans un sac fini sans remise : jetons réservés puis consommés au démarrage, report sans réalisation quand aucun partenaire n’est disponible, édition au prochain cycle et huit sacs de test.
+- Sommeil quotidien hors sac, besoin et horaire individuels, récupération selon durée obtenue et avance jusqu’au premier réveil quand tous dorment.
+- Quatre besoins; confort supprimé. Pressions personnelles continues sur exaltation et détresse, sans humeur globale ni repondération du sac.
+- Catalogue de traits permanents et conditionnels, douze prototypes et Alpha/Bêta. Seuils, effets, sources et incompatibilités inspectables et cherchables.
+- Séances rejoignables sans interrompre les musiciens; cadence sociale commune. Discussion, soutien et avance séparent acceptation du résultat, avec chances et conséquences visibles.
+- Affinité lente, tension rapide, poids de partenaires liés à la coordination, lien amoureux orienté sans attirance parallèle et statut de couple distinct.
+- Projets, chansons, groupes, déchéance, calendrier et shows conservés et raccordés. Quatre limites débranchées annoncées : poids d’humeur des souvenirs, anciennes six nuances des nouvelles chansons, ancien choix par personnalité/priorités, bonus de choix Relax.
+- Migration V1–V6, archive des anciens compteurs et copie avant migration. DDD exhaustifs par domaine, architecture documentaire et recherche VitePress/jeu depuis les mêmes Markdown.
+
+Voir les [DDD V7](./gdd/documentation.md) et le [registre des raccords](./gdd/raccords-v7.md).
+
 ## 0.6.4 — Carte, musicien, BANG !
 
 - La carte apparaît brièvement dans une place réservée, toujours au même format. Elle disparaît avant la visée et le tir du musicien vers la foule. La défausse ne recouvre plus la scène; les cartes jouées restent consultables dans l’historique.

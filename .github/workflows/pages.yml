@@ -35,7 +35,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: interface-v6
+          name: interface-v7
           path: test-results/
           retention-days: 7
 

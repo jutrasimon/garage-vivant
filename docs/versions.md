@@ -1,5 +1,18 @@
 # Notes de version
 
+## V0.7.0 — Personnages et relations {#v070}
+
+- Cinq actions d’éveil dans un sac fini sans remise : jetons réservés puis consommés au démarrage, report sans réalisation quand aucun partenaire n’est disponible, édition au prochain cycle et huit sacs de test.
+- Sommeil quotidien hors sac, besoin et horaire individuels, récupération selon durée obtenue et avance jusqu’au premier réveil quand tous dorment.
+- Quatre besoins; confort supprimé. Pressions personnelles continues sur exaltation et détresse, sans humeur globale ni repondération du sac.
+- Catalogue de traits permanents et conditionnels, douze prototypes et Alpha/Bêta. Seuils, effets, sources et incompatibilités inspectables et cherchables.
+- Séances rejoignables sans interrompre les musiciens; cadence sociale commune. Discussion, soutien et avance séparent acceptation du résultat, avec chances et conséquences visibles.
+- Affinité lente, tension rapide, poids de partenaires liés à la coordination, lien amoureux orienté sans attirance parallèle et statut de couple distinct.
+- Projets, chansons, groupes, déchéance, calendrier et shows conservés et raccordés. Quatre limites débranchées annoncées : poids d’humeur des souvenirs, anciennes six nuances des nouvelles chansons, ancien choix par personnalité/priorités, bonus de choix Relax.
+- Migration V1–V6, archive des anciens compteurs et copie avant migration. DDD exhaustifs par domaine, architecture documentaire et recherche VitePress/jeu depuis les mêmes Markdown.
+
+Voir les [DDD V7](./gdd/documentation.md) et le [registre des raccords](./gdd/raccords-v7.md).
+
 ## V0.6.4 — Carte, musicien, BANG ! {#v064}
 
 - La carte apparaît brièvement dans une place réservée, toujours au même format. Elle disparaît avant la visée et le tir du musicien vers la foule. La défausse ne recouvre plus la scène; les cartes jouées restent consultables dans l’historique.
@@ -51,7 +64,8 @@ Shows automatiques à cartes, foule physique, déchéance, projets de compositio
 
 <script setup>
 import {onMounted,onUnmounted} from 'vue'
+import {PATCH_NOTES} from '../dist/release.mjs'
 let observer
-onMounted(()=>{const ids=['v064','v063','v062','v061','v060','v051','v050'];let saved=[];try{const value=JSON.parse(localStorage.getItem('garage-vivant-read-notes')||'[]');if(Array.isArray(value))saved=value;}catch{}const read=new Set(saved);const target=ids.find(id=>!read.has(id));if(target&&!location.hash)document.getElementById(target)?.scrollIntoView();observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){const id=entry.target.id;setTimeout(()=>{if(document.visibilityState==='visible'&&entry.target.getBoundingClientRect().top<innerHeight&&entry.target.getBoundingClientRect().bottom>0){read.add(id);try{localStorage.setItem('garage-vivant-read-notes',JSON.stringify([...read]));}catch{}}},1500);}}, {threshold:1});for(const id of ids){const node=document.getElementById(id);if(node)observer.observe(node);}})
+onMounted(()=>{const ids=PATCH_NOTES;let saved=[];try{const value=JSON.parse(localStorage.getItem('garage-vivant-read-notes')||'[]');if(Array.isArray(value))saved=value;}catch{}const read=new Set(saved);const target=ids.find(id=>!read.has(id));if(target&&!location.hash)document.getElementById(target)?.scrollIntoView();observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){const id=entry.target.id;setTimeout(()=>{if(document.visibilityState==='visible'&&entry.target.getBoundingClientRect().top<innerHeight&&entry.target.getBoundingClientRect().bottom>0){read.add(id);try{localStorage.setItem('garage-vivant-read-notes',JSON.stringify([...read]));}catch{}}},1500);}}, {threshold:1});for(const id of ids){const node=document.getElementById(id);if(node)observer.observe(node);}})
 onUnmounted(()=>observer?.disconnect())
 </script>

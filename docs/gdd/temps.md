@@ -1,4 +1,4 @@
-# Temps et horloges
+# DDD — Temps et horloges
 
 | Horloge | Règle |
 |---|---|
@@ -10,8 +10,12 @@
 | Durée musicale | 4 minutes par morceau, créneaux de 10/20 minutes; sert au programme et aux disponibilités. |
 | Direct | Quartier gelé; reprise au même instant, sans vieillissement ni rattrapage. |
 | Onglet masqué | Quartier et lecture suspendus. |
+| Sommeil collectif | En lecture active, avance minute par minute jusqu’au premier réveil; garde 1440 min et arrêt au début d’un show. |
+| Échanges | Une horloge par séance, cadence de 15 minutes; arrivée d’un membre sans réinitialisation. |
 | Âge | Identité éditable; pas de vieillissement simulé. |
 
 Les jours mesurent la vie du quartier, pas des années compressées. Les paramètres d’usure, apprentissage et retour émotionnel modifient des taux simulés; la vitesse de lecture ne change pas leurs règles.
+
+Le raccourci de sommeil ne prolonge pas le bouton +1 h et ne tourne pas en pause. Les besoins, jauges, liens et calendrier évoluent réellement pendant cette avance. Voir le [DDD Sommeil](./sommeil.md).
 
 Liens : [shows](./shows.md), [actions](./actions.md), [architecture](./technique.md).

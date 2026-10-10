@@ -1,3 +1,5 @@
+// New songs match the two broad V7 axes; legacy performances keep exact matching.
+export function emotionCompatible(song,fan,version=7){return song===fan||version>=7&&(song==='exaltation'&&['joy','excitement','affection'].includes(fan)||song==='distress'&&['sadness','anger','fear'].includes(fan));}
 // The stage is a deterministic simulation. Rendering and audio never change it.
 export const SHOW_TICKS = 3600;
 export const PHRASE_TICKS = 720;
@@ -67,7 +69,7 @@ function shuffled(s, xs) {const a=[...xs];for(let i=a.length-1;i>0;i--){const j=
 
 export function createPerformance({id, seed, people, group, song, opportunity, intention='tight', preview=false,totalTicks=SHOW_TICKS}) {
   if(people.length<2 || !INTENTIONS[intention]) throw Error('Il faut au moins deux musiciens et une intention valide.');
-  const s = {id,rulesVersion:6,totalTicks,rng:seed>>>0,seed:seed>>>0,tick:0,status:'playing',applied:false,preview,groupId:group.id,groupName:group.name,opportunityId:opportunity.id,opportunityName:opportunity.name,sourceOpportunity:{...opportunity},genre:song.genre,song:{id:song.id,title:song.title,quality:song.quality,intensity:song.intensity||0,emotion:song.emotion,tone:song.tone},mastery:group.repertoire?.find(r=>r.songId===song.id)?.mastery||0,morale:group.stageMorale??60,development:group.development||0,intention,actors:[],fans:[],cues:[],nextCue:0,impacts:[],zones:[],events:[],support:0,crescendo:0,result:null};
+  const s = {id,rulesVersion:7,totalTicks,rng:seed>>>0,seed:seed>>>0,tick:0,status:'playing',applied:false,preview,groupId:group.id,groupName:group.name,opportunityId:opportunity.id,opportunityName:opportunity.name,sourceOpportunity:{...opportunity},genre:song.genre,song:{id:song.id,title:song.title,quality:song.quality,intensity:song.intensity||0,emotion:song.emotion,tone:song.tone},mastery:group.repertoire?.find(r=>r.songId===song.id)?.mastery||0,morale:group.stageMorale??60,development:group.development||0,intention,actors:[],fans:[],cues:[],nextCue:0,impacts:[],zones:[],events:[],support:0,crescendo:0,result:null};
   // Bass and drums prepare first. This order is visible in the show’s explanation.
   const order = {bass:0,drums:1,percussion:2,keys:3,guitar:4,sax:5,trumpet:6,voice:7};
   for(const p of [...people].sort((a,b)=>order[a.instrument]-order[b.instrument]||a.id.localeCompare(b.id))) {
@@ -149,7 +151,7 @@ function impact(s, hit) {
     const preference=fan.style===s.genre?1.28:.93;
     const instrument=fan.instrument===actor.instrument?1.32:1;
     const trance=hit.tag==='rhythm' && s.zones.some(z=>z.kind==='trance'&&Math.hypot(fan.x-z.x,fan.y-z.y)<z.radius)?1.4:1;
-    const emotion=hit.tag==='emotion'&&s.song.emotion===fan.emotion?1.2:1;
+    const emotion=hit.tag==='emotion'&&emotionCompatible(s.song.emotion,fan.emotion,s.rulesVersion)?1.2:1;
     const value=hit.power*preference*instrument*trance*emotion*fan.receptivity*(1-distance/hit.radius*.35);
     const before=fan.meter;fan.meter=limit(fan.meter+value);gain+=fan.meter-before;touched++;targets.push({id:fan.id,before,after:fan.meter,style:preference,instrument,emotion});fan.lastHit={cardId:hit.cardId,actorId:actor.id,gain:Math.round(fan.meter-before),tick:s.tick};
     const dx=fan.x-hit.x,dy=fan.y-hit.y,d=Math.max(20,distance),push=hit.tag==='impact'?60:18;

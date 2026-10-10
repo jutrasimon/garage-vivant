@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.6.4
+# Garage vivant · v0.7.0
 
-Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs priorités ou intervenir.
+Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v061) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v070) · [Contribuer](CONTRIBUTING.md)
 
 ## Prendre la scène
 
@@ -18,27 +18,27 @@ Les dates se renouvellent continuellement. Un gros événement revient toutes le
 
 **Essayer maintenant** est une répétition générale sans récompense. Un replay reproduit le tirage et n’ajoute aucune conséquence; les douze dernières prestations gardent la trace de leur dernière chanson. **Interrompre** un vrai show ne donne pas de récompense et coûte de l’énergie.
 
-## Quartier observable et réglable
+## Quartier V7
 
-Six actions : récupérer, socialiser, pratiquer, jammer, composer et former un groupe. Récupérer choisit sommeil, pause solo ou détente ensemble. Les priorités 1/2/3/0 restent disponibles; une énergie critique impose la récupération. Une jam demande deux musiciens réellement présents. Les compositions progressent sur plusieurs séances, avec qualité, style et origine émotionnelle conservés.
+Cinq activités d’éveil : Décrocher, Socialiser, Pratiquer, Jammer et Composer. Chaque personnage possède un sac fini sans remise; la fiche montre composition, restants, consommés et réservation. Modifier les quantités prépare le prochain cycle. Une recherche sociale ou jam sans partenaire rend le jeton et attend, sans activité fictive. Le sommeil quotidien est hors sac; sa durée et son horaire sont personnels.
 
-Affinité, confiance et tension décrivent un point de vue : Alex → Camille peut différer de Camille → Alex. Un grief permet au conflit de persister après la colère; les amis refroidissent plus vite, l’écoute empathique aide à réparer. Les croisements de trajets peuvent créer des échanges et des moments ensemble. La chimie musicale se découvre par des expériences communes, plutôt que par un chiffre connu d’avance.
+Énergie, lien social, plaisir et expression exercent des pressions personnelles sur exaltation et détresse. Les traits conditionnels s’activent au seuil et se retirent en dessous; les sources permanentes restent actives. Les besoins, traits et personnalité ne changent pas la pige. Confort, humeur globale, ancien mode à scores et attirance séparée sont retirés.
 
-La fiche détaillée utilise l’espace central. Le bouton **Organiser** expose les commandes de disposition. Ses modules peuvent être réordonnés, élargis ou masqués; les modules masqués restent accessibles en bas. Les souvenirs actifs et terminés sont datés. Le **sac Rapin** distingue les parts de base éditables des chances actuelles, modulées par besoins, émotions et priorités. Les verrous protègent les autres parts pendant une redistribution.
+Les séances accueillent les intentions compatibles et possèdent une horloge commune. Discuter, soutenir et faire une avance séparent acceptation et résultat. Les traces donnent chances, entrées, tirages et conséquences. Affinité, tension et lien amoureux sont dirigés; les couples sont un statut distinct. Le développement du groupe est bien sa Coordination, utilisée pour pondérer les partenaires.
 
-Navigation fixe, slider de vitesse 0–10 aimanté aux valeurs rondes, filtres du journal et positions de lecture conservées. **Ctrl+Espace** ou Recherche ouvre les règles par système. Le numéro de version ouvre les nouveautés dans un autre onglet, à la dernière note non lue.
+Les anciens moteurs de projets, compétences, déchéance, groupes et shows sont conservés. Quatre raccords restent explicitement débranchés : poids des souvenirs sur l’humeur, anciennes six nuances des nouvelles chansons, choix par personnalité/priorités et bonus de choix Relax. Réglages et le [DDD des raccords](docs/gdd/raccords-v7.md) donnent leur état réel.
+
+Fiches modulaires, catalogue de traits filtrable, focus et lecture conservés. Ctrl+Espace ou Rechercher ouvre les règles; VitePress cherche les mêmes DDD. Les [douze domaines](docs/gdd/documentation.md) couvrent formules, sauvegardes, frontières de systèmes et limites.
 
 ## Temps et sauvegardes
 
-À ×1, une seconde réelle vaut huit minutes de quartier; une journée dure trois minutes hors pauses. La lecture d’une chanson dure une minute à ×1 sur une horloge distincte. Le quartier attend la fin de la soirée; masquer le navigateur suspend les deux horloges sans rattrapage. L’âge est une donnée, sans vieillissement automatique.
+À ×1, une seconde réelle vaut huit minutes de quartier. Le sommeil collectif avance jusqu’au premier réveil en conservant tous les effets minute par minute. Une chanson se présente en 30 secondes à ×1 sur une horloge distincte. Le quartier attend la fin de la soirée; masquer le navigateur suspend les horloges sans rattrapage. L’âge reste une identité.
 
-Sauvegarde locale, export/import JSON et migration V1–V5.1. Personnages, chansons, projets, relations, compétences et engagements sont conservés. Les compteurs repos/décrocher sont additionnés. Les nouvelles archives gardent jusqu’à 600 souvenirs par personnage; un souvenir hérité sans date l’indique. Une copie est conservée avant migration dans `garage-vivant-before-v6`; une sauvegarde invalide n’est pas écrasée automatiquement.
-
-Les sauvegardes dépendent du navigateur et de l’origine web : exporter puis importer pour changer d’hébergement. Les préférences de disposition restent propres au navigateur.
+Sauvegarde locale, export/import et migration V1–V6. Chansons, projets, compétences, groupes, engagements et shows historiques sont conservés. Les anciens compteurs gardent une archive; l’humeur historique n’est pas maintenue comme calcul caché. Une copie avant migration se trouve dans `garage-vivant-before-v7`; une sauvegarde invalide n’est pas écrasée automatiquement. Un rechargement V7 ne reroule pas les seuils ou sacs et poursuit le même futur.
 
 ## Développement et validation
 
-Le jeu reste une application statique sans dépendance à l’exécution. Les sources sont dans `dist/` : `engine.mjs` simule le quartier, `life.mjs` la carrière et les commandes, `calendar.mjs` les inscriptions et dates, `social.mjs` les griefs et sacs, `stage.mjs` la physique musicale. Rendu et audio ne changent pas le hasard de simulation.
+Les sources exécutables sont dans `dist/`. `v7.mjs` centralise les nouvelles règles; `engine.mjs` orchestre la simulation; `life.mjs`, `calendar.mjs` et `stage.mjs` gardent carrière, calendrier et spectacle. Rendu et audio n’utilisent pas le hasard du monde. Voir le [DDD Technique](docs/gdd/technique.md).
 
 Avec Node 22 :
 
@@ -50,11 +50,9 @@ npx playwright install --with-deps chromium
 npm run test:browser
 ```
 
-Pour jouer localement après le build documentaire : `python3 -m http.server 8000 --directory dist`, puis ouvrir `http://localhost:8000/`. Le jeu fonctionne sans ce build; les liens documentaires utilisent le préfixe Pages `/garage-vivant/docs/`.
+Pour jouer localement : `python3 -m http.server 8000 --directory dist`, puis `http://localhost:8000/`. Le build crée la documentation et son index de recherche. Les dix suites couvrent les règles V7, imports réels V1–V6, déterminisme, compositions, engagements, setlists, skip/replay, récompenses uniques, 100 jours de calendrier et cohérence documentaire. Chromium couvre ordinateur et tactile, rendu, recherche VitePress et parcours de jeu. Le viewport tactile ne remplace pas un test sur appareil réel.
 
-Les sept suites couvrent migrations réelles V5.1, sauvegardes actives, compositions, relations, engagements, sélection reproductible, shows, skip/replay sans doubles gains et 100 jours de calendrier. Chromium vérifie les parcours ordinateur et tactile : fiches modulaires, sac, groupes, setlists, réservation réelle, pause du quartier, skip, historique, recherche, notes et scroll. Ce viewport tactile ne remplace pas un test sur iPhone réel.
-
-La CI construit jeu et documentation ensemble et publie `dist/` depuis `main` après validation. Les PR vérifient sans publier. Les captures sont disponibles dans l’artefact `interface-v6`. Voir [le plan V6](docs/PLAN_V6.md), les [GDD par système](docs/gdd/) et [l’historique](docs/CHANGELOG.md). Le test de compréhension et l’équilibrage des probabilités restent à faire avec des joueurs.
+La CI vérifie les PR sans publier; `main` publie jeu et doc après validation. Captures dans `interface-v7`. Voir [PLAN_V7](docs/PLAN_V7.md), [DDD](docs/gdd/documentation.md), [historique](docs/CHANGELOG.md) et [contribution](CONTRIBUTING.md). L’équilibrage des profils et probabilités reste provisoire et demande un essai avec joueurs.
 
 ## Mise en scène V0.6.4
 
