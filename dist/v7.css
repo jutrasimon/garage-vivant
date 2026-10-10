@@ -1,0 +1,47 @@
+.v7-table-scroll {
+  overflow: auto;
+}
+.v7-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.v7-table td,
+.v7-table th {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+.v7-trace pre {
+  white-space: pre-wrap;
+  max-height: 260px;
+  overflow: auto;
+  font-size: 11px;
+}
+#trait-catalog article {
+  border-bottom: 1px solid #ddd;
+  padding: 8px 0;
+}
+#trait-catalog h3 {
+  margin: 4px 0;
+}
+.profile-module[data-module="thresholds"] {
+  grid-column: 1/-1;
+}
+.bag-row {
+  grid-template-columns: minmax(100px, 1fr) minmax(90px, 120px) 80px;
+}
+.bag-row input[type="number"] {
+  width: 75px;
+}
+.emotion-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 600px) {
+  .v7-table {
+    font-size: 11px;
+  }
+  .bag-row {
+    grid-template-columns: minmax(100px, 1fr) 100px 65px;
+  }
+}

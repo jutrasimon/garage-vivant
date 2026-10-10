@@ -1,2 +1,6 @@
-export function mergedCounts(counts){const result=structuredClone(counts);if(result.relax){for(const key of ['started','completed','interrupted'])result.sleep[key]+=result.relax[key];delete result.relax;}return result;}
-export function oldFields(value,original){return Object.fromEntries(Object.keys(original).map(k=>[k,value[k]]));}
+import assert from 'node:assert/strict';
+export function mergedCounts(counts){const result=structuredClone(counts),pause={started:0,completed:0,interrupted:0};for(const key of ['started','completed','interrupted'])pause[key]=(result.sleep?.[key]||0)+(result.relax?.[key]||0);result.relax=pause;result.sleep={started:0,completed:0,interrupted:0};delete result.form;return result;}
+export function oldFields(value,original){return Object.fromEntries(Object.keys(original).filter(k=>k!=='attraction').map(k=>[k,value[k]]));}
+export function fourNeeds(needs){const result=structuredClone(needs);delete result.comfort;return result;}
+export function projectsPreserved(actual,old){assert.equal(actual.length,old.length);for(let i=0;i<old.length;i++){const omitted=old[i].status==='finished'?[]:['emotion','tone','intensity'];assert.deepEqual(Object.fromEntries(Object.entries(actual[i]).filter(([k])=>!omitted.includes(k))),Object.fromEntries(Object.entries(old[i]).filter(([k])=>!omitted.includes(k))));}}
+export function draftPreserved(actual,old){const omit=['emotions','samples'];assert.deepEqual(Object.fromEntries(Object.entries(actual).filter(([k])=>!omit.includes(k))),Object.fromEntries(Object.entries(old).filter(([k])=>!omit.includes(k))));}

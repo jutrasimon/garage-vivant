@@ -1,252 +1,2761 @@
-import {createShowClock,advanceShowClock,songSeconds,stagePoint,actorPosition,songKey,stageGeometry,showBeat} from './show-playback.mjs?v=0.6.4';
-import {showOverlayHTML,showResourcesHTML,deckInspectionHTML,cardInspectionHTML} from './show-view.mjs?v=0.6.4';
-import {setupDocSearch} from './doc-search.mjs?v=0.6.4';
-import {calendarHTML} from './v6-view.mjs?v=0.6.4';
-import {pendingBooking,eventById} from './calendar.mjs?v=0.6.4';
-import {editBag} from './social.mjs?v=0.6.4';
-import {profileMarkup,changeModule,resetLayout} from './profile-layout.mjs?v=0.6.4';
-import {VERSION,NEEDS,PERSONALITY,SKILLS,GENRES,TRAITS,EMOTIONS,PRIORITIES,ACTIONS,PLACES,DEFAULTS,clamp,round,relationship,chemistry,mood,stamp,addPerson,createWorld,scores,step,removePerson,scenario,restore,log,decide,dominantEmotion,isMember,groupsOf,createGroup,liveSessions,formationPlan,refreshReputation,locationReason,feel,compositionProject,journalEntries,chemistryKnowledge} from './engine.mjs?v=0.6.4';
-import {command,bandStage,nextCurse,eligibleSongs,isArchivedSong,acceptance,advanceToBooking,playTicks,seasonSummary,initializeLife,newSeason,nextSlot,skipShow} from './life.mjs?v=0.6.4';
-import {CARDS,CURSES,INTENTIONS,SHOW_TICKS,createPerformance} from './stage.mjs?v=0.6.4';
-import {resolveShowPlan} from './show-planning.mjs?v=0.6.4';
-import {reconcile,createViewPositions,withReadingAnchor} from './ui-state.mjs?v=0.6.4';
-import {quickHTML,skillHTML,decadenceHTML,cardsHTML,deckEditorHTML,bandsHTML,invitationHTML,showSetupHTML,showStatusHTML,seasonHTML,rapinHTML,decorateCube,drawStage,enableAudio,playSound,patchesHTML} from './v5-view.mjs?v=0.6.4';
-import {createPlayback,snapSpeed,setPlaybackSpeed,advancePlayback,updatePositions} from './runtime.mjs?v=0.6.4';
-const playback=createPlayback();
-const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)],esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let world,saveProblem=false,loadFailed=false;try{const saved=localStorage.getItem('garage-vivant-v1');if(saved){const input=JSON.parse(saved);if(input.version!==VERSION){try{if(!localStorage.getItem('garage-vivant-before-v6'))localStorage.setItem('garage-vivant-before-v6',saved);}catch{}}world=restore(input);}else world=createWorld();}catch{world=createWorld();saveProblem=true;loadFailed=true;}
-let selected=world.people[0].id,view='map',pair=null,metric='affinity',filter='all',lastUI=0,lastSaved=0,tabInactive=false,labValues=false,rawJournal=false;
-const viewPositions=createViewPositions(),personPositions=createViewPositions();
-const showPlan={groupId:null,songId:undefined,actorId:null,opportunityId:null,intention:'tight',members:null};
-let showClock=null,stagePresentationKey=null,resumeInspectedShow=null;
-let selectedGroup=null,bandQuery='',bandArchives=false,savedWorldSpeed=playback.speed,liveEvent=!!world.showEventId;let showFeedback=null,speedDragging=false,snappingRange=null;
-let showingPerformance=world.performance?.status==='playing'||!!world.showEventId;let showSpeed=1,showPaused=!!world.performance?.presentationPaused,showBudget=0,showLast=null,soundEnabled=false,reducedEffects=matchMedia('(prefers-reduced-motion: reduce)').matches,selectedFan=null,lastSoundEvent=0,lastShotEvent=null,lastShowId=null,previewReturn=world.livePreviewReturn||null,showArchives=false,journalPinnedIds=null,journalPending=0,journalTypes=new Set(['music','relations','groups','shows','life']),hideRest=true,catalogueLimit=50,profileSongLimit=30;
-try{const settings=JSON.parse(localStorage.getItem('garage-vivant-ui')||'null');if(settings){showArchives=!!settings.showArchives;hideRest=settings.hideRest!==false;reducedEffects=settings.reducedEffects??reducedEffects;if(Array.isArray(settings.journalTypes))journalTypes=new Set(settings.journalTypes);}}catch{}
-function saveUI(){try{localStorage.setItem('garage-vivant-ui',JSON.stringify({showArchives,hideRest,reducedEffects,journalTypes:[...journalTypes]}));}catch{}}
-const params={drain:['Usure des besoins','Vitesse à laquelle la fatigue et les autres besoins augmentent.'],music:['Attrait de la musique','Poids de la pratique, de la composition et des jams dans les décisions.'],social:['Attrait des rencontres','Poids des activités sociales dans les décisions.'],conflict:['Risque d’accrochage','Amplifie l’effet de l’humeur, de l’impulsivité et des tensions sur les disputes.'],learning:['Apprentissage','Vitesse de progression des compétences musicales.'],randomness:['Spontanéité','Variation ajoutée au score ; 0 donne toujours le choix le mieux coté.'],relations:['Évolution des liens','Amplitude des changements d’affinité, de confiance, de tension et d’amour.'],emotionDecay:['Retour au calme','Vitesse à laquelle les émotions s’atténuent naturellement ; 0 les maintient jusqu’à une nouvelle expérience.'],compositionPace:['Progression des compositions','Vitesse du travail sur les projets. ×1 demande environ quatre à six séances ; ×0 suspend la progression.'],romance:['Avances amoureuses','Fréquence des avances spontanées entre adultes attirés. 0 désactive les avances autonomes.']};
-function notify(text){$('#toast').textContent=text;$('#toast').style.display='block';clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('#toast').style.display='none',3500);}
-function save(){if(loadFailed){$('#save-state').textContent='La sauvegarde illisible a été conservée. Importe un monde valide ou crée explicitement un nouveau quartier.';return;}try{if(world.performance)world.performance.presentationPaused=showPaused;localStorage.setItem('garage-vivant-v1',JSON.stringify(world));saveProblem=false;}catch{saveProblem=true;}$('#save-state').textContent=saveProblem?'Sauvegarde locale indisponible. Exporte le JSON pour conserver ton monde.':'Sauvegarde automatique dans ce navigateur · export JSON disponible.';}
-function select(id,open=true){if(!world.people.some(x=>x.id===id))return;if(selected!==id){personPositions.save(selected,$('#inspector'));profileSongLimit=30;}const changed=selected!==id;selected=id;if(open)$('#inspector').classList.add('open');renderPeople();renderProfile(true);if(changed)personPositions.restore(id,$('#inspector'));if(view==='journal')renderJournal();if(view==='actions')renderActions();}
-function current(){return world.people.find(p=>p.id===selected)||world.people[0];}
-function actionLabel(p){if(world.performance?.status==='playing'&&!world.performance.preview&&world.performance.actors.some(a=>a.id===p.id))return '♫ Sur scène';if(p.engagement){const b=world.bookings.find(b=>b.id===p.engagement.bookingId);return p.engagement.arrived?'♫ Prêt pour le show':`↗ En route pour ${world.season.opportunities.find(o=>o.id===b?.opportunityId)?.name||'le show'}`;}const a=p.action;if(!a)return 'Choisit sa prochaine activité';if(a.route.length)return `↗ ${ACTIONS[a.key].label} · en route`;if(a.key==='jam'){const j=world.jams.find(x=>x.id===a.sessionId);return j?.status==='active'?`♬ Jam · ${j.participants.filter(id=>{const q=world.people.find(x=>x.id===id);return q?.action?.sessionId===j.id&&!q.action.route.length;}).length} musiciens`:'♬ Attend un partenaire';}return `${ACTIONS[a.key].icon} ${ACTIONS[a.key].label}`;}
-function renderPeople(){$('#population').textContent=world.people.length;replacePreserving('#people',world.people.map(p=>`<button class="person ${p.id===selected?'active':''}" data-person="${p.id}"><span class="mini-cube" style="background:${esc(p.color)}"></span><span><span class="person-name">${esc(p.name)} ${isMember(world,p)?'<span class="role-dot" title="Membre d’un groupe">♫</span>':''}</span><span class="person-action">${esc(actionLabel(p))}</span></span></button>`).join(''));$('#add').disabled=world.people.length>=24;}
-function bar(label,value,key=null){return `<div class="need"><span>${esc(label)}</span><div class="bar"><i style="width:${clamp(value)}%;background:${value<25?'#d08c68':value<50?'#b6ab71':'#819b6f'}"></i></div><b ${key?`data-need-value="${key}"`:''}>${round(value)}</b></div>`;}
-function spark(p){const h=p.history;if(h.length<2)return '<div class="muted" style="font-size:9px">Historique d’humeur : première mesure après 30 min.</div>';return `<div class="spark-label"><span>Humeur au fil du temps · 0–100</span><span>${stamp(h[0].time)} → ${stamp(h.at(-1).time)}</span></div><svg class="spark" viewBox="0 0 260 32" preserveAspectRatio="none" aria-label="Historique de l’humeur, de 0 à 100"><path d="M0 31H260" stroke="#e8ebdf" fill="none"/><polyline points="${h.map((x,i)=>`${i*260/(h.length-1)},${30-x.mood*.28}`).join(' ')}" fill="none" stroke="#91a786" stroke-width="2"/></svg>`;}
-function rangeEditor(group,k,label,v,max=100,min=0){return `<div class="range-row"><label>${esc(label)} <b data-output="${group}:${k}">${round(v)}</b></label><input type="range" min="${min}" max="${max}" value="${v}" data-edit="${group}:${k}" aria-label="${esc(label)}"></div>`;}
-function renderProfile(force=false){const p=current();if(!p)return;if(!force&&$('#profile').dataset.person===p.id){updateProfile();return;}$('#profile').dataset.person=p.id;const preserve=[],catalogScroll=0;const scroll=$('#inspector').scrollTop;const a=p.action,candidates=decisionRows(p);const friends=world.people.filter(x=>x!==p).sort((a,b)=>relationship(world,p,b).affinity-relationship(world,p,a).affinity).slice(0,3);
-replacePreserving('#profile',profileMarkup(`<div class="profile-head"><div class="portrait" style="background:${esc(p.color)}">♫</div><div><h2>${esc(p.name)}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p></div></div><div class="pills">${groupsOf(world,p).map(g=>`<button class="pill member" data-open-groups>${esc(g.name)}</button>`).join('')}${p.traits.map(t=>`<span class="pill">${TRAITS[t]}</span>`).join('')}</div>${quickHTML(world,p)}<div id="reputation">${reputationHTML(p)}</div><div class="mood"><span>Humeur <span data-mood-word></span></span><strong data-mood>${round(mood(p))}/100</strong></div><div class="action-card"><strong data-action>${esc(actionLabel(p))}</strong><p data-reason>${esc(profileReason(p))}</p><div class="bar"><i data-progress style="width:${a?clamp((a.key==='jam'?(world.jams.find(j=>j.id===a.sessionId)?.elapsed||0):a.elapsed)/ACTIONS[a.key].duration*100):0}%"></i></div></div>${skillHTML(p)}<section><div class="section-head">SES COMPOSITIONS <span id="profile-song-count" data-retain></span><button class="text-button" data-toggle-archives>${showArchives?'Masquer archives':'Archives ↗'}</button></div><div id="profile-songs" data-retain></div></section>${cardsHTML(p)}${decadenceHTML(p)}<section class="emotion-section"><div class="section-head">CE QUI L’HABITE <span id="emotion-label" data-retain></span></div><div id="emotion-bars">${emotionHTML(p)}</div><div id="emotion-source" data-retain class="emotion-source"></div></section><section><div class="section-head">BESOINS <span style="color:#8e9888;font-weight:400;letter-spacing:0">100 = comblé</span></div><div id="needs">${Object.entries(NEEDS).map(([k,l])=>bar(l,p.needs[k],k)).join('')}</div><div id="profile-history">${spark(p)}</div></section><section><div class="section-head">POURQUOI CETTE ACTIVITÉ <span id="decision-time" data-retain style="letter-spacing:0;font-weight:400"></span></div><div id="ranks">${rankHTML(candidates)}</div><p class="muted" style="font-size:10px;margin:7px 0 0">Ces scores ont servi à choisir l’activité actuelle. La prochaine action sera choisie à la fin, selon la situation à ce moment-là.</p></section><section id="rapin-pool" data-retain></section><section><div class="section-head">DERNIERS SOUVENIRS</div><div id="memories">${memoryHTML(p)}</div></section><section id="profile-links"><div class="section-head">SES 3 PLUS FORTS LIENS <button class="text-button" id="profile-relations">Matrice ↗</button></div>${friends.map(b=>{const r=relationship(world,p,b);return `<button class="person" data-person="${b.id}" style="padding:7px 0"><span class="mini-cube" style="background:${esc(b.color)};width:19px;height:19px"></span><span style="flex:1;font-size:10px">${esc(b.name)}</span><span style="font-size:11px;color:${r.affinity<0?'#c28069':'#819b6f'}">${r.affinity>0?'+':''}${round(r.affinity)}</span></button>`;}).join('')}</section><section><div class="section-head">ACTIVITÉS TERMINÉES <button class="text-button" data-open-actions>Toutes les actions ↗</button></div><div id="profile-counts" data-retain></div></section>${priorityEditor(p)}<details id="emotion-edit"><summary>ÉMOTIONS · MODIFIER</summary><p class="muted">Six familles de jeu, trois intensités. Plusieurs émotions peuvent coexister. Les effets nourrissent les prochains choix et compositions.</p>${Object.entries(EMOTIONS).map(([k,v])=>rangeEditor('emotions',k,v.label,p.emotions[k])).join('')}</details><details id="identity-edit"><summary>IDENTITÉ & TRAITS · MODIFIER</summary><div class="editor"><label class="edit-row">Nom<input data-identity="name" maxlength="24" value="${esc(p.name)}"></label><label class="edit-row">Âge<input data-identity="age" type="number" min="18" max="90" value="${p.age}"></label><label class="edit-row">Couleur<input data-identity="color" type="color" value="${esc(p.color)}"></label><label class="edit-row">Instrument<select data-identity="instrument">${Object.entries(SKILLS).filter(([k])=>k!=='writing').map(([k,l])=>`<option value="${k}" ${p.instrument===k?'selected':''}>${l}</option>`).join('')}</select></label><label class="edit-row">Style préféré<select data-identity="genre">${GENRES.map(g=>`<option ${g===p.genre?'selected':''}>${g}</option>`).join('')}</select></label></div><div class="trait-checks" style="margin-top:12px">${Object.entries(TRAITS).map(([k,l])=>`<label><input type="checkbox" data-trait="${k}" ${p.traits.includes(k)?'checked':''}>${l}</label>`).join('')}</div></details><details id="personality-edit"><summary>PERSONNALITÉ · MODIFIER</summary>${Object.entries(PERSONALITY).map(([k,l])=>rangeEditor('personality',k,l,p.personality[k])).join('')}</details><details id="skills-edit"><summary>COMPÉTENCES · MODIFIER</summary>${Object.entries(SKILLS).map(([k,l])=>rangeEditor('skills',k,l,p.skills[k])).join('')}<div class="muted">Chanson en cours : ${round(p.songProgress)} %</div></details><details id="needs-edit"><summary>BESOINS · MODIFIER</summary>${Object.entries(NEEDS).map(([k,l])=>rangeEditor('needs',k,l,p.needs[k])).join('')}</details><details id="intervene"><summary>INTERVENIR</summary><p class="muted">Choisis une activité pour ton musicien; les autres reçoivent une proposition et peuvent refuser.</p><div class="file-actions">${Object.entries(ACTIONS).map(([k,v])=>`<button data-force="${k}" style="font-size:10px;padding:7px">${v.icon} ${v.label}</button>`).join('')}<button id="remove" class="danger" style="font-size:10px" ${world.people.length===1?'disabled':''}>Retirer du quartier</button></div></details>`));
-for(const id of preserve){const e=$('#'+id);if(e)e.open=true;}updateProfile();if($('#profile-songs .profile-catalog'))$('#profile-songs .profile-catalog').scrollTop=catalogScroll;}
-function decisionRows(p){const rows=p.action?.decision?.length?p.action.decision:scores(world,p);const top=rows.filter(x=>!x.blocked).slice(0,4);const chosen=rows.find(x=>x.key===p.action?.key);if(chosen&&!top.includes(chosen))top[top.length-1]=chosen;return top;}
-function rankHTML(cs){let max=Math.max(1,...cs.map(x=>x.score));const p=current();return cs.map(c=>`<div class="rank ${c.key===p.action?.key?'chosen-rank':''}" title="${esc(c.why)} · base ${c.base} + émotion ${c.emotion}, priorité ×${c.factor}, objectif ×${c.bandBoost}${c.invite?' + invitation '+c.invite:''}"><span>${c.key===p.action?.key?'▸ ':''}${(ACTIONS[c.key]||ACTIONS.sleep).icon} ${(ACTIONS[c.key]||ACTIONS.sleep).label}</span><div class="bar"><i style="width:${c.score/max*100}%"></i></div><b>${p.action?.mode==='bag'?round(c.chance)+'%':round(c.score)}</b></div>`).join('');}
-function emotionHTML(p){return `<div class="emotion-grid">${Object.entries(EMOTIONS).map(([k,e])=>`<div class="emotion-item" title="${e.levels.join(' → ')}"><span style="color:${e.color}">${e.icon} ${e.label}</span><b>${round(p.emotions[k])}</b><div class="bar"><i style="width:${p.emotions[k]}%;background:${e.color}"></i></div></div>`).join('')}</div>`;}
-function priorityEditor(p){return `<details id="priorities-edit"><summary>PRIORITÉS · MODIFIER</summary><p class="muted">1 haute · 2 normale · 3 basse · — interdit. L’énergie critique reste prioritaire.</p><div class="editor">${Object.entries(ACTIONS).map(([k,a])=>`<label class="edit-row">${a.icon} ${a.label}<select data-priority="${p.id}:${k}">${priorityOptions(p,k)}</select></label>`).join('')}</div><button data-rethink="${p.id}" style="margin-top:12px">Reconsidérer maintenant</button></details>`;}
-function priorityOptions(p,k){return [1,2,3,...(k==='sleep'?[]:[0])].map(v=>`<option value="${v}" ${p.priorities[k]===v?'selected':''}>${v||'—'} · ${PRIORITIES[v]}</option>`).join('');}
-function memoryHTML(p){const active=p.memories,expired=(p.memoryArchive||[]).filter(m=>m.until<=world.time);const row=m=>`<div class="memory ${m.effect<0?'negative':''}"><span>${esc(m.text)}<small>${m.created===null?'Date d’origine inconnue':stamp(m.created)} · ${m.until>world.time?'actif jusqu’à '+stamp(m.until):'terminé '+stamp(m.until)}</small></span><b>${m.effect>0?'+':''}${Math.round(m.effect*10)/10}</b></div>`;return `<b>Actifs</b>${active.map(row).join('')||'<p>Aucun effet actif.</p>'}<details data-key="expired-memories"><summary>Souvenirs terminés · ${expired.length}</summary>${expired.slice(0,30).map(row).join('')}</details><button data-person-journal="${p.id}">Journal du personnage</button><details data-key="memory-archive"><summary>Archive complète disponible · ${p.memoryArchive?.length||0}</summary>${(p.memoryArchive||[]).map(row).join('')}</details>`;}
-
-function profileReason(p){const a=p.action;if(p.engagement)return p.engagement.arrived?'Le band est rassemblé pour son engagement.':'Un engagement commun détermine ce trajet.';return `${PLACES.find(x=>x.id===a?.dest)?.name||''} · ${a?.route.length?'Le trajet précède l’activité':a?.key==='jam'&&world.jams.find(j=>j.id===a.sessionId)?.status!=='active'?'La jam attend au moins 2 personnes sur place':round(a?.remaining||0)+' min restantes'}. ${locationReason(world,p)}`;}
-function updateModule(selector,html){const target=$(selector);if(!target)return;const template=document.createElement('template');template.innerHTML=html;replacePreserving(selector,(target.querySelector('.module-toolbar')?.outerHTML||'')+template.content.firstElementChild.innerHTML);}
-function updateProfile(){withReadingAnchor($('#inspector'),updateProfileContents);}
-function updateProfileContents(){const p=current();if(!p||!$('[data-mood]'))return;updateModule('#profile [data-stable="quick"]',quickHTML(world,p));updateModule('#profile [data-stable="skills"]',skillHTML(p));updateModule('#profile [data-stable="deck"]',cardsHTML(p));updateModule('#profile [data-stable="decadence"]',decadenceHTML(p));const m=round(mood(p));$('[data-mood]').textContent=m+'/100';$('[data-mood-word]').textContent=m>75?'· bien':m<35?'· à plat':'· stable';$('[data-action]').textContent=actionLabel(p);const a=p.action;$('[data-reason]').textContent=profileReason(p);$('[data-progress]').style.width=(a?clamp((a.key==='jam'?(world.jams.find(j=>j.id===a.sessionId)?.elapsed||0):a.elapsed)/ACTIONS[a.key].duration*100):0)+'%';for(const k of Object.keys(NEEDS)){const b=$(`[data-need-value="${k}"]`);if(b){b.textContent=round(p.needs[k]);const i=b.previousElementSibling.firstElementChild;i.style.width=p.needs[k]+'%';i.style.background=p.needs[k]<25?'#d08c68':p.needs[k]<50?'#b6ab71':'#819b6f';}}updateModule('#rapin-pool',rapinHTML(world,p));$('#ranks').innerHTML=rankHTML(decisionRows(p));$('#decision-time').textContent=p.action?stamp(p.action.started||world.time):'À venir';$('#emotion-label').textContent=dominantEmotion(p).label;$('#emotion-bars').innerHTML=emotionHTML(p);const em=dominantEmotion(p),origin=p.emotionSources[em.key]?.[0];$('#emotion-source').innerHTML=em.active&&origin?`<span>Origine récente</span>${esc(origin.text)}`:'Un état qui évolue avec ses expériences.';replacePreserving('#memories',memoryHTML(p));$('#profile-history').innerHTML=spark(p);$('#reputation').innerHTML=reputationHTML(p);renderProfileSongs(p);$('#profile-counts').innerHTML=Object.entries(ACTIONS).map(([k,a])=>`<div class="count-line"><span>${a.icon} ${a.label}</span><b>${p.actionCounts[k].completed}</b></div>`).join('')+`<p class="muted" style="font-size:9px">Comptées depuis ${stamp(p.countsSince)}.</p>`;}
-function reputationHTML(p){const r=p.reputation;return `<div class="reputation-head"><span>Réputation musicale</span><strong>${r.score}<small>/100</small></strong></div><div class="bar"><i style="width:${r.score}%"></i></div><p class="reputation-note">Talent ${r.skill} · catalogue ${r.catalogue} · reconnaissance ${r.recognition} · collaborations ${r.collaboration}. Elle rend ses invitations à jouer plus attirantes.</p>`;}
-function projectHTML(p,c=compositionProject(world,p)){if(!c)return '';const progress=clamp(c.work/c.target*100),active=p&&c.id===p.draft.projectId;return `<div class="draft-note"><strong>✎ ${esc(c.title)}</strong><br>${c.status==='idea'?'Idée':c.status==='ready'?'Prête à terminer':'Ébauche'} · ${round(progress)} % · ${c.sessions} séance${c.sessions>1?'s':''}<div class="bar"><i style="width:${progress}%"></i></div><small>${esc(c.genre)} · ${esc(c.tone)} · potentiel provisoire ${c.potential}/100<br>${active?'Le projet reprend à la prochaine séance de composition.':'Projet conservé dans le carnet ; le scénario a lancé un autre projet.'}</small>${c.sources.length?`<details class="causes" data-key="project-${c.id}"><summary>Ce qui inspire ce projet</summary>${c.sources.map(x=>`<p>${esc(x.text)}</p>`).join('')}</details>`:''}</div>`;}
-function renderProfileSongs(p){const songs=world.songs.filter(s=>s.authors.includes(p.id)&&(showArchives||!isArchivedSong(world,s.id)));const allCount=world.songs.filter(s=>s.authors.includes(p.id)).length;$('#profile-song-count').textContent=`${allCount} terminées · ${songs.length} visibles`;replacePreserving('#profile-songs',`${world.projects.filter(c=>c.author===p.id&&c.status!=='finished').map(c=>projectHTML(p,c)).join('')}${songs.length?`<div class="profile-catalog">${songs.slice(0,profileSongLimit).map(song=>`<details class="profile-song" data-key="profile-song-${song.id}"><summary><span>${esc(song.title)}</span><b>${song.quality}/100</b></summary><p>${esc(song.genre)} · ${esc(song.tone)} · ${stamp(song.time)}</p>${song.sources.map(c=>`<p class="muted">${esc(c.text)}</p>`).join('')}</details>`).join('')}${songs.length>profileSongLimit?'<button id="more-profile-songs" class="text-button">Voir davantage de chansons</button>':''}</div>`:'<p class="muted">Aucune chanson terminée. Composer crée puis développe un projet visible ici.</p>'}`);}
-
-const sessionStatus={travel:'En route',waiting:'Attend un partenaire',active:'En cours',completed:'Terminée',interrupted:'Interrompue',cancelled:'Annulée'};
-function eventHTML(e){if(e.session){const moments=e.events.filter(x=>x.type!=='decision');const place=PLACES.find(x=>x.id===e.place)?.name||'';return `<div class="event ${e.type} session-event" data-entry="${esc(e.id)}"><time>${stamp(e.time)}</time><span class="event-dot"></span><div class="event-body"><button ${e.ids[0]?`data-person="${esc(e.ids[0])}"`:''}><strong>${esc(e.text)}</strong></button><small class="session-meta">${sessionStatus[e.status]} · ${round(e.activeMinutes)} min d’activité · ${esc(place)}${e.end?' · fin '+stamp(e.end):''}</small>${moments.length?`<p class="session-highlight">${esc(moments.filter(x=>x.outcome||x.type==='project').at(-1)?.text||moments.at(-1).text)}</p>`:''}<details class="causes" data-key="session-${esc(e.id)}"><summary>Déroulement et effets (${moments.length})</summary>${e.events.map(x=>`<p><time>${stamp(x.time)}</time> ${esc(x.text)}${x.effects?`<br><b>${esc(x.effects)}</b>`:''}${x.explanation?`<br>${esc(x.explanation)}`:''}${x.repeatFactor<1?`<br>Effet atténué : résultat déjà vécu pendant cette jam.`:''}${x.causes?.map(c=>`<br>Origine : ${esc(c.text)}`).join('')||''}</p>`).join('')||'<p>Le trajet précède l’activité.</p>'}</details></div></div>`;}return `<div class="event ${e.type}" data-entry="event-${e.id}"><time>${stamp(e.time)}</time><span class="event-dot"></span><div class="event-body"><button ${e.ids[0]?`data-person="${esc(e.ids[0])}"`:''}>${esc(e.text)}</button>${e.effects?`<p class="session-highlight">${esc(e.effects)}</p>`:''}${e.causes?.length||e.explanation?`<details data-key="event-${e.id}" class="causes"><summary>Ce qui y a mené</summary>${e.explanation?`<p>${esc(e.explanation)}</p>`:''}${e.causes?.map(c=>`<p><time>${stamp(c.time)}</time> ${esc(c.text)}</p>`).join('')||''}</details>`:''}</div></div>`;}
-
-function replacePreserving(selector,html){reconcile($(selector),html);}
-
-function renderMetrics(){let rs=Object.values(world.rels),friends=rs.filter(r=>r.affinity>30).length,tensions=rs.filter(r=>r.tension>25).length;replacePreserving('#metrics',[['HUMEUR DU QUARTIER',round(world.people.reduce((a,p)=>a+mood(p),0)/world.people.length),'/100'],['LIENS AMICAUX',friends,'orientés'],['TENSIONS',tensions,'liens'],['CHANSONS AUJOURD’HUI',world.songs.filter(song=>song.time>=Math.floor(world.time/1440)*1440).length,' / '+world.songs.length+' au total']].map(([l,n,u])=>`<div class="metric"><span>${l}</span><strong>${n} <small>${u}</small></strong></div>`).join(''));replacePreserving('#recent',journalEntries(world).filter(e=>e.type!=='decision').slice(0,4).map(eventHTML).join('')||'<div class="empty">Les premières rencontres s’en viennent.</div>');renderGroupStrip();replacePreserving('#mini-calendar',calendarHTML(world));}
-function renderMatrix(){const ps=world.people,negative=metric==='tension';$('#relations-view .legend').innerHTML=metric==='chemistry'?`<span class="muted">La chimie est un potentiel symétrique. ${labValues?'Valeurs exactes du laboratoire.':'Elle se découvre par des jams terminées ensemble ; ? = aucune expérience mesurée.'} La complicité et les sentiments restent distincts.</span>`:`<span>${metric==='affinity'?'Hostile':'Faible'}</span><i style="background:#d99883"></i><i style="background:#eee9df"></i><i style="background:${negative?'#d99883':'#82b5a1'}"></i><span>${metric==='affinity'?'Proche':'Forte'}</span><span class="muted">La ligne ressent → la colonne. Les deux points de vue peuvent différer.</span>`;replacePreserving('#matrix',`<table class="matrix"><thead><tr><th>${metric==='chemistry'?'Potentiel commun':'↓ ressent →'}</th>${ps.map(p=>`<th data-stable="col-${p.id}" class="${pair?.includes(p.id)?'selected-name':''}" title="${esc(p.name)}">${esc(p.name.slice(0,8))}</th>`).join('')}</tr></thead><tbody>${ps.map(a=>`<tr data-stable="row-${a.id}" class="${pair?.[0]===a.id?'selected-row':''}"><th class="${pair?.includes(a.id)?'selected-name':''}">${esc(a.name.slice(0,10))}</th>${ps.map(b=>{if(a===b)return '<td style="text-align:center;color:#bfc4b8">—</td>';const k=chemistryKnowledge(world,a,b);if(metric==='chemistry'&&!labValues){const grade=k.known?k.grade:'?',color=!k.known?'#eeeee7':k.grade==='Très prometteuse'?'#d3e6cb':k.grade==='Prometteuse'?'#e1ead4':k.grade==='Contrastée'?'#eee4d3':'#ebd4ca';return `<td class="${pair?.[1]===b.id?'selected-column':''}"><button class="chemistry-grade ${pair?.[0]===a.id&&pair?.[1]===b.id?'chosen':''}" data-pair="${a.id},${b.id}" style="background:${color}" title="${esc(grade)} · ${k.confidence} · ${k.sessions} jams communes">${k.known?grade:'?'}</button></td>`;}const r=relationship(world,a,b),v=metric==='chemistry'?chemistry(a,b):r[metric],intensity=metric==='affinity'?Math.abs(v)/100:v/100,red=metric==='tension'||metric==='affinity'&&v<0,bg=red?`rgba(199,114,82,${.08+intensity*.65})`:`rgba(83,147,113,${.06+intensity*.65})`;return `<td class="${pair?.[1]===b.id?'selected-column':''}"><button class="${pair?.[0]===a.id&&pair?.[1]===b.id?'chosen':''}" data-pair="${a.id},${b.id}" style="background:${bg}" title="${esc(a.name)} → ${esc(b.name)} : ${round(v)}">${round(v)}</button></td>`;}).join('')}</tr>`).join('')}</tbody></table>`);}
-
-function renderPair(){if(!pair){replacePreserving('#relation-detail','<div class="empty">Sélectionne un lien dans la matrice pour l’examiner.</div>');return;}let a=world.people.find(p=>p.id===pair[0]),b=world.people.find(p=>p.id===pair[1]);if(!a||!b){pair=null;renderPair();return;}replacePreserving('#relation-detail',`<h2 class="pair-title">${esc(a.name)} & ${esc(b.name)}</h2><p class="muted">Chimie potentielle : ${labValues?round(chemistry(a,b))+'/100':esc(chemistryKnowledge(world,a,b).grade)+' · '+chemistryKnowledge(world,a,b).confidence} (${chemistryKnowledge(world,a,b).sessions} jams communes) · ${a.genre===b.genre?'Style musical partagé':'Styles musicaux différents'} · ${a.instrument!==b.instrument?'Instruments complémentaires':'Même instrument'}</p><div class="pair-directions">${[[a,b],[b,a]].map(([p,q])=>{let r=relationship(world,p,q);return `<div><h3>${esc(p.name)} → ${esc(q.name)}</h3>${Object.entries({affinity:'Affinité',trust:'Confiance',tension:'Tension',collaboration:'Complicité musicale',attraction:'Attirance',love:'Amour vécu'}).map(([k,l])=>`<div class="range-row"><label>${l} <b data-rel-output="${p.id}:${q.id}:${k}">${round(r[k])}</b></label><input type="range" data-rel="${p.id}:${q.id}:${k}" aria-label="${l} de ${esc(p.name)} envers ${esc(q.name)}" min="${k==='affinity'?-100:0}" max="100" value="${r[k]}"></div>`).join('')}<p class="muted">${r.meetings} interactions · dernier contact ${r.meetings?stamp(r.last):'jamais'}</p></div>`;}).join('')}</div>`);}
-function renderJournal(){if($('#archive-threshold')&&document.activeElement!==$('#archive-threshold'))$('#archive-threshold').value=world.archiveThreshold;const complete=filteredJournal();let es=complete;if(view==='journal'&&$('#main').scrollTop>100){if(!journalPinnedIds)journalPinnedIds=new Set(complete.map(e=>String(e.id)));es=complete.filter(e=>journalPinnedIds.has(String(e.id)));journalPending=complete.filter(e=>!journalPinnedIds.has(String(e.id))).length;}else{journalPinnedIds=null;journalPending=0;}if($('#new-events')){$('#new-events').hidden=!journalPending;$('#new-events').textContent=`${journalPending} nouvelles entrées · afficher`;}replacePreserving('#journal',es.slice(0,150).map(eventHTML).join('')||'<div class="empty">Aucun événement dans ce filtre pour le moment.</div>');$('#song-count').textContent=world.songs.length+' terminées · '+world.songArchive.length+' archivées';replacePreserving('#projects',world.projects.filter(c=>c.status!=='finished').map(c=>{const p=world.people.find(x=>x.id===c.author);return `<div class="project-card"><button class="text-button" ${p?`data-person="${p.id}"`:''}>${esc(p?.name||'Ancien voisin')} ↗</button>${projectHTML(p,c)}</div>`;}).join('')||'<p class="muted">Les projets apparaissent dès qu’un personnage commence à composer.</p>');const visibleSongs=world.songs.filter(s=>showArchives||!isArchivedSong(world,s.id));replacePreserving('#songs',visibleSongs.slice(0,catalogueLimit).map(s=>`<div class="song ${isArchivedSong(world,s.id)?'archive':''}" data-entry="catalogue-${s.id}"><div class="song-title">♫ ${esc(s.title)} ${s.hit?'<span class="pill member">Ça résonne !</span>':''}<strong>${s.quality}/100</strong></div><small>${esc(s.genre)} · ${s.authors.map(id=>world.people.find(p=>p.id===id)?.name||'Ancien voisin').map(esc).join(', ')} · ${stamp(s.time)}</small><div class="song-tone"><span style="color:${EMOTIONS[s.emotion]?.color||'#819b6f'}">${EMOTIONS[s.emotion]?.icon||'♫'} ${esc(s.tone)} · intensité ${s.intensity}/100</span><span>Écho public ${s.resonance===null?'non mesuré':s.resonance+'/100'}</span></div><details class="causes" data-key="song-${s.id}"><summary>Les expériences derrière la chanson</summary>${s.sources?.length?s.sources.map(c=>`<p><time>${stamp(c.time)}</time> ${esc(c.text)}</p>`).join(''):'<p>Pas d’événement émotionnel marqué pendant cette composition.</p>'}${s.breakdown?`<p>Qualité : maîtrise ${s.breakdown.craft} + expression ${s.breakdown.expression} + ensemble ${s.breakdown.ensemble} + perfectionnisme ${s.breakdown.perfection} + variation ${s.breakdown.variance} − surcharge émotionnelle ${s.breakdown.overwhelm}. Les arrondis peuvent varier d’un point.</p>`:''}<p>La tonalité conserve les émotions de la première phase créative ; les séances suivantes développent la chanson. L’écho public est un indicateur simulé.</p></details><button class="text-button song-archive-action" data-archive-song="${s.id}" data-restore-song="${isArchivedSong(world,s.id)?'yes':'no'}">${isArchivedSong(world,s.id)?'Restaurer cette chanson':'Archiver cette chanson'}</button></div>`).join('')+(visibleSongs.length>catalogueLimit?'<button id="more-songs" class="text-button">Voir davantage de chansons</button>':'')||'<div class="empty">Plusieurs séances de composition font avancer un projet jusqu’à une chanson terminée. Les projets en cours sont visibles ci-dessus.</div>');}
-function renderSettings(){$('#decision-mode').value=world.decisionMode;$('#parameters').innerHTML=Object.entries(params).map(([k,[l,d]])=>`<div class="range-row"><label>${l} <b data-param-output="${k}">×${world.params[k].toFixed(1)}</b></label><input type="range" min="0" max="3" step="0.1" value="${world.params[k]}" data-param="${k}" aria-label="${l}"><p>${d}</p></div>`).join('');$('#scenario-current').textContent='Scénario actuel : '+world.scenario;$('#save-state').textContent=saveProblem?'Sauvegarde locale indisponible. Exporte ton monde en JSON.':'Sauvegarde automatique dans ce navigateur.';}
-const titles={shows:['Ton band. Sa prochaine scène.','Prépare une formation, une chanson et les cartes. Le show se joue tout seul.'],actions:['Ce qu’ils peuvent faire.','Six actions, leurs effets et leurs compteurs.'],groups:['Les groupes qui se forment.','Des liens deviennent des projets communs. Plusieurs groupes peuvent se croiser.'],map:['Une banlieue. '+world.people.length+' univers.','La vie se passe entre deux répétitions. Action à droite du cube · émotion à gauche.'],relations:['Le courant passe. Ou pas.','Des liens vécus, des affinités et quelques fausses notes.'],journal:['Les petites histoires du quartier.','Chaque décision, chaque rencontre, chaque chanson.'],settings:['Change les règles du quotidien.','Observe les conséquences. Ajuste. Recommence.']};
-function changeView(v){if(!titles[v])return;if(v==='shows'&&!liveEvent&&world.performance?.status!=='playing')setPlaybackSpeed(playback,0);if(liveEvent)showPaused=v!=='shows';$('.topline').hidden=false;viewPositions.save(view,$('#main'));view=v;$('.workspace').classList.toggle('show-layout',v==='shows'&&showingPerformance&&!!world.performance);document.body.classList.toggle('show-mode',v==='shows'&&showingPerformance&&!!world.performance);for(const el of $$('.view'))el.hidden=el.id!==v+'-view';for(const el of $$('nav button'))el.classList.toggle('active',el.dataset.view===v);$('#view-title').textContent=v==='map'?`Une banlieue. ${world.people.length} univers.`:titles[v][0];$('#view-subtitle').textContent=titles[v][1];if(v==='relations'){renderMatrix();renderPair();}if(v==='journal')renderJournal();if(v==='settings')renderSettings();if(v==='groups')renderGroups();if(v==='actions')renderActions();if(v==='shows'){if(liveEvent)showingPerformance=true;renderShows();}viewPositions.restore(v,$('#main'));if(v==='map')updatePositions(world.people,displayPos,{visible:false});}
-function renderTransport(){$('#clock').textContent=stamp(world.time)+(liveEvent?' · quartier en pause pour le show':'');$('#pause').textContent=world.performance?.status==='playing'?(showPaused?'▶ Jouer':'Ⅱ Pause'):playback.speed>0?'Ⅱ Pause':'▶ Jouer';$('#speed').value=playback.speed;$('#speed-value').textContent=playback.speed===0?'Pause':'×'+playback.speed.toFixed(1);$('#status').textContent=liveEvent?'Quartier en pause · soirée en direct':world.performance?.status==='playing'?(showPaused?'Show en pause':'Show en cours'):playback.speed>0?'Autonomie active':'Simulation en pause';}
-function render(){ renderTransport();renderPeople();renderProfile();renderMetrics();if(view==='groups')renderGroups();if(view==='actions')renderActions();if(view==='relations'){renderMatrix();renderPair();}if(view==='journal')renderJournal();if(view==='shows')renderShows();}
-let modalOrigin=null;function modal(html){modalOrigin=document.activeElement;$('#dialog-content').innerHTML=html;$('#dialog').showModal();}$('#dialog').addEventListener('close',()=>{if(resumeInspectedShow){resumeInspectedShow();resumeInspectedShow=null;}$('#dialog').classList.remove('show-fan-inspection');modalOrigin?.focus({preventScroll:true});});
-const dialogElement=$('#dialog');let modalPointerOutside=false;
-dialogElement.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();dialogElement.close();}});
-function outsideDialog(event){const r=dialogElement.getBoundingClientRect();return event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom;}
-dialogElement.addEventListener('pointerdown',event=>{modalPointerOutside=event.target===dialogElement&&outsideDialog(event);});
-dialogElement.addEventListener('click',event=>{if(modalPointerOutside&&event.target===dialogElement&&outsideDialog(event))dialogElement.close();modalPointerOutside=false;});
-$('#dialog-close').onclick=()=>dialogElement.close();$('#help').onclick=()=>modal('<h2>Bienvenue rue des Érables.</h2><p>Les cubes décident seuls. Clique un voisin pour voir ce qu’il fait, ce dont il a besoin et pourquoi il choisit son activité.</p><p><b>Quartier</b> : les trajets et les rencontres. <b>Relations</b> : les sentiments de chacun envers chacun. <b>Journal</b> : les événements. <b>Réglages</b> : le moteur et les scénarios.</p><p>Dans la fiche, ouvre les sections « modifier » pour changer un personnage. « Intervenir » te permet de forcer une activité. Le curseur règle la vitesse de 0 à 10 par pas de 0,1 ; 0 met en pause. +1 h avance d’une heure puis reste en pause. À ×1, une seconde réelle vaut 8 minutes simulées.</p><p>Actions expose les activités, leurs compteurs et les priorités. Groupes montre les formations qui émergent des relations, avec plusieurs appartenances possibles. Six émotions se propagent dans les décisions, les relations et la composition. Les événements et les chansons exposent leurs causes. Les jams démarrent à deux sur place. Leurs participants sont surlignés. Composer fait avancer une idée puis une ébauche persistante. Plusieurs séances terminent une chanson. Le journal regroupe les sessions ; ses détails exposent les causes. La chimie se découvre après des jams communes, avec une option de valeurs exactes au laboratoire. Les cubes restent devant les bâtiments pour être visibles. Shows propose quatre dates continues et une grosse scène tous les quatre événements. Chaque musicien pige cinq cartes de son deck. Les sons s’activent à ta demande. La déchéance ajoute des cartes maudites; le repos et le soutien aident à récupérer.</p>');
-function setSpeed(value){setPlaybackSpeed(playback,value);render();if(playback.speed===0)updatePositions(world.people,displayPos,{visible:false});}
-$('#pause').onclick=()=>{if(world.performance?.status==='playing')$('#show-pause').click();else setSpeed(playback.speed>0?0:playback.resumeSpeed);};$('#speed').onpointerdown=()=>speedDragging=true;document.addEventListener('pointerdown',e=>snappingRange=e.target.matches('input[data-param]')?e.target:null);window.addEventListener('pointerup',()=>{speedDragging=false;snappingRange=null;});$('#speed').onkeydown=()=>{speedDragging=false;snappingRange=null;};$('#speed').oninput=e=>setSpeed(speedDragging?snapSpeed(e.target.value):e.target.value);$('#speed-value').onclick=()=>setSpeed(1);$('#speed-value').onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();setSpeed(1);}};$('#step').onclick=()=>{setPlaybackSpeed(playback,0);step(world,60);updatePositions(world.people,displayPos,{visible:false});render();save();};$('#nav').onclick=e=>{if(e.target.dataset.view)changeView(e.target.dataset.view);};$('#all-events').onclick=()=>changeView('journal');$('#close-inspector').onclick=()=>$('#inspector').classList.remove('open');$('#add').onclick=()=>{const p=addPerson(world);if(p){decide(world,p);select(p.id);render();changeView(view);save();}};
-$('#lab-values').onchange=e=>{labValues=e.target.checked;renderMatrix();renderPair();};$('#raw-journal').onchange=e=>{rawJournal=e.target.checked;renderJournal();};$('#relation-metric').onchange=e=>{metric=e.target.value;renderMatrix();};$('#event-filter').onchange=e=>{filter=e.target.value;renderJournal();};
-document.addEventListener('click',e=>{const person=e.target.closest('[data-person]');if(person)select(person.dataset.person);const cell=e.target.closest('[data-pair]');if(cell){pair=cell.dataset.pair.split(',');renderPair();renderMatrix();}const force=e.target.closest('[data-force]');if(force){const r=command(world,{type:'action',actorId:selected,key:force.dataset.force});notify(r.message);renderProfile(true);save();}if(e.target.id==='profile-relations'){changeView('relations');}if(e.target.id==='remove'&&world.people.length>1){removePerson(world,selected);selected=world.people[0].id;pair=null;render();renderProfile(true);save();}const sc=e.target.closest('[data-scenario]');if(sc){scenario(world,sc.dataset.scenario);if(sc.dataset.scenario==='Cœur brisé')selected=world.people[0].id;renderSettings();renderProfile(true);render();save();notify('Scénario appliqué : '+sc.dataset.scenario);}});
-document.addEventListener('input',e=>{const el=e.target,p=current();if(el.dataset.edit){const [group,k]=el.dataset.edit.split(':');p[group][k]=Number(el.value);$(`[data-output="${group}:${k}"]`).textContent=round(Number(el.value));updateProfile();}if(el.dataset.identity){const k=el.dataset.identity;p[k]=k==='age'?clamp(Number(el.value),18,90):el.value;renderPeople();}if(el.dataset.param){const k=el.dataset.param;if(snappingRange===el)el.value=snapSpeed(el.value);world.params[k]=Number(el.value);$(`[data-param-output="${k}"]`).textContent='×'+world.params[k].toFixed(1);}if(el.dataset.rel){const [a,b,k]=el.dataset.rel.split(':');const r=relationship(world,world.people.find(p=>p.id===a),world.people.find(p=>p.id===b));r[k]=Number(el.value);$(`[data-rel-output="${a}:${b}:${k}"]`).textContent=round(r[k]);renderMatrix();}});
-document.addEventListener('change',e=>{const el=e.target;if(el.dataset.trait){const p=current(),t=el.dataset.trait;p.traits=el.checked?[...new Set([...p.traits,t])]:p.traits.filter(x=>x!==t);renderProfile(true);}if(el.dataset.edit||el.dataset.identity||el.dataset.param||el.dataset.rel||el.dataset.trait){const ev=log(world,'system','Paramètre modifié manuellement.',el.dataset.edit||el.dataset.identity||el.dataset.trait?[selected]:[]);if(el.dataset.identity)renderProfile(true);if(el.dataset.edit?.startsWith('skills:')||el.dataset.identity==='instrument')refreshReputation(world,current());if(el.dataset.edit?.startsWith('emotions:')){const key=el.dataset.edit.split(':')[1];ev.text=`Intervention : ${EMOTIONS[key].label.toLowerCase()} de ${current().name} réglée à ${round(current().emotions[key])}.`;current().emotionSources[key]=[{id:ev.id,time:ev.time,text:ev.text}];}save();}});
-$('#export').onclick=()=>{save();const blob=new Blob([JSON.stringify(world,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`garage-vivant-j${Math.floor(world.time/1440)+1}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);notify('Monde exporté avec son état complet.');};$('#import').onclick=()=>$('#import-file').click();$('#import-file').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>50000000)throw Error('Fichier trop volumineux.');let candidate=restore(JSON.parse(await f.text()));world=candidate;previewReturn=world.livePreviewReturn||null;liveEvent=!!world.showEventId;showingPerformance=world.performance?.status==='playing'||liveEvent;viewPositions.clear();personPositions.clear();journalPinnedIds=null;loadFailed=false;displayPos.clear();selected=world.people[0].id;pair=null;setPlaybackSpeed(playback,0);renderProfile(true);changeView(view);render();save();notify('Monde importé. Simulation en pause.');}catch(err){notify('Import refusé : '+err.message);}e.target.value='';};
-$('#reset').onclick=()=>modal('<h2>Un nouveau quartier</h2><p>Remplace le monde actuel. Exporte le JSON si tu veux le conserver. La même graine reproduit le même départ.</p><label>Graine<input id="seed" type="number" value="2040" min="0" max="4294967295"></label><label>Voisins<input id="count" type="number" value="8" min="2" max="24"></label><button id="confirm-reset" class="primary">Créer le quartier</button>');document.addEventListener('click',e=>{if(e.target.id==='confirm-reset'){try{localStorage.setItem('garage-vivant-before-new-game',loadFailed?localStorage.getItem('garage-vivant-v1'):JSON.stringify(world));}catch{$('#export').click();}viewPositions.clear();personPositions.clear();journalPinnedIds=null;loadFailed=false;showingPerformance=false;liveEvent=false;previewReturn=null;world=createWorld(clamp(Number($('#seed').value),0,4294967295),clamp(round(Number($('#count').value)),2,24));displayPos.clear();selected=world.people[0].id;pair=null;setPlaybackSpeed(playback,1);$('#dialog').close();renderProfile(true);changeView(view);render();save();}});
-function renderGroupStrip(){const sessions=liveSessions(world);replacePreserving('#band-strip',`<div><span class="eyebrow">LE QUARTIER ENSEMBLE</span><strong>${world.groups.length} groupe${world.groups.length>1?'s':''} · ${sessions.filter(x=>x.type==='jam').length} jam${sessions.filter(x=>x.type==='jam').length>1?'s':''} en cours</strong><small>${sessions.length?sessions.map(x=>`${esc(x.label)} (${x.participants.length})`).join(' · '):'Les rencontres font naître les projets.'}</small></div>${(world.performance?.status==='playing'||liveEvent)?'<button data-open-shows class="primary">Le show est en cours ↗</button>':'<button data-open-groups>Voir les groupes ↗</button>'}`);}
-function renderActions(){const p=current();$('#action-person-name').textContent=p.name;if(!$('#actions-view').contains(document.activeElement)||!['INPUT','SELECT'].includes(document.activeElement.tagName)){replacePreserving('#action-catalog',Object.entries(ACTIONS).map(([k,a])=>{const c=p.actionCounts[k],blocked=k==='form'&&!formationPlan(world,p);return `<div class="action-entry"><span class="action-symbol">${a.icon}</span><div><h3>${a.label}</h3><p>${a.description}</p><small>${a.duration} min d’activité · ${c.completed} terminée${c.completed>1?'s':''} · ${c.started} lancée${c.started>1?'s':''} · ${c.interrupted} interrompue${c.interrupted>1?'s':''}</small>${blocked?'<small>Pas de nouveau partenaire admissible pour le moment.</small>':''}</div><button data-force="${k}" ${blocked?'disabled':''}>Lancer</button></div>`;}).join(''));replacePreserving('#priority-table',`<table class="priorities"><thead><tr><th>Personnage</th>${Object.values(ACTIONS).map(a=>`<th>${a.icon}<small>${a.label}</small></th>`).join('')}</tr></thead><tbody>${world.people.map(q=>`<tr><th><button data-person="${q.id}">${esc(q.name)}</button></th>${Object.keys(ACTIONS).map(k=>`<td><select class="priority-${q.priorities[k]}" data-priority="${q.id}:${k}" aria-label="${ACTIONS[k].label} pour ${esc(q.name)}">${priorityOptions(q,k)}</select></td>`).join('')}</tr>`).join('')}</tbody></table>`);}
-$('#location-guide').innerHTML='<p class="muted"><b>Maison →</b> se reposer. <b>Garages →</b> pratiquer, composer et jammer. <b>Café, parc et disquaire →</b> rencontrer des voisins. <b>Parc →</b> décrocher. Former un groupe mène vers le partenaire choisi.</p><p class="muted">Le personnage choisit d’abord une activité, puis un lieu adapté. Le trajet ne compte pas comme du temps d’activité. Pour un jam, tous les participants reçoivent le même rendez-vous ; la session commence quand au moins deux sont arrivés.</p>';
+import {
+  thresholdsHTML,
+  catalogueHTML,
+  connectionsHTML,
+  exchangeTrace,
+  sessionHTML,
+  rapinHTML,
+} from "./v7-view.mjs?v=0.7.0";
+import {
+  effectiveTraits,
+  updateTraits,
+  TRAIT_CATALOG,
+  BAG_ACTIONS,
+} from "./v7.mjs?v=0.7.0";
+import {
+  createShowClock,
+  advanceShowClock,
+  songSeconds,
+  stagePoint,
+  actorPosition,
+  songKey,
+  stageGeometry,
+  showBeat,
+} from "./show-playback.mjs?v=0.7.0";
+import {
+  showOverlayHTML,
+  showResourcesHTML,
+  deckInspectionHTML,
+  cardInspectionHTML,
+} from "./show-view.mjs?v=0.7.0";
+import { setupDocSearch } from "./doc-search.mjs?v=0.7.0";
+import { calendarHTML } from "./v6-view.mjs?v=0.7.0";
+import { pendingBooking, eventById } from "./calendar.mjs?v=0.7.0";
+import { editBag } from "./social.mjs?v=0.7.0";
+import {
+  profileMarkup,
+  changeModule,
+  resetLayout,
+} from "./profile-layout.mjs?v=0.7.0";
+import {
+  VERSION,
+  NEEDS,
+  PERSONALITY,
+  SKILLS,
+  GENRES,
+  TRAITS,
+  EMOTIONS,
+  emotionDefinition,
+  ACTIONS,
+  PLACES,
+  DEFAULTS,
+  clamp,
+  round,
+  relationship,
+  chemistry,
+  advanceSleeping,
+  stamp,
+  addPerson,
+  createWorld,
+  scores,
+  step,
+  removePerson,
+  scenario,
+  restore,
+  log,
+  decide,
+  dominantEmotion,
+  isMember,
+  groupsOf,
+  createGroup,
+  liveSessions,
+  refreshReputation,
+  locationReason,
+  feel,
+  compositionProject,
+  journalEntries,
+  chemistryKnowledge,
+} from "./engine.mjs?v=0.7.0";
+import {
+  command,
+  bandStage,
+  nextCurse,
+  eligibleSongs,
+  isArchivedSong,
+  acceptance,
+  advanceToBooking,
+  playTicks,
+  seasonSummary,
+  initializeLife,
+  newSeason,
+  nextSlot,
+  skipShow,
+} from "./life.mjs?v=0.7.0";
+import {
+  CARDS,
+  CURSES,
+  INTENTIONS,
+  SHOW_TICKS,
+  createPerformance,
+} from "./stage.mjs?v=0.7.0";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.7.0";
+import {
+  reconcile,
+  createViewPositions,
+  withReadingAnchor,
+} from "./ui-state.mjs?v=0.7.0";
+import {
+  quickHTML,
+  skillHTML,
+  decadenceHTML,
+  cardsHTML,
+  deckEditorHTML,
+  bandsHTML,
+  invitationHTML,
+  showSetupHTML,
+  showStatusHTML,
+  seasonHTML,
+  decorateCube,
+  drawStage,
+  enableAudio,
+  playSound,
+} from "./v5-view.mjs?v=0.7.0";
+import {
+  createPlayback,
+  snapSpeed,
+  setPlaybackSpeed,
+  advancePlayback,
+  updatePositions,
+} from "./runtime.mjs?v=0.7.0";
+const playback = createPlayback();
+const $ = (q) => document.querySelector(q),
+  $$ = (q) => [...document.querySelectorAll(q)],
+  esc = (x) =>
+    String(x ?? "").replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+let world,
+  saveProblem = false,
+  loadFailed = false;
+try {
+  const saved = localStorage.getItem("garage-vivant-v1");
+  if (saved) {
+    const input = JSON.parse(saved);
+    if (input.version !== VERSION) {
+      try {
+        if (!localStorage.getItem("garage-vivant-before-v7"))
+          localStorage.setItem("garage-vivant-before-v7", saved);
+      } catch {}
+    }
+    world = restore(input);
+  } else world = createWorld();
+} catch {
+  world = createWorld();
+  saveProblem = true;
+  loadFailed = true;
 }
-function renderGroups(){replacePreserving('#group-list',bandsHTML(world,selectedGroup,bandQuery,bandArchives));}
+let selected = world.people[0].id,
+  view = "map",
+  pair = null,
+  metric = "affinity",
+  filter = "all",
+  lastUI = 0,
+  lastSaved = 0,
+  tabInactive = false,
+  labValues = false,
+  rawJournal = false;
+const viewPositions = createViewPositions(),
+  personPositions = createViewPositions();
+const showPlan = {
+  groupId: null,
+  songId: undefined,
+  actorId: null,
+  opportunityId: null,
+  intention: "tight",
+  members: null,
+};
+let showClock = null,
+  stagePresentationKey = null,
+  resumeInspectedShow = null;
+let selectedGroup = null,
+  bandQuery = "",
+  bandArchives = false,
+  savedWorldSpeed = playback.speed,
+  liveEvent = !!world.showEventId;
+let showFeedback = null,
+  speedDragging = false,
+  snappingRange = null;
+let showingPerformance =
+  world.performance?.status === "playing" || !!world.showEventId;
+let showSpeed = 1,
+  showPaused = !!world.performance?.presentationPaused,
+  showBudget = 0,
+  showLast = null,
+  soundEnabled = false,
+  reducedEffects = matchMedia("(prefers-reduced-motion: reduce)").matches,
+  selectedFan = null,
+  lastSoundEvent = 0,
+  lastShotEvent = null,
+  lastShowId = null,
+  previewReturn = world.livePreviewReturn || null,
+  showArchives = false,
+  journalPinnedIds = null,
+  journalPending = 0,
+  journalTypes = new Set(["music", "relations", "groups", "shows", "life"]),
+  hideRest = true,
+  catalogueLimit = 50,
+  profileSongLimit = 30;
+try {
+  const settings = JSON.parse(
+    localStorage.getItem("garage-vivant-ui") || "null",
+  );
+  if (settings) {
+    showArchives = !!settings.showArchives;
+    hideRest = settings.hideRest !== false;
+    reducedEffects = settings.reducedEffects ?? reducedEffects;
+    if (Array.isArray(settings.journalTypes))
+      journalTypes = new Set(settings.journalTypes);
+  }
+} catch {}
+function saveUI() {
+  try {
+    localStorage.setItem(
+      "garage-vivant-ui",
+      JSON.stringify({
+        showArchives,
+        hideRest,
+        reducedEffects,
+        journalTypes: [...journalTypes],
+      }),
+    );
+  } catch {}
+}
+const params = {
+  drain: [
+    "Usure des besoins",
+    "Vitesse à laquelle la fatigue et les autres besoins augmentent.",
+  ],
+  music: [
+    "Attrait de la musique",
+    "Poids de la pratique, de la composition et des jams dans les décisions.",
+  ],
+  social: [
+    "Attrait des rencontres",
+    "Poids des activités sociales dans les décisions.",
+  ],
+  conflict: [
+    "Risque d’accrochage",
+    "Multiplie le risque de résultat défavorable; les chances restent bornées et normalisées.",
+  ],
+  learning: [
+    "Apprentissage",
+    "Vitesse de progression des compétences musicales.",
+  ],
+  randomness: [
+    "Spontanéité",
+    "Variation ajoutée au score ; 0 donne toujours le choix le mieux coté.",
+  ],
+  relations: [
+    "Évolution des liens",
+    "Amplitude des changements d’affinité et de tension lors des échanges.",
+  ],
+  emotionDecay: [
+    "Retour au calme",
+    "Vitesse à laquelle les émotions s’atténuent naturellement ; 0 les maintient jusqu’à une nouvelle expérience.",
+  ],
+  compositionPace: [
+    "Progression des compositions",
+    "Vitesse du travail sur les projets. ×1 demande environ quatre à six séances ; ×0 suspend la progression.",
+  ],
+  romance: [
+    "Avances amoureuses",
+    "Chance de naissance du lien amoureux et poids des avances admissibles; 0 désactive les avances autonomes.",
+  ],
+};
+function notify(text) {
+  $("#toast").textContent = text;
+  $("#toast").style.display = "block";
+  clearTimeout(notify.timer);
+  notify.timer = setTimeout(() => ($("#toast").style.display = "none"), 3500);
+}
+function save() {
+  if (loadFailed) {
+    $("#save-state").textContent =
+      "La sauvegarde illisible a été conservée. Importe un monde valide ou crée explicitement un nouveau quartier.";
+    return;
+  }
+  try {
+    if (world.performance) world.performance.presentationPaused = showPaused;
+    localStorage.setItem("garage-vivant-v1", JSON.stringify(world));
+    saveProblem = false;
+  } catch {
+    saveProblem = true;
+  }
+  $("#save-state").textContent = saveProblem
+    ? "Sauvegarde locale indisponible. Exporte le JSON pour conserver ton monde."
+    : "Sauvegarde automatique dans ce navigateur · export JSON disponible.";
+}
+function select(id, open = true) {
+  if (!world.people.some((x) => x.id === id)) return;
+  if (selected !== id) {
+    personPositions.save(selected, $("#inspector"));
+    profileSongLimit = 30;
+  }
+  const changed = selected !== id;
+  selected = id;
+  if (open) $("#inspector").classList.add("open");
+  renderPeople();
+  renderProfile(true);
+  if (changed) personPositions.restore(id, $("#inspector"));
+  if (view === "journal") renderJournal();
+  if (view === "actions") renderActions();
+}
+function current() {
+  return world.people.find((p) => p.id === selected) || world.people[0];
+}
+function actionLabel(p) {
+  if (
+    world.performance?.status === "playing" &&
+    !world.performance.preview &&
+    world.performance.actors.some((a) => a.id === p.id)
+  )
+    return "♫ Sur scène";
+  if (p.engagement) {
+    const b = world.bookings.find((b) => b.id === p.engagement.bookingId);
+    return p.engagement.arrived
+      ? "♫ Prêt pour le show"
+      : `↗ En route pour ${world.season.opportunities.find((o) => o.id === b?.opportunityId)?.name || "le show"}`;
+  }
+  const a = p.action;
+  if (!a) return "Choisit sa prochaine activité";
+  if (a.route.length) return `↗ ${ACTIONS[a.key].label} · en route`;
+  if (a.key === "jam") {
+    const j = world.jams.find((x) => x.id === a.sessionId);
+    return j?.status === "active"
+      ? `♬ Jam · ${
+          j.participants.filter((id) => {
+            const q = world.people.find((x) => x.id === id);
+            return q?.action?.sessionId === j.id && !q.action.route.length;
+          }).length
+        } musiciens`
+      : "♬ Attend un partenaire";
+  }
+  return `${ACTIONS[a.key].icon} ${ACTIONS[a.key].label}`;
+}
+function renderPeople() {
+  $("#population").textContent = world.people.length;
+  replacePreserving(
+    "#people",
+    world.people
+      .map(
+        (p) =>
+          `<button class="person ${p.id === selected ? "active" : ""}" data-person="${p.id}"><span class="mini-cube" style="background:${esc(p.color)}"></span><span><span class="person-name">${esc(p.name)} ${isMember(world, p) ? '<span class="role-dot" title="Membre d’un groupe">♫</span>' : ""}</span><span class="person-action">${esc(actionLabel(p))}</span></span></button>`,
+      )
+      .join(""),
+  );
+  $("#add").disabled = world.people.length >= 24;
+}
+function bar(label, value, key = null) {
+  return `<div class="need"><span>${esc(label)}</span><div class="bar"><i style="width:${clamp(value)}%;background:${value < 25 ? "#d08c68" : value < 50 ? "#b6ab71" : "#819b6f"}"></i></div><b ${key ? `data-need-value="${key}"` : ""}>${round(value)}</b></div>`;
+}
+function traitPills(p) {
+  return effectiveTraits(p)
+    .map(
+      (t) =>
+        `<span class="pill" title="${esc(TRAIT_CATALOG[t].description)}">${TRAITS[t]}${p.activeTraits.includes(t) && !p.traits.includes(t) ? " · conditionnel" : ""}</span>`,
+    )
+    .join("");
+}
+function spark(p) {
+  const h = p.history;
+  if (h.length < 2)
+    return '<p class="muted">Historique émotionnel : première mesure après 30 minutes.</p>';
+  return `<div class="spark-label">Exaltation et détresse · ${stamp(h[0].time)} → ${stamp(h.at(-1).time)}</div><svg class="spark" viewBox="0 0 260 32" aria-label="Historique exaltation et détresse">${Object.entries(
+    EMOTIONS,
+  )
+    .map(
+      ([k, e]) =>
+        `<polyline points="${h.map((x, i) => `${(i * 260) / (h.length - 1)},${30 - x[k] * 0.28}`).join(" ")}" fill="none" stroke="${e.color}" stroke-width="2"/>`,
+    )
+    .join("")}</svg>`;
+}
 
-$('#decision-mode').onchange=e=>{world.decisionMode=e.target.value;log(world,'system',`Décisions : ${world.decisionMode==='bag'?'sac pondéré':'meilleur score'}.`);save();notify('Mode appliqué aux prochaines décisions.');renderProfile();};
-document.addEventListener('change',e=>{const el=e.target;if(el.dataset.priority){const [id,k]=el.dataset.priority.split(':');const p=world.people.find(p=>p.id===id);p.priorities[k]=Number(el.value);el.className='priority-'+el.value;log(world,'system',`Priorité de ${p.name} : ${ACTIONS[k].label.toLowerCase()} → ${PRIORITIES[el.value].toLowerCase()}.`,[id]);save();}});
-document.addEventListener('click',e=>{if(e.target.closest('[data-open-groups]'))changeView('groups');if(e.target.closest('[data-open-actions]'))changeView('actions');const rethink=e.target.closest('[data-rethink]');if(rethink){const p=world.people.find(p=>p.id===rethink.dataset.rethink);decide(world,p);renderProfile(true);save();}if(e.target.id==='reset-priorities'){for(const p of world.people)for(const k of Object.keys(ACTIONS))p.priorities[k]=2;renderActions();log(world,'system','Les priorités reviennent à la normale.');save();}if(e.target.id==='create-group'){modal(`<h2>Créer un groupe · laboratoire</h2><p>Intervention manuelle : choisis au moins deux membres. Ils conservent leurs autres groupes. La formation autonome reste active.</p><label>Nom <input id="group-name" maxlength="50" placeholder="Nom facultatif" style="width:70%"></label><div class="group-select">${world.people.map(p=>`<label><input type="checkbox" name="group-member" value="${p.id}" ${p.id===selected?'checked':''}> ${esc(p.name)} · ${SKILLS[p.instrument]}</label>`).join('')}</div><button id="confirm-group" class="primary">Créer</button>`);}if(e.target.id==='confirm-group'){const ids=$$('input[name="group-member"]:checked').map(x=>x.value);if(ids.length<2){notify('Choisis au moins deux musiciens.');return;}createGroup(world,ids,{name:$('#group-name').value.trim()||null,manual:true});$('#dialog').close();renderGroups();renderProfile(true);renderGroupStrip();save();}});
+function rangeEditor(group, k, label, v, max = 100, min = 0) {
+  return `<div class="range-row"><label>${esc(label)} <b data-output="${group}:${k}">${round(v)}</b></label><input type="range" min="${min}" max="${max}" value="${v}" data-edit="${group}:${k}" aria-label="${esc(label)}"></div>`;
+}
+function renderProfile(force = false) {
+  const p = current();
+  if (!p) return;
+  if (!force && $("#profile").dataset.person === p.id) {
+    updateProfile();
+    return;
+  }
+  $("#profile").dataset.person = p.id;
+  const preserve = [],
+    catalogScroll = 0;
+  const scroll = $("#inspector").scrollTop;
+  const a = p.action;
+  const friends = world.people
+    .filter((x) => x !== p)
+    .sort(
+      (a, b) =>
+        relationship(world, p, b).affinity - relationship(world, p, a).affinity,
+    )
+    .slice(0, 3);
+  replacePreserving(
+    "#profile",
+    profileMarkup(
+      `<div class="profile-head"><div class="portrait" style="background:${esc(p.color)}">♫</div><div><h2>${esc(p.name)}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p></div></div><div class="pills">${groupsOf(
+        world,
+        p,
+      )
+        .map(
+          (g) =>
+            `<button class="pill member" data-open-groups>${esc(g.name)}</button>`,
+        )
+        .join(
+          "",
+        )}<span id="profile-traits" data-retain>${traitPills(p)}</span></div>${quickHTML(world, p)}<div id="reputation">${reputationHTML(p)}</div><div class="action-card"><strong data-action>${esc(actionLabel(p))}</strong><p data-reason>${esc(profileReason(p))}</p><div class="bar"><i data-progress style="width:${a ? clamp(((a.key === "jam" ? world.jams.find((j) => j.id === a.sessionId)?.elapsed || 0 : a.elapsed) / (a.key === "sleep" ? p.sleep.habitual : ACTIONS[a.key].duration)) * 100) : 0}%"></i></div></div>${skillHTML(p)}<section><div class="section-head">SES COMPOSITIONS <span id="profile-song-count" data-retain></span><button class="text-button" data-toggle-archives>${showArchives ? "Masquer archives" : "Archives ↗"}</button></div><div id="profile-songs" data-retain></div></section>${cardsHTML(p)}${decadenceHTML(p)}<section class="emotion-section"><div class="section-head">CE QUI L’HABITE <span id="emotion-label" data-retain></span></div><div id="emotion-bars">${emotionHTML(p)}</div><div id="emotion-source" data-retain class="emotion-source"></div></section><section><div class="section-head">BESOINS <span style="color:#8e9888;font-weight:400;letter-spacing:0">100 = comblé</span></div><div id="needs">${Object.entries(
+        NEEDS,
+      )
+        .map(([k, l]) => bar(l, p.needs[k], k))
+        .join(
+          "",
+        )}</div><div id="profile-history">${spark(p)}</div></section><section><div class="section-head">POURQUOI CETTE ACTIVITÉ <span id="decision-time" data-retain style="letter-spacing:0;font-weight:400"></span></div><div id="ranks">${decisionHTML(p)}</div><p id="decision-note" class="muted" style="font-size:10px;margin:7px 0 0">${decisionNote(p)}</p></section><section id="rapin-pool" data-retain></section><section><div class="section-head">DERNIERS SOUVENIRS</div><div id="memories">${memoryHTML(p)}</div></section><section id="profile-links"><div class="section-head">SES 3 PLUS FORTS LIENS <button class="text-button" id="profile-relations">Matrice ↗</button></div>${friends
+        .map((b) => {
+          const r = relationship(world, p, b);
+          return `<button class="person" data-person="${b.id}" style="padding:7px 0"><span class="mini-cube" style="background:${esc(b.color)};width:19px;height:19px"></span><span style="flex:1;font-size:10px">${esc(b.name)}</span><span style="font-size:11px;color:${r.affinity < 0 ? "#c28069" : "#819b6f"}">${r.affinity > 0 ? "+" : ""}${round(r.affinity)}</span></button>`;
+        })
+        .join(
+          "",
+        )}</section><section><div class="section-head">ACTIVITÉS TERMINÉES <button class="text-button" data-open-actions>Toutes les actions ↗</button></div><div id="profile-counts" data-retain></div></section>${thresholdsHTML(p, world)}${sessionHTML(world, p)}<details id="emotion-edit"><summary>ÉMOTIONS · MODIFIER</summary><p class="muted">Deux jauges indépendantes. Les seuils activent des traits; les valeurs et traits influencent les interactions. Aucun effet sur la pige.</p>${Object.entries(
+        EMOTIONS,
+        emotionDefinition,
+      )
+        .map(([k, v]) => rangeEditor("emotions", k, v.label, p.emotions[k]))
+        .join(
+          "",
+        )}</details><details id="identity-edit"><summary>IDENTITÉ & TRAITS · MODIFIER</summary><div class="editor"><label class="edit-row">Nom<input data-identity="name" maxlength="24" value="${esc(p.name)}"></label><label class="edit-row">Âge<input data-identity="age" type="number" min="18" max="90" value="${p.age}"></label><label class="edit-row">Couleur<input data-identity="color" type="color" value="${esc(p.color)}"></label><label class="edit-row">Instrument<select data-identity="instrument">${Object.entries(
+        SKILLS,
+      )
+        .filter(([k]) => k !== "writing")
+        .map(
+          ([k, l]) =>
+            `<option value="${k}" ${p.instrument === k ? "selected" : ""}>${l}</option>`,
+        )
+        .join(
+          "",
+        )}</select></label><label class="edit-row">Style préféré<select data-identity="genre">${GENRES.map((g) => `<option ${g === p.genre ? "selected" : ""}>${g}</option>`).join("")}</select></label></div><div class="trait-checks" style="margin-top:12px">${Object.entries(
+        TRAITS,
+      )
+        .map(
+          ([k, l]) =>
+            `<label><input type="checkbox" data-trait="${k}" ${p.traits.includes(k) ? "checked" : ""}>${l}</label>`,
+        )
+        .join(
+          "",
+        )}</div></details><details id="personality-edit"><summary>PERSONNALITÉ · MODIFIER</summary>${Object.entries(
+        PERSONALITY,
+      )
+        .map(([k, l]) => rangeEditor("personality", k, l, p.personality[k]))
+        .join(
+          "",
+        )}</details><details id="skills-edit"><summary>COMPÉTENCES · MODIFIER</summary>${Object.entries(
+        SKILLS,
+      )
+        .map(([k, l]) => rangeEditor("skills", k, l, p.skills[k]))
+        .join(
+          "",
+        )}<div class="muted">Chanson en cours : ${round(p.songProgress)} %</div></details><details id="needs-edit"><summary>BESOINS · MODIFIER</summary>${Object.entries(
+        NEEDS,
+      )
+        .map(([k, l]) => rangeEditor("needs", k, l, p.needs[k]))
+        .join(
+          "",
+        )}</details><details id="intervene"><summary>INTERVENIR</summary><p class="muted">Choisis une activité pour ton musicien; les autres reçoivent une proposition et peuvent refuser.</p><div class="file-actions">${Object.entries(
+        ACTIONS,
+      )
+        .filter(([, v]) => !v.internal)
+        .map(
+          ([k, v]) =>
+            `<button data-force="${k}" style="font-size:10px;padding:7px">${v.icon} ${v.label}</button>`,
+        )
+        .join(
+          "",
+        )}<button id="remove" class="danger" style="font-size:10px" ${world.people.length === 1 ? "disabled" : ""}>Retirer du quartier</button></div></details>`,
+    ),
+  );
+  for (const id of preserve) {
+    const e = $("#" + id);
+    if (e) e.open = true;
+  }
+  updateProfile();
+  if ($("#profile-songs .profile-catalog"))
+    $("#profile-songs .profile-catalog").scrollTop = catalogScroll;
+}
+function decisionRows(p) {
+  const rows = p.action
+    ? p.action.mode === "bag"
+      ? p.action.decision || []
+      : []
+    : scores(world, p);
+  const top = rows.filter((x) => !x.blocked).slice(0, 4);
+  const chosen = rows.find((x) => x.key === p.action?.key);
+  if (chosen && !top.includes(chosen)) top[top.length - 1] = chosen;
+  return top;
+}
+function decisionHTML(p) {
+  if (p.engagement) return '<p class="muted">Engagement commun hors sac.</p>';
+  if (p.action && p.action.mode !== "bag")
+    return `<p class="muted">${esc(p.action.why)}</p>`;
+  return rankHTML(decisionRows(p));
+}
+function decisionNote(p) {
+  return p.engagement || (p.action && p.action.mode !== "bag")
+    ? "Cette activité suit la règle indiquée ci-dessus, sans nouvelle pige."
+    : "Jetons présents au moment de la pige. Un jeton est réservé sans remise, puis consommé au démarrage réel de l’activité.";
+}
+function rankHTML(cs) {
+  return cs
+    .map(
+      (c) =>
+        `<div class="rank ${c.key === current().action?.key ? "chosen-rank" : ""}"><span>${ACTIONS[c.key].label}</span><div class="bar"><i style="width:${c.chance}%"></i></div><b>${c.chance.toFixed(1)} %</b></div>`,
+    )
+    .join("");
+}
+
+function emotionHTML(p) {
+  return `<div class="emotion-grid">${Object.entries(EMOTIONS)
+    .map(
+      ([k, e]) =>
+        `<div class="emotion-item" title="${e.levels.join(" → ")}"><span style="color:${e.color}">${e.icon} ${e.label}</span><b>${round(p.emotions[k])}</b><div class="bar"><i style="width:${p.emotions[k]}%;background:${e.color}"></i></div></div>`,
+    )
+    .join("")}</div>`;
+}
+
+function memoryHTML(p) {
+  const active = p.memories,
+    expired = (p.memoryArchive || []).filter((m) => m.until <= world.time);
+  const row = (m) =>
+    `<div class="memory ${m.effect < 0 ? "negative" : ""}"><span>${esc(m.text)}<small>${m.created === null ? "Date d’origine inconnue" : stamp(m.created)} · ${m.until > world.time ? "récent jusqu’à " + stamp(m.until) : "terminé " + stamp(m.until)}</small></span><small title="Ancien poids sur l’humeur, sans effet V7">trace historique</small></div>`;
+  return `<p class="muted">Souvenirs descriptifs et sources de composition. Leur ancien poids sur l’humeur est débranché.</p><b>Récents</b>${active.map(row).join("") || "<p>Aucun souvenir récent.</p>"}<details data-key="expired-memories"><summary>Souvenirs terminés · ${expired.length}</summary>${expired.slice(0, 30).map(row).join("")}</details><button data-person-journal="${p.id}">Journal du personnage</button><details data-key="memory-archive"><summary>Archive complète disponible · ${p.memoryArchive?.length || 0}</summary>${(p.memoryArchive || []).map(row).join("")}</details>`;
+}
+
+function profileReason(p) {
+  const a = p.action;
+  if (p.engagement)
+    return p.engagement.arrived
+      ? "Le band est rassemblé pour son engagement."
+      : "Un engagement commun détermine ce trajet.";
+  return `${PLACES.find((x) => x.id === a?.dest)?.name || ""} · ${a?.route.length ? "Le trajet précède l’activité" : a?.key === "jam" && world.jams.find((j) => j.id === a.sessionId)?.status !== "active" ? "La jam attend au moins 2 personnes sur place" : round(a?.remaining || 0) + " min restantes"}. ${locationReason(world, p)}`;
+}
+function updateModule(selector, html) {
+  const target = $(selector);
+  if (!target) return;
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  replacePreserving(
+    selector,
+    (target.querySelector(".module-toolbar")?.outerHTML || "") +
+      template.content.firstElementChild.innerHTML,
+  );
+}
+function updateProfile() {
+  withReadingAnchor($("#inspector"), updateProfileContents);
+}
+function updateProfileContents() {
+  const p = current();
+  if (!p || !$("[data-action]")) return;
+  updateModule('#profile [data-stable="quick"]', quickHTML(world, p));
+  updateModule('#profile [data-stable="skills"]', skillHTML(p));
+  updateModule('#profile [data-stable="deck"]', cardsHTML(p));
+  updateModule('#profile [data-stable="decadence"]', decadenceHTML(p));
+  updateTraits(p);
+  replacePreserving("#profile-traits", traitPills(p));
+  updateModule('#profile [data-stable="thresholds"]', thresholdsHTML(p, world));
+  updateModule('#profile [data-stable="session-v7"]', sessionHTML(world, p));
+  $("[data-action]").textContent = actionLabel(p);
+  const a = p.action;
+  $("[data-reason]").textContent = profileReason(p);
+  $("[data-progress]").style.width =
+    (a
+      ? clamp(
+          ((a.key === "jam"
+            ? world.jams.find((j) => j.id === a.sessionId)?.elapsed || 0
+            : a.elapsed) /
+            (a.key === "sleep" ? p.sleep.habitual : ACTIONS[a.key].duration)) *
+            100,
+        )
+      : 0) + "%";
+  for (const k of Object.keys(NEEDS)) {
+    const b = $(`[data-need-value="${k}"]`);
+    if (b) {
+      b.textContent = round(p.needs[k]);
+      const i = b.previousElementSibling.firstElementChild;
+      i.style.width = p.needs[k] + "%";
+      i.style.background =
+        p.needs[k] < 25 ? "#d08c68" : p.needs[k] < 50 ? "#b6ab71" : "#819b6f";
+    }
+  }
+  updateModule("#rapin-pool", rapinHTML(world, p));
+  $("#ranks").innerHTML = decisionHTML(p);
+  $("#decision-note").textContent = decisionNote(p);
+  $("#decision-time").textContent = p.action
+    ? stamp(p.action.started || world.time)
+    : "À venir";
+  $("#emotion-label").textContent = dominantEmotion(p).label;
+  $("#emotion-bars").innerHTML = emotionHTML(p);
+  const em = dominantEmotion(p),
+    origin = p.emotionSources[em.key]?.[0];
+  $("#emotion-source").innerHTML =
+    em.active && origin
+      ? `<span>Origine récente</span>${esc(origin.text)}`
+      : "Un état qui évolue avec ses expériences.";
+  replacePreserving("#memories", memoryHTML(p));
+  $("#profile-history").innerHTML = spark(p);
+  $("#reputation").innerHTML = reputationHTML(p);
+  renderProfileSongs(p);
+  $("#profile-counts").innerHTML =
+    Object.entries(ACTIONS)
+      .map(
+        ([k, a]) =>
+          `<div class="count-line"><span>${a.icon} ${a.label}</span><b>${p.actionCounts[k].completed}</b></div>`,
+      )
+      .join("") +
+    `<p class="muted" style="font-size:9px">Comptées depuis ${stamp(p.countsSince)}.</p>`;
+}
+function reputationHTML(p) {
+  const r = p.reputation;
+  return `<div class="reputation-head"><span>Réputation musicale</span><strong>${r.score}<small>/100</small></strong></div><div class="bar"><i style="width:${r.score}%"></i></div><p class="reputation-note">Talent ${r.skill} · catalogue ${r.catalogue} · reconnaissance ${r.recognition} · collaborations ${r.collaboration}. Elle rend ses invitations à jouer plus attirantes.</p>`;
+}
+function projectHTML(p, c = compositionProject(world, p)) {
+  if (!c) return "";
+  const progress = clamp((c.work / c.target) * 100),
+    active = p && c.id === p.draft.projectId;
+  return `<div class="draft-note"><strong>✎ ${esc(c.title)}</strong><br>${c.status === "idea" ? "Idée" : c.status === "ready" ? "Prête à terminer" : "Ébauche"} · ${round(progress)} % · ${c.sessions} séance${c.sessions > 1 ? "s" : ""}<div class="bar"><i style="width:${progress}%"></i></div><small>${esc(c.genre)} · ${esc(c.tone)} · potentiel provisoire ${c.potential}/100<br>${active ? "Le projet reprend à la prochaine séance de composition." : "Projet conservé dans le carnet ; le scénario a lancé un autre projet."}</small>${c.sources.length ? `<details class="causes" data-key="project-${c.id}"><summary>Ce qui inspire ce projet</summary>${c.sources.map((x) => `<p>${esc(x.text)}</p>`).join("")}</details>` : ""}</div>`;
+}
+function renderProfileSongs(p) {
+  const songs = world.songs.filter(
+    (s) =>
+      s.authors.includes(p.id) &&
+      (showArchives || !isArchivedSong(world, s.id)),
+  );
+  const allCount = world.songs.filter((s) => s.authors.includes(p.id)).length;
+  $("#profile-song-count").textContent =
+    `${allCount} terminées · ${songs.length} visibles`;
+  replacePreserving(
+    "#profile-songs",
+    `${world.projects
+      .filter((c) => c.author === p.id && c.status !== "finished")
+      .map((c) => projectHTML(p, c))
+      .join("")}${
+      songs.length
+        ? `<div class="profile-catalog">${songs
+            .slice(0, profileSongLimit)
+            .map(
+              (song) =>
+                `<details class="profile-song" data-key="profile-song-${song.id}"><summary><span>${esc(song.title)}</span><b>${song.quality}/100</b></summary><p>${esc(song.genre)} · ${esc(song.tone)} · ${stamp(song.time)}</p>${song.sources.map((c) => `<p class="muted">${esc(c.text)}</p>`).join("")}</details>`,
+            )
+            .join(
+              "",
+            )}${songs.length > profileSongLimit ? '<button id="more-profile-songs" class="text-button">Voir davantage de chansons</button>' : ""}</div>`
+        : '<p class="muted">Aucune chanson terminée. Composer crée puis développe un projet visible ici.</p>'
+    }`,
+  );
+}
+
+const sessionStatus = {
+  travel: "En route",
+  waiting: "Attend un partenaire",
+  active: "En cours",
+  completed: "Terminée",
+  interrupted: "Interrompue",
+  cancelled: "Annulée",
+};
+function eventHTML(e) {
+  if (e.session) {
+    const moments = e.events.filter((x) => x.type !== "decision");
+    const place = PLACES.find((x) => x.id === e.place)?.name || "";
+    return `<div class="event ${e.type} session-event" data-entry="${esc(e.id)}"><time>${stamp(e.time)}</time><span class="event-dot"></span><div class="event-body"><button ${e.ids[0] ? `data-person="${esc(e.ids[0])}"` : ""}><strong>${esc(e.text)}</strong></button><small class="session-meta">${sessionStatus[e.status]} · ${round(e.activeMinutes)} min d’activité · ${esc(place)}${e.end ? " · fin " + stamp(e.end) : ""}</small>${moments.length ? `<p class="session-highlight">${esc(moments.filter((x) => x.outcome || x.type === "project").at(-1)?.text || moments.at(-1).text)}</p>` : ""}<details class="causes" data-key="session-${esc(e.id)}"><summary>Déroulement et effets (${moments.length})</summary>${e.events.map((x) => `<div class="session-moment"><time>${stamp(x.time)}</time> ${esc(x.text)}${x.effects ? `<br><b>${esc(x.effects)}</b>` : ""}${x.explanation ? `<br>${esc(x.explanation)}` : ""}${x.repeatFactor < 1 ? `<br>Effet atténué : résultat déjà vécu pendant cette jam.` : ""}${exchangeTrace(x)}${x.causes?.map((c) => `<br>Origine : ${esc(c.text)}`).join("") || ""}</div>`).join("") || "<p>Le trajet précède l’activité.</p>"}</details></div></div>`;
+  }
+  return `<div class="event ${e.type}" data-entry="event-${e.id}"><time>${stamp(e.time)}</time><span class="event-dot"></span><div class="event-body"><button ${e.ids[0] ? `data-person="${esc(e.ids[0])}"` : ""}>${esc(e.text)}</button>${exchangeTrace(e)}${e.effects ? `<p class="session-highlight">${esc(e.effects)}</p>` : ""}${e.causes?.length || e.explanation ? `<details data-key="event-${e.id}" class="causes"><summary>Ce qui y a mené</summary>${e.explanation ? `<p>${esc(e.explanation)}</p>` : ""}${e.causes?.map((c) => `<p><time>${stamp(c.time)}</time> ${esc(c.text)}</p>`).join("") || ""}</details>` : ""}</div></div>`;
+}
+
+function replacePreserving(selector, html) {
+  reconcile($(selector), html);
+}
+
+function renderMetrics() {
+  let rs = Object.values(world.rels),
+    friends = rs.filter((r) => r.affinity > 30).length,
+    tensions = rs.filter((r) => r.tension > 25).length;
+  replacePreserving(
+    "#metrics",
+    [
+      [
+        "DÉTRESSE MOYENNE",
+        round(
+          world.people.reduce((a, p) => a + p.emotions.distress, 0) /
+            world.people.length,
+        ),
+        "/100",
+      ],
+      ["LIENS AMICAUX", friends, "orientés"],
+      ["TENSIONS", tensions, "liens"],
+      [
+        "CHANSONS AUJOURD’HUI",
+        world.songs.filter(
+          (song) => song.time >= Math.floor(world.time / 1440) * 1440,
+        ).length,
+        " / " + world.songs.length + " au total",
+      ],
+    ]
+      .map(
+        ([l, n, u]) =>
+          `<div class="metric"><span>${l}</span><strong>${n} <small>${u}</small></strong></div>`,
+      )
+      .join(""),
+  );
+  replacePreserving(
+    "#recent",
+    journalEntries(world)
+      .filter((e) => e.type !== "decision")
+      .slice(0, 4)
+      .map(eventHTML)
+      .join("") ||
+      '<div class="empty">Les premières rencontres s’en viennent.</div>',
+  );
+  renderGroupStrip();
+  replacePreserving("#mini-calendar", calendarHTML(world));
+}
+function renderMatrix() {
+  const ps = world.people,
+    negative = metric === "tension";
+  $("#relations-view .legend").innerHTML =
+    metric === "chemistry"
+      ? `<span class="muted">La chimie est un potentiel symétrique. ${labValues ? "Valeurs exactes du laboratoire." : "Elle se découvre par des jams terminées ensemble ; ? = aucune expérience mesurée."} La complicité et les sentiments restent distincts.</span>`
+      : `<span>${metric === "affinity" ? "Hostile" : "Faible"}</span><i style="background:#d99883"></i><i style="background:#eee9df"></i><i style="background:${negative ? "#d99883" : "#82b5a1"}"></i><span>${metric === "affinity" ? "Proche" : "Forte"}</span><span class="muted">La ligne ressent → la colonne. Les deux points de vue peuvent différer.</span>`;
+  replacePreserving(
+    "#matrix",
+    `<table class="matrix"><thead><tr><th>${metric === "chemistry" ? "Potentiel commun" : "↓ ressent →"}</th>${ps.map((p) => `<th data-stable="col-${p.id}" class="${pair?.includes(p.id) ? "selected-name" : ""}" title="${esc(p.name)}">${esc(p.name.slice(0, 8))}</th>`).join("")}</tr></thead><tbody>${ps
+      .map(
+        (a) =>
+          `<tr data-stable="row-${a.id}" class="${pair?.[0] === a.id ? "selected-row" : ""}"><th class="${pair?.includes(a.id) ? "selected-name" : ""}">${esc(a.name.slice(0, 10))}</th>${ps
+            .map((b) => {
+              if (a === b)
+                return '<td style="text-align:center;color:#bfc4b8">—</td>';
+              const k = chemistryKnowledge(world, a, b);
+              if (metric === "chemistry" && !labValues) {
+                const grade = k.known ? k.grade : "?",
+                  color = !k.known
+                    ? "#eeeee7"
+                    : k.grade === "Très prometteuse"
+                      ? "#d3e6cb"
+                      : k.grade === "Prometteuse"
+                        ? "#e1ead4"
+                        : k.grade === "Contrastée"
+                          ? "#eee4d3"
+                          : "#ebd4ca";
+                return `<td class="${pair?.[1] === b.id ? "selected-column" : ""}"><button class="chemistry-grade ${pair?.[0] === a.id && pair?.[1] === b.id ? "chosen" : ""}" data-pair="${a.id},${b.id}" style="background:${color}" title="${esc(grade)} · ${k.confidence} · ${k.sessions} jams communes">${k.known ? grade : "?"}</button></td>`;
+              }
+              const r = relationship(world, a, b),
+                v = metric === "chemistry" ? chemistry(a, b) : r[metric],
+                intensity = metric === "affinity" ? Math.abs(v) / 100 : v / 100,
+                red = metric === "tension" || (metric === "affinity" && v < 0),
+                bg = red
+                  ? `rgba(199,114,82,${0.08 + intensity * 0.65})`
+                  : `rgba(83,147,113,${0.06 + intensity * 0.65})`;
+              return `<td class="${pair?.[1] === b.id ? "selected-column" : ""}"><button class="${pair?.[0] === a.id && pair?.[1] === b.id ? "chosen" : ""}" data-pair="${a.id},${b.id}" style="background:${bg}" title="${esc(a.name)} → ${esc(b.name)} : ${round(v)}">${round(v)}</button></td>`;
+            })
+            .join("")}</tr>`,
+      )
+      .join("")}</tbody></table>`,
+  );
+}
+
+function renderPair() {
+  if (!pair) {
+    replacePreserving(
+      "#relation-detail",
+      '<div class="empty">Sélectionne un lien dans la matrice pour l’examiner.</div>',
+    );
+    return;
+  }
+  let a = world.people.find((p) => p.id === pair[0]),
+    b = world.people.find((p) => p.id === pair[1]);
+  if (!a || !b) {
+    pair = null;
+    renderPair();
+    return;
+  }
+  replacePreserving(
+    "#relation-detail",
+    `<h2 class="pair-title">${esc(a.name)} & ${esc(b.name)}</h2><p class="muted">Chimie potentielle : ${labValues ? round(chemistry(a, b)) + "/100" : esc(chemistryKnowledge(world, a, b).grade) + " · " + chemistryKnowledge(world, a, b).confidence} (${chemistryKnowledge(world, a, b).sessions} jams communes) · ${a.genre === b.genre ? "Style musical partagé" : "Styles musicaux différents"} · ${a.instrument !== b.instrument ? "Instruments complémentaires" : "Même instrument"}</p><div class="pair-directions">${[
+      [a, b],
+      [b, a],
+    ]
+      .map(([p, q]) => {
+        let r = relationship(world, p, q);
+        return `<div><h3>${esc(p.name)} → ${esc(q.name)}</h3>${Object.entries({
+          affinity: "Affinité",
+          trust: "Confiance",
+          tension: "Tension",
+          collaboration: "Complicité musicale",
+          love: "Lien amoureux",
+        })
+          .map(
+            ([k, l]) =>
+              `<div class="range-row"><label>${l} <b data-rel-output="${p.id}:${q.id}:${k}">${round(r[k])}</b></label><input type="range" data-rel="${p.id}:${q.id}:${k}" aria-label="${l} de ${esc(p.name)} envers ${esc(q.name)}" min="${k === "affinity" ? -100 : 0}" max="100" value="${r[k]}"></div>`,
+          )
+          .join(
+            "",
+          )}<p class="muted">${r.couple ? "En couple" : "Sans statut de couple"} · ${r.affinity >= 75 ? "Inséparables : poids de sélection +6 · " : ""}${r.meetings} interactions · dernier contact ${r.meetings ? stamp(r.last) : "jamais"}</p></div>`;
+      })
+      .join("")}</div>`,
+  );
+}
+function renderJournal() {
+  if (
+    $("#archive-threshold") &&
+    document.activeElement !== $("#archive-threshold")
+  )
+    $("#archive-threshold").value = world.archiveThreshold;
+  const complete = filteredJournal();
+  let es = complete;
+  if (view === "journal" && $("#main").scrollTop > 100) {
+    if (!journalPinnedIds)
+      journalPinnedIds = new Set(complete.map((e) => String(e.id)));
+    es = complete.filter((e) => journalPinnedIds.has(String(e.id)));
+    journalPending = complete.filter(
+      (e) => !journalPinnedIds.has(String(e.id)),
+    ).length;
+  } else {
+    journalPinnedIds = null;
+    journalPending = 0;
+  }
+  if ($("#new-events")) {
+    $("#new-events").hidden = !journalPending;
+    $("#new-events").textContent =
+      `${journalPending} nouvelles entrées · afficher`;
+  }
+  replacePreserving(
+    "#journal",
+    es.slice(0, 150).map(eventHTML).join("") ||
+      '<div class="empty">Aucun événement dans ce filtre pour le moment.</div>',
+  );
+  $("#song-count").textContent =
+    world.songs.length +
+    " terminées · " +
+    world.songArchive.length +
+    " archivées";
+  replacePreserving(
+    "#projects",
+    world.projects
+      .filter((c) => c.status !== "finished")
+      .map((c) => {
+        const p = world.people.find((x) => x.id === c.author);
+        return `<div class="project-card"><button class="text-button" ${p ? `data-person="${p.id}"` : ""}>${esc(p?.name || "Ancien voisin")} ↗</button>${projectHTML(p, c)}</div>`;
+      })
+      .join("") ||
+      '<p class="muted">Les projets apparaissent dès qu’un personnage commence à composer.</p>',
+  );
+  const visibleSongs = world.songs.filter(
+    (s) => showArchives || !isArchivedSong(world, s.id),
+  );
+  replacePreserving(
+    "#songs",
+    visibleSongs
+      .slice(0, catalogueLimit)
+      .map(
+        (s) =>
+          `<div class="song ${isArchivedSong(world, s.id) ? "archive" : ""}" data-entry="catalogue-${s.id}"><div class="song-title">♫ ${esc(s.title)} ${s.hit ? '<span class="pill member">Ça résonne !</span>' : ""}<strong>${s.quality}/100</strong></div><small>${esc(s.genre)} · ${s.authors
+            .map(
+              (id) =>
+                world.people.find((p) => p.id === id)?.name || "Ancien voisin",
+            )
+            .map(esc)
+            .join(
+              ", ",
+            )} · ${stamp(s.time)}</small><div class="song-tone"><span style="color:${emotionDefinition(s.emotion)?.color || "#819b6f"}">${emotionDefinition(s.emotion)?.icon || "♫"} ${esc(s.tone)} · intensité ${s.intensity}/100</span><span>Écho public ${s.resonance === null ? "non mesuré" : s.resonance + "/100"}</span></div><details class="causes" data-key="song-${s.id}"><summary>Les expériences derrière la chanson</summary>${s.sources?.length ? s.sources.map((c) => `<p><time>${stamp(c.time)}</time> ${esc(c.text)}</p>`).join("") : "<p>Pas d’événement émotionnel marqué pendant cette composition.</p>"}${s.breakdown ? `<p>Qualité : maîtrise ${s.breakdown.craft} + expression ${s.breakdown.expression} + ensemble ${s.breakdown.ensemble} + perfectionnisme ${s.breakdown.perfection} + variation ${s.breakdown.variance} − surcharge émotionnelle ${s.breakdown.overwhelm}. Les arrondis peuvent varier d’un point.</p>` : ""}<p>La tonalité conserve les émotions de la première phase créative ; les séances suivantes développent la chanson. L’écho public est un indicateur simulé.</p></details><button class="text-button song-archive-action" data-archive-song="${s.id}" data-restore-song="${isArchivedSong(world, s.id) ? "yes" : "no"}">${isArchivedSong(world, s.id) ? "Restaurer cette chanson" : "Archiver cette chanson"}</button></div>`,
+      )
+      .join("") +
+      (visibleSongs.length > catalogueLimit
+        ? '<button id="more-songs" class="text-button">Voir davantage de chansons</button>'
+        : "") ||
+      '<div class="empty">Plusieurs séances de composition font avancer un projet jusqu’à une chanson terminée. Les projets en cours sont visibles ci-dessus.</div>',
+  );
+}
+function renderSettings() {
+  $("#decision-mode").value = world.decisionMode;
+  $("#parameters").innerHTML = Object.entries(params)
+    .filter(([k]) => !["randomness", "music", "social"].includes(k))
+    .map(
+      ([k, [l, d]]) =>
+        `<div class="range-row"><label>${l} <b data-param-output="${k}">×${world.params[k].toFixed(1)}</b></label><input type="range" min="0" max="3" step="0.1" value="${world.params[k]}" data-param="${k}" aria-label="${l}"><p>${d}</p></div>`,
+    )
+    .join("");
+  $("#scenario-current").textContent = "Scénario actuel : " + world.scenario;
+  $("#save-state").textContent = loadFailed
+    ? "La sauvegarde illisible a été conservée. Importe un monde valide ou crée explicitement un nouveau quartier."
+    : saveProblem
+      ? "Sauvegarde locale indisponible. Exporte ton monde en JSON."
+      : "Sauvegarde automatique dans ce navigateur.";
+}
+const titles = {
+  shows: [
+    "Ton band. Sa prochaine scène.",
+    "Prépare une formation, une chanson et les cartes. Le show se joue tout seul.",
+  ],
+  actions: [
+    "Ce qu’ils peuvent faire.",
+    "Cinq actions d’éveil et le sommeil hors sac.",
+  ],
+  groups: [
+    "Les groupes qui se forment.",
+    "Des liens deviennent des projets communs. Plusieurs groupes peuvent se croiser.",
+  ],
+  map: [
+    "Une banlieue. " + world.people.length + " univers.",
+    "La vie se passe entre deux répétitions. Action à droite du cube · émotion à gauche.",
+  ],
+  relations: [
+    "Le courant passe. Ou pas.",
+    "Des liens vécus, des affinités et quelques fausses notes.",
+  ],
+  journal: [
+    "Les petites histoires du quartier.",
+    "Chaque décision, chaque rencontre, chaque chanson.",
+  ],
+  settings: [
+    "Change les règles du quotidien.",
+    "Observe les conséquences. Ajuste. Recommence.",
+  ],
+};
+function changeView(v) {
+  if (!titles[v]) return;
+  if (v === "shows" && !liveEvent && world.performance?.status !== "playing")
+    setPlaybackSpeed(playback, 0);
+  if (liveEvent) showPaused = v !== "shows";
+  $(".topline").hidden = false;
+  viewPositions.save(view, $("#main"));
+  view = v;
+  $(".workspace").classList.toggle(
+    "show-layout",
+    v === "shows" && showingPerformance && !!world.performance,
+  );
+  document.body.classList.toggle(
+    "show-mode",
+    v === "shows" && showingPerformance && !!world.performance,
+  );
+  for (const el of $$(".view")) el.hidden = el.id !== v + "-view";
+  for (const el of $$("nav button"))
+    el.classList.toggle("active", el.dataset.view === v);
+  $("#view-title").textContent =
+    v === "map"
+      ? `Une banlieue. ${world.people.length} univers.`
+      : titles[v][0];
+  $("#view-subtitle").textContent = titles[v][1];
+  if (v === "relations") {
+    renderMatrix();
+    renderPair();
+  }
+  if (v === "journal") renderJournal();
+  if (v === "settings") renderSettings();
+  if (v === "groups") renderGroups();
+  if (v === "actions") renderActions();
+  if (v === "shows") {
+    if (liveEvent) showingPerformance = true;
+    renderShows();
+  }
+  viewPositions.restore(v, $("#main"));
+  if (v === "map")
+    updatePositions(world.people, displayPos, { visible: false });
+}
+function renderTransport() {
+  $("#clock").textContent =
+    stamp(world.time) + (liveEvent ? " · quartier en pause pour le show" : "");
+  $("#pause").textContent =
+    world.performance?.status === "playing"
+      ? showPaused
+        ? "▶ Jouer"
+        : "Ⅱ Pause"
+      : playback.speed > 0
+        ? "Ⅱ Pause"
+        : "▶ Jouer";
+  $("#speed").value = playback.speed;
+  $("#speed-value").textContent =
+    playback.speed === 0 ? "Pause" : "×" + playback.speed.toFixed(1);
+  $("#status").textContent = liveEvent
+    ? "Quartier en pause · soirée en direct"
+    : world.performance?.status === "playing"
+      ? showPaused
+        ? "Show en pause"
+        : "Show en cours"
+      : playback.speed > 0
+        ? "Autonomie active"
+        : "Simulation en pause";
+}
+function render() {
+  renderTransport();
+  renderPeople();
+  renderProfile();
+  renderMetrics();
+  if (view === "groups") renderGroups();
+  if (view === "actions") renderActions();
+  if (view === "relations") {
+    renderMatrix();
+    renderPair();
+  }
+  if (view === "journal") renderJournal();
+  if (view === "shows") renderShows();
+}
+let modalOrigin = null;
+function modal(html) {
+  modalOrigin = document.activeElement;
+  $("#dialog-content").innerHTML = html;
+  $("#dialog").showModal();
+}
+$("#dialog").addEventListener("close", () => {
+  if (resumeInspectedShow) {
+    resumeInspectedShow();
+    resumeInspectedShow = null;
+  }
+  $("#dialog").classList.remove("show-fan-inspection");
+  modalOrigin?.focus({ preventScroll: true });
+});
+const dialogElement = $("#dialog");
+let modalPointerOutside = false;
+dialogElement.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    dialogElement.close();
+  }
+});
+function outsideDialog(event) {
+  const r = dialogElement.getBoundingClientRect();
+  return (
+    event.clientX < r.left ||
+    event.clientX > r.right ||
+    event.clientY < r.top ||
+    event.clientY > r.bottom
+  );
+}
+dialogElement.addEventListener("pointerdown", (event) => {
+  modalPointerOutside = event.target === dialogElement && outsideDialog(event);
+});
+dialogElement.addEventListener("click", (event) => {
+  if (
+    modalPointerOutside &&
+    event.target === dialogElement &&
+    outsideDialog(event)
+  )
+    dialogElement.close();
+  modalPointerOutside = false;
+});
+$("#dialog-close").onclick = () => dialogElement.close();
+$("#help").onclick = () =>
+  modal(
+    "<h2>Bienvenue rue des Érables.</h2><p>Les cubes décident seuls. Clique un voisin pour voir ce qu’il fait, ce dont il a besoin et pourquoi il choisit son activité.</p><p><b>Quartier</b> : les trajets et les rencontres. <b>Relations</b> : les sentiments de chacun envers chacun. <b>Journal</b> : les événements. <b>Réglages</b> : le moteur et les scénarios.</p><p>Dans la fiche, ouvre les sections « modifier » pour changer un personnage. « Intervenir » te permet de forcer une activité. Le curseur règle la vitesse de 0 à 10 par pas de 0,1 ; 0 met en pause. +1 h avance d’une heure puis reste en pause. À ×1, une seconde réelle vaut 8 minutes simulées.</p><p>Actions expose les cinq activités, leurs compteurs et les jetons sans remise. Le sommeil quotidien est hors sac. Groupes montre les formations qui émergent des relations, avec plusieurs appartenances possibles. Exaltation et détresse activent des traits et modulent les interactions. Les besoins ne changent pas la pige. Les événements et les chansons exposent leurs causes. Les jams démarrent à deux sur place, sans attirer de force un musicien occupé. Leurs participants sont surlignés. Composer fait avancer une idée puis une ébauche persistante. Plusieurs séances terminent une chanson. Le journal regroupe les sessions ; ses détails exposent les causes. La chimie se découvre après des jams communes, avec une option de valeurs exactes au laboratoire. Les cubes restent devant les bâtiments pour être visibles. Shows propose quatre dates continues et une grosse scène tous les quatre événements. Chaque musicien pige cinq cartes de son deck. Les sons s’activent à ta demande. La déchéance ajoute des cartes maudites; le sommeil, les pauses et le soutien aident à récupérer.</p>",
+  );
+function setSpeed(value) {
+  setPlaybackSpeed(playback, value);
+  render();
+  if (playback.speed === 0)
+    updatePositions(world.people, displayPos, { visible: false });
+}
+$("#pause").onclick = () => {
+  if (world.performance?.status === "playing") $("#show-pause").click();
+  else setSpeed(playback.speed > 0 ? 0 : playback.resumeSpeed);
+};
+$("#speed").onpointerdown = () => (speedDragging = true);
+document.addEventListener(
+  "pointerdown",
+  (e) =>
+    (snappingRange = e.target.matches("input[data-param]") ? e.target : null),
+);
+window.addEventListener("pointerup", () => {
+  speedDragging = false;
+  snappingRange = null;
+});
+$("#speed").onkeydown = () => {
+  speedDragging = false;
+  snappingRange = null;
+};
+$("#speed").oninput = (e) =>
+  setSpeed(speedDragging ? snapSpeed(e.target.value) : e.target.value);
+$("#speed-value").onclick = () => setSpeed(1);
+$("#speed-value").onkeydown = (e) => {
+  if (["Enter", " "].includes(e.key)) {
+    e.preventDefault();
+    setSpeed(1);
+  }
+};
+$("#step").onclick = () => {
+  setPlaybackSpeed(playback, 0);
+  step(world, 60);
+  updatePositions(world.people, displayPos, { visible: false });
+  render();
+  save();
+};
+$("#nav").onclick = (e) => {
+  if (e.target.dataset.view) changeView(e.target.dataset.view);
+};
+$("#all-events").onclick = () => changeView("journal");
+$("#close-inspector").onclick = () => $("#inspector").classList.remove("open");
+$("#add").onclick = () => {
+  const p = addPerson(world);
+  if (p) {
+    decide(world, p);
+    select(p.id);
+    render();
+    changeView(view);
+    save();
+  }
+};
+$("#lab-values").onchange = (e) => {
+  labValues = e.target.checked;
+  renderMatrix();
+  renderPair();
+};
+$("#raw-journal").onchange = (e) => {
+  rawJournal = e.target.checked;
+  renderJournal();
+};
+$("#relation-metric").onchange = (e) => {
+  metric = e.target.value;
+  renderMatrix();
+};
+$("#event-filter").onchange = (e) => {
+  filter = e.target.value;
+  renderJournal();
+};
+document.addEventListener("click", (e) => {
+  const person = e.target.closest("[data-person]");
+  if (person) select(person.dataset.person);
+  const cell = e.target.closest("[data-pair]");
+  if (cell) {
+    pair = cell.dataset.pair.split(",");
+    renderPair();
+    renderMatrix();
+  }
+  const force = e.target.closest("[data-force]");
+  if (force) {
+    const r = command(world, {
+      type: "action",
+      actorId: selected,
+      key: force.dataset.force,
+    });
+    notify(r.message);
+    renderProfile(true);
+    save();
+  }
+  if (e.target.id === "profile-relations") {
+    changeView("relations");
+  }
+  if (e.target.id === "remove" && world.people.length > 1) {
+    removePerson(world, selected);
+    selected = world.people[0].id;
+    pair = null;
+    render();
+    renderProfile(true);
+    save();
+  }
+  const sc = e.target.closest("[data-scenario]");
+  if (sc) {
+    scenario(world, sc.dataset.scenario);
+    if (sc.dataset.scenario === "Cœur brisé") selected = world.people[0].id;
+    renderSettings();
+    renderProfile(true);
+    render();
+    save();
+    notify("Scénario appliqué : " + sc.dataset.scenario);
+  }
+});
+document.addEventListener("input", (e) => {
+  const el = e.target,
+    p = current();
+  if (el.dataset.edit) {
+    const [group, k] = el.dataset.edit.split(":");
+    p[group][k] = Number(el.value);
+    $(`[data-output="${group}:${k}"]`).textContent = round(Number(el.value));
+    updateProfile();
+  }
+  if (el.dataset.identity) {
+    const k = el.dataset.identity;
+    p[k] = k === "age" ? clamp(Number(el.value), 18, 90) : el.value;
+    renderPeople();
+  }
+  if (el.dataset.param) {
+    const k = el.dataset.param;
+    if (snappingRange === el) el.value = snapSpeed(el.value);
+    world.params[k] = Number(el.value);
+    $(`[data-param-output="${k}"]`).textContent =
+      "×" + world.params[k].toFixed(1);
+  }
+  if (el.dataset.rel) {
+    const [a, b, k] = el.dataset.rel.split(":");
+    const r = relationship(
+      world,
+      world.people.find((p) => p.id === a),
+      world.people.find((p) => p.id === b),
+    );
+    r[k] = Number(el.value);
+    $(`[data-rel-output="${a}:${b}:${k}"]`).textContent = round(r[k]);
+    renderMatrix();
+  }
+});
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.dataset.trait) {
+    const p = current(),
+      t = el.dataset.trait;
+    p.traits = el.checked
+      ? [
+          ...new Set([
+            ...p.traits.filter((x) => x !== TRAIT_CATALOG[t]?.exclusive),
+            t,
+          ]),
+        ]
+      : p.traits.filter((x) => x !== t);
+    if (t === "night") {
+      p.sleep.bedtime = el.checked ? 120 : 1380;
+      const candidate = Math.floor(world.time / 1440) * 1440 + p.sleep.bedtime;
+      p.sleep.nextBedtime =
+        candidate > world.time ? candidate : candidate + 1440;
+    }
+    updateTraits(p);
+    renderProfile(true);
+  }
+  if (
+    el.dataset.edit ||
+    el.dataset.identity ||
+    el.dataset.param ||
+    el.dataset.rel ||
+    el.dataset.trait
+  ) {
+    const ev = log(
+      world,
+      "system",
+      "Paramètre modifié manuellement.",
+      el.dataset.edit || el.dataset.identity || el.dataset.trait
+        ? [selected]
+        : [],
+    );
+    if (el.dataset.identity) renderProfile(true);
+    if (
+      el.dataset.edit?.startsWith("skills:") ||
+      el.dataset.identity === "instrument"
+    )
+      refreshReputation(world, current());
+    if (el.dataset.edit?.startsWith("emotions:")) {
+      const key = el.dataset.edit.split(":")[1];
+      ev.text = `Intervention : ${EMOTIONS[key].label.toLowerCase()} de ${current().name} réglée à ${round(current().emotions[key])}.`;
+      current().emotionSources[key] = [
+        { id: ev.id, time: ev.time, text: ev.text },
+      ];
+    }
+    save();
+  }
+});
+$("#export").onclick = () => {
+  save();
+  const blob = new Blob([JSON.stringify(world, null, 2)], {
+      type: "application/json",
+    }),
+    url = URL.createObjectURL(blob),
+    a = document.createElement("a");
+  a.href = url;
+  a.download = `garage-vivant-j${Math.floor(world.time / 1440) + 1}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  notify("Monde exporté avec son état complet.");
+};
+$("#import").onclick = () => $("#import-file").click();
+$("#import-file").onchange = async (e) => {
+  try {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 50000000) throw Error("Fichier trop volumineux.");
+    let candidate = restore(JSON.parse(await f.text()));
+    world = candidate;
+    previewReturn = world.livePreviewReturn || null;
+    liveEvent = !!world.showEventId;
+    showingPerformance = world.performance?.status === "playing" || liveEvent;
+    viewPositions.clear();
+    personPositions.clear();
+    journalPinnedIds = null;
+    loadFailed = false;
+    displayPos.clear();
+    selected = world.people[0].id;
+    pair = null;
+    setPlaybackSpeed(playback, 0);
+    renderProfile(true);
+    changeView(view);
+    render();
+    save();
+    notify("Monde importé. Simulation en pause.");
+  } catch (err) {
+    notify("Import refusé : " + err.message);
+  }
+  e.target.value = "";
+};
+$("#reset").onclick = () =>
+  modal(
+    '<h2>Un nouveau quartier</h2><p>Remplace le monde actuel. Exporte le JSON si tu veux le conserver. La même graine reproduit le même départ.</p><label>Graine<input id="seed" type="number" value="2040" min="0" max="4294967295"></label><label>Voisins<input id="count" type="number" value="8" min="2" max="24"></label><button id="confirm-reset" class="primary">Créer le quartier</button>',
+  );
+document.addEventListener("click", (e) => {
+  if (e.target.id === "confirm-reset") {
+    try {
+      localStorage.setItem(
+        "garage-vivant-before-new-game",
+        loadFailed
+          ? localStorage.getItem("garage-vivant-v1")
+          : JSON.stringify(world),
+      );
+    } catch {
+      $("#export").click();
+    }
+    viewPositions.clear();
+    personPositions.clear();
+    journalPinnedIds = null;
+    loadFailed = false;
+    showingPerformance = false;
+    liveEvent = false;
+    previewReturn = null;
+    world = createWorld(
+      clamp(Number($("#seed").value), 0, 4294967295),
+      clamp(round(Number($("#count").value)), 2, 24),
+    );
+    displayPos.clear();
+    selected = world.people[0].id;
+    pair = null;
+    setPlaybackSpeed(playback, 1);
+    $("#dialog").close();
+    renderProfile(true);
+    changeView(view);
+    render();
+    save();
+  }
+});
+function renderGroupStrip() {
+  const sessions = liveSessions(world);
+  replacePreserving(
+    "#band-strip",
+    `<div><span class="eyebrow">LE QUARTIER ENSEMBLE</span><strong>${world.groups.length} groupe${world.groups.length > 1 ? "s" : ""} · ${sessions.filter((x) => x.type === "jam").length} jam${sessions.filter((x) => x.type === "jam").length > 1 ? "s" : ""} en cours</strong><small>${sessions.length ? sessions.map((x) => `${esc(x.label)} (${x.participants.length})`).join(" · ") : "Les rencontres font naître les projets."}</small></div>${world.performance?.status === "playing" || liveEvent ? '<button data-open-shows class="primary">Le show est en cours ↗</button>' : "<button data-open-groups>Voir les groupes ↗</button>"}`,
+  );
+}
+function renderActions() {
+  const p = current();
+  $("#action-person-name").textContent = p.name;
+  replacePreserving(
+    "#action-catalog",
+    BAG_ACTIONS.map((k) => {
+      const a = ACTIONS[k],
+        c = p.actionCounts[k];
+      return `<div class="action-entry"><span class="action-symbol">${a.icon}</span><div><h3>${a.label}</h3><p>${a.description}</p><small>${a.duration} min · ${c.completed} terminées · ${c.started} lancées · ${c.interrupted} interrompues</small></div><button data-force="${k}">Lancer hors sac</button></div>`;
+    }).join(""),
+  );
+  replacePreserving(
+    "#bag-table",
+    world.people
+      .map(
+        (q) =>
+          `<details data-key="bags-${q.id}"><summary>${esc(q.name)} · cycle ${q.bag.cycle}</summary>${rapinHTML(world, q)}</details>`,
+      )
+      .join(""),
+  );
+  $("#location-guide").innerHTML =
+    "<p>Maisons : dormir hors sac. Garages : pratiquer, composer et jammer. Café, parc et disquaire : discuter. Parc : décrocher. Une jam ouverte peut être rejointe sans interrompre ses musiciens.</p>";
+}
+
+function renderGroups() {
+  replacePreserving(
+    "#group-list",
+    bandsHTML(world, selectedGroup, bandQuery, bandArchives),
+  );
+}
+
+$("#decision-mode").disabled = true;
+document.addEventListener("change", (e) => {
+  const el = e.target;
+});
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-open-groups]")) changeView("groups");
+  if (e.target.closest("[data-open-actions]")) changeView("actions");
+  const rethink = e.target.closest("[data-rethink]");
+  if (rethink) {
+    const p = world.people.find((p) => p.id === rethink.dataset.rethink);
+    decide(world, p);
+    renderProfile(true);
+    save();
+  }
+  if (e.target.id === "create-group") {
+    modal(
+      `<h2>Créer un groupe · laboratoire</h2><p>Intervention manuelle : choisis au moins deux membres. Ils conservent leurs autres groupes. La formation autonome reste active.</p><label>Nom <input id="group-name" maxlength="50" placeholder="Nom facultatif" style="width:70%"></label><div class="group-select">${world.people.map((p) => `<label><input type="checkbox" name="group-member" value="${p.id}" ${p.id === selected ? "checked" : ""}> ${esc(p.name)} · ${SKILLS[p.instrument]}</label>`).join("")}</div><button id="confirm-group" class="primary">Créer</button>`,
+    );
+  }
+  if (e.target.id === "confirm-group") {
+    const ids = $$('input[name="group-member"]:checked').map((x) => x.value);
+    if (ids.length < 2) {
+      notify("Choisis au moins deux musiciens.");
+      return;
+    }
+    createGroup(world, ids, {
+      name: $("#group-name").value.trim() || null,
+      manual: true,
+    });
+    $("#dialog").close();
+    renderGroups();
+    renderProfile(true);
+    renderGroupStrip();
+    save();
+  }
+});
 // A small, entirely code-drawn town. No external assets or dependencies.
-const canvas=$('#map'),ctx=canvas.getContext('2d');let screenPositions=[],displayPos=new Map();
-function rect(x,y,w,h,c,r=0){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
-function label(text,x,y,color='#586b53',size=11){ctx.fillStyle=color;ctx.font=`${size}px ui-sans-serif, system-ui`;ctx.textAlign='center';ctx.fillText(text,x,y);}
-function tree(x,y,r=17){rect(x-2,y,4,17,'#929d76',2);ctx.fillStyle='#cbd8b9';ctx.beginPath();ctx.arc(x+2,y+5,r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#b1c59c';ctx.beginPath();ctx.arc(x-3,y,r*.8,0,Math.PI*2);ctx.fill();}
-function draw(){let width=canvas.clientWidth,height=canvas.clientHeight,dpr=Math.min(devicePixelRatio||1,2);if(canvas.width!==Math.round(width*dpr)||canvas.height!==Math.round(height*dpr)){canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);let scale=Math.min(width/1100,height/670),ox=(width-1100*scale)/2,oy=(height-670*scale)/2;ctx.translate(ox,oy);ctx.scale(scale,scale);rect(0,0,1100,670,'#e8ecdc');ctx.fillStyle='#d9e1cd';for(let i=0;i<140;i++){let x=(i*137+31)%1100,y=(i*89+71)%670;rect(x,y,2,2,'#d5dec6');}rect(0,290,1100,100,'#ced2c6');rect(0,310,1100,60,'#babeb7');rect(0,292,1100,4,'#eef0e5');rect(0,384,1100,4,'#eef0e5');ctx.strokeStyle='#e5e6d9';ctx.lineWidth=2;ctx.setLineDash([18,20]);ctx.beginPath();ctx.moveTo(0,340);ctx.lineTo(1100,340);ctx.stroke();ctx.setLineDash([]);label('R U E   D E S   É R A B L E S',550,345,'#909789',9);
-for(const pl of PLACES){const {x,y,w,h,color}=pl;rect(pl.door.x-15,Math.min(pl.door.y,290),30,Math.abs(pl.door.y-290)+(pl.door.y>340?50:0),'#d5dac9');if(pl.kind==='park'){rect(x-12,y-8,w+24,h+10,'#d8e3c7',18);tree(x+30,y+35,27);tree(x+w-30,y+40,23);tree(x+90,y+105,19);rect(x+112,y+38,55,10,'#a7a188',3);rect(x+125,y+65,36,26,'#c4c0a3',5);label('PARC DES AMPLIS',x+w/2,y+h+19,'#6b7d5c',11);continue;}rect(x+7,y+9,w,h,'#b6c1a238',8);rect(x,y,w,h,color,7);rect(x,y,w,20,'#00000012',7);rect(x+12,y+28,w-24,h-40,'#ffffff16',3);if(pl.kind==='garage'){rect(x+28,y+55,w-56,62,'#edeadf',3);for(let j=0;j<4;j++)rect(x+28,y+64+j*12,w-56,1,'#cccec3');rect(x+62,y+41,w-124,12,'#567061',3);label(pl.id==='g1'?'01':'02',x+w-22,y+38,'#586b53',10);}else if(pl.kind==='home'){for(let j=0;j<3;j++){rect(x+15+j*64,y+37,51,73,'#e8e1d3',3);rect(x+22+j*64,y+45,14,20,'#a4b9b2',2);rect(x+39+j*64,y+76,16,34,'#b2a18e',2);}}else{for(let j=0;j<3;j++)rect(x+20+j*55,y+45,39,36,'#edf0d7',2);rect(x+20,y+89,w-40,10,color,2);label(pl.kind==='cafe'?'CHEZ JO':'DISQUES',x+w/2,y+32,'#6b6659',11);}label(pl.name,pl.door.x,pl.door.y+(pl.door.y<340?31:-25),'#64745b',11);}
-[[40,120],[360,105],[697,185],[1020,126],[47,470],[330,522],[735,505],[1030,550],[340,240],[1030,260],[55,600],[1060,60]].forEach(([x,y])=>tree(x,y));rect(340,276,40,7,'#9f9f83',3);rect(690,400,40,7,'#9f9f83',3);label('QUARTIER DES MUSICIENS',550,625,'#8f9c80',9);
-// Shared activity highlights represent actual concurrent activity, not mere proximity.
-for(const session of liveSessions(world)){const positions=session.participants.map(id=>displayPos.get(id)).filter(Boolean);if(positions.length<2)continue;const minX=Math.min(...positions.map(p=>p.x))-22,maxX=Math.max(...positions.map(p=>p.x))+22,minY=Math.min(...positions.map(p=>p.y))-27,maxY=Math.max(...positions.map(p=>p.y))+9;const color=session.type==='jam'?'#9a83b7':'#649b83';rect(minX,minY,maxX-minX,maxY-minY,color+'26',13);ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(minX,minY,maxX-minX,maxY-minY,13);ctx.stroke();ctx.setLineDash([4,4]);ctx.beginPath();positions.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);const text=session.label+' · '+positions.length,center=(minX+maxX)/2;ctx.font='11px ui-sans-serif, system-ui';const w=Math.min(275,ctx.measureText(text).width+18);rect(center-w/2,minY-24,w,19,'#fffef4eb',5);label(text,center,minY-11,color,10);}
-if($('#links').checked){for(let i=0;i<world.people.length;i++)for(let j=i+1;j<world.people.length;j++){const a=world.people[i],b=world.people[j],r=relationship(world,a,b),r2=relationship(world,b,a);let affinity=(r.affinity+r2.affinity)/2,tension=Math.max(r.tension,r2.tension);if(Math.abs(affinity)<12&&tension<15)continue;const pa=displayPos.get(a.id),pb=displayPos.get(b.id);ctx.strokeStyle=Math.max(r.love,r2.love)>15?'#be7d9caa':tension>25||affinity<0?'#ca866299':'#75977888';ctx.lineWidth=a.id===selected||b.id===selected?2:1;ctx.setLineDash(tension>25?[5,4]:[]);ctx.beginPath();ctx.moveTo(pa.x,pa.y-10);ctx.lineTo(pb.x,pb.y-10);ctx.stroke();ctx.setLineDash([]);}}
-if($('#paths').checked){const p=current(),pos=displayPos.get(p.id);ctx.strokeStyle='#788c6988';ctx.lineWidth=2;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(pos.x,pos.y);p.action?.route.forEach(r=>ctx.lineTo(r.x,r.y));ctx.stroke();ctx.setLineDash([]);}
-screenPositions=[];for(const p of [...world.people].sort((a,b)=>a.y-b.y)){let pos=displayPos.get(p.id),x=pos.x,y=pos.y;const visualTime=performance.now()/1000;if(!reducedEffects){if(p.identity.movement==='nervous')x+=Math.sin(visualTime*12)*.9;else if(p.identity.movement==='flamboyant')y-=Math.abs(Math.sin(visualTime*3))*2;else if(p.identity.movement==='shy')y+=1;else y-=Math.sin(visualTime*1.5)*.5;}let isSelected=p.id===selected,size=isSelected?23:19;ctx.fillStyle='#82916828';ctx.beginPath();ctx.ellipse(x,y+4,16,5,0,0,Math.PI*2);ctx.fill();if(isSelected){ctx.strokeStyle='#476f4e';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+3,22,9,0,0,Math.PI*2);ctx.stroke();}rect(x-size/2,y-size,size,size,p.color,3);rect(x-size/2,y-size,size,5,'#ffffff38',3);rect(x+size/2-5,y-size+4,5,size-4,'#00000015',2);decorateCube(ctx,x,y,size,p);if(isMember(world,p)){rect(x-size/2,y-2,size,3,'#fff8d2');}rect(x-5,y-11,2,2,'#ffffff');rect(x+3,y-11,2,2,'#ffffff');if(p.action){ctx.fillStyle='#f9fbf0ed';ctx.beginPath();ctx.arc(x+17,y-30,10,0,Math.PI*2);ctx.fill();const em=dominantEmotion(p);label(p.action.route.length?'↗':ACTIONS[p.action.key].icon,x+17,y-26,'#66805a',12);if($('#emotional-map').checked&&em.active){rect(x-30,y-42,20,18,'#f9fbf0ed',6);label(EMOTIONS[em.key].icon,x-20,y-29,EMOTIONS[em.key].color,12);}}if(p.togetherId){ctx.strokeStyle='#c797ad';ctx.lineWidth=3;ctx.strokeRect(x-18,y-35,36,38);}if(p.encounterVisual?.until>world.time){ctx.fillStyle=p.encounterVisual.outcome==='conflict'?'#b45f47':'#aa6b93';ctx.fillText(p.encounterVisual.partner,x,y-43);}const tw=ctx.measureText(p.name).width;rect(x-tw/2-6,y+10,tw+12,16,isSelected?'#fffcf4ed':'#f1f5e5cc',3);label(p.name,x,y+21,isSelected?'#365740':'#6f7b62',10);screenPositions.push({id:p.id,x:ox+x*scale,y:oy+(y-9)*scale,r:Math.max(15,size*scale)});}
-const hour=world.time%1440/60;if(hour>=21||hour<6){rect(0,0,1100,670,'#25395426');$('#weather').textContent='☾ Une autre nuit de musique';}else $('#weather').textContent=hour<12?'☀ Un beau matin en banlieue':hour<18?'☀ Le quartier prend son rythme':'◐ La fin de journée s’étire';}
-canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const hits=screenPositions.filter(p=>Math.hypot(p.x-x,p.y-y)<p.r+10).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y));if(hits.length)select(hits[0].id);});
-document.addEventListener('visibilitychange',()=>{tabInactive=document.hidden;playback.budget=0;playback.last=performance.now();updatePositions(world.people,displayPos,{visible:false});save();});window.addEventListener('pagehide',save);
-function filteredJournal(){
- const category=e=>e.session?(['practice','jam','write'].includes(e.key)?'music':e.key==='social'?'relations':'life'):['music','jam','project','song'].includes(e.type)?'music':['social','conflict','support','romance'].includes(e.type)?'relations':e.type==='group'?'groups':['show','booking','season'].includes(e.type)?'shows':'life';
- return journalEntries(world,{raw:rawJournal,filter,selected}).filter(e=>journalTypes.has(category(e))&&!(hideRest&&e.session&&['sleep','relax'].includes(e.key)));
+const canvas = $("#map"),
+  ctx = canvas.getContext("2d");
+let screenPositions = [],
+  displayPos = new Map();
+function rect(x, y, w, h, c, r = 0) {
+  ctx.fillStyle = c;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fill();
 }
-function renderShows(){
- renderTransport();
- replacePreserving('#show-setup',showSetupHTML(world,showPlan,showFeedback));replacePreserving('#season-report',seasonHTML(world));
- const show=world.performance;$('.workspace').classList.toggle('show-layout',!!show&&showingPerformance&&view==='shows');document.body.classList.toggle('show-mode',!!show&&showingPerformance&&view==='shows');$('.stage-shell').classList.toggle('show-finished',show?.status==='finished');if(show?.status==='playing'||liveEvent)showingPerformance=true;const feedback=$('#show-feedback');if(feedback){feedback.hidden=!showFeedback;feedback.innerHTML=showFeedback?`<b>${esc(showFeedback.message)}</b>${showFeedback.refused?.length?`<ul>${showFeedback.refused.map(r=>`<li>${esc(world.people.find(p=>p.id===r.id)?.name)} : ${esc(r.reason)}</li>`).join('')}</ul>`:''}`:'';}$('#performance-wrap').hidden=!show||!showingPerformance;$('#show-setup').hidden=!!show&&showingPerformance;$('#season-report').hidden=!!show&&showingPerformance;$('.topline').hidden=!!show&&showingPerformance;
- if(!show)return;$('#stop-show').hidden=show.status!=='playing';$('#skip-show').hidden=show.status!=='playing';$('#skip-evening').hidden=show.preview||show.status!=='playing';$('#stop-show').textContent=show.preview?'Arrêter l’essai':'Interrompre le show';
- replacePreserving('#show-status',showStatusHTML(world));$('#show-pause').textContent=showReady(show)?'▶ Lancer le show':showPaused?'▶ Reprendre':'Ⅱ Pause';$('#show-pause').disabled=show.status!=='playing';
- replacePreserving('#show-feed',show.events.filter(e=>e.type==='card').map(e=>`<button class="show-history-card" data-inspect-card="${e.id}">${esc(show.actors.find(a=>a.id===e.actorId)?.name)} · ${esc(CARDS[e.cardId].name)}</button>`).join('')||'<p>Le band se prépare. Les cartes arrivent dans leur ordre musical.</p>');
- replacePreserving('#show-explanation',show.events.filter(e=>e.type!=='card').map(e=>`<p data-stable="show-cause-${e.id}"><b>${songSeconds(show,e.tick).toFixed(1)} s</b> · ${esc(e.text)}${e.type==='impact'?` · ${e.touched} touchés, +${e.gain} points de jauges`:''}</p>`).join(''));
- document.body.classList.toggle('reduce-effects',reducedEffects);updateSoundButton();$('#reduced-effects').checked=reducedEffects;
- if(selectedFan){const fan=show.fans.find(f=>f.id===selectedFan);if(fan)$('#fan-detail').textContent=`${fan.name} · aime ${fan.style} · sensible à ${SKILLS[fan.instrument]} · ${round(fan.meter)}/100 · ${EMOTIONS[fan.emotion].label} · ${fan.reacted?'conquis':'encore à toucher'} · réaction : ${({euphoria:'euphorie',emotion:'émotion',trance:'transe'})[fan.reaction]}`;}
- renderLivePresentation(show);
- drawStage($('#stage'),show,{reduced:reducedEffects,selectedFan});
+function label(text, x, y, color = "#586b53", size = 11) {
+  ctx.fillStyle = color;
+  ctx.font = `${size}px ui-sans-serif, system-ui`;
+  ctx.textAlign = "center";
+  ctx.fillText(text, x, y);
 }
-function submit(cmd){const r=command(world,cmd);notify(r.message);render();if(view==='groups')renderGroups();if(view==='shows')renderShows();save();return r;}
-function plannedCommand(type){const prep=resolveShowPlan(world,showPlan);if(type==='book'&&!prep.ready)return {ok:false,message:prep.reason};if(!prep.group)return {ok:false,message:prep.reason};showPlan.songId=showPlan.setlist?.[0]??showPlan.songId;for(const id of showPlan.setlist||[]){if(id===null)continue;const r=command(world,{type:'repertoire',groupId:showPlan.groupId,actorId:showPlan.actorId,songId:id});if(!r.ok)return r;}if(showPlan.songId!==null){const r=command(world,{type:'repertoire',groupId:showPlan.groupId,actorId:showPlan.actorId,songId:showPlan.songId});if(!r.ok)return r;}return command(world,{type:type==='book'&&showPlan.editBookingId?'modifyBooking':type,bookingId:showPlan.editBookingId,...showPlan});}
-function launchPreview(replay=false){if(replay&&liveEvent&&!world.performance?.preview)previewReturn=world.livePreviewReturn=structuredClone(world.performance);const r=replay?command(world,{type:'replay'}):plannedCommand('preview');showFeedback=r;if(!r.ok)notify(r.message);else{clearTimeout(notify.timer);$('#toast').style.display='none';}render();save();if(!r.ok){previewReturn=null;delete world.livePreviewReturn;}if(r.ok){showingPerformance=true;showPaused=true;showClock=null;stagePresentationKey=null;showBudget=0;showSpeed=1;$('#show-speed').value='1';setPlaybackSpeed(playback,playback.speed||1);changeView('shows');$('#main').scrollTop=0;}}
-$('#version').onclick=e=>{e.stopPropagation();window.open('docs/versions.html#v064','_blank','noopener');};
-$('#brand-home').onclick=e=>{e.preventDefault();changeView('map');};
-$('#new-game').onclick=()=>$('#reset').click();
-$('#new-events').onclick=()=>{journalPinnedIds=null;$('#main').scrollTop=0;renderJournal();};
-$('#hide-rest').checked=hideRest;$('#show-archives').checked=showArchives;$('#archive-threshold').value=world.archiveThreshold;
-for(const checkbox of $$('#journal-types input[value]'))checkbox.checked=journalTypes.has(checkbox.value);
-$('#journal-types').onchange=e=>{if(e.target.id==='hide-rest')hideRest=e.target.checked;else if(e.target.checked)journalTypes.add(e.target.value);else journalTypes.delete(e.target.value);journalPinnedIds=null;renderJournal();saveUI();};
-$('#show-archives').onchange=e=>{showArchives=e.target.checked;catalogueLimit=50;renderJournal();renderProfile();saveUI();};
-$('#archive-threshold').onchange=e=>{world.archiveThreshold=clamp(Number(e.target.value));e.target.value=world.archiveThreshold;save();notify('Seuil appliqué aux prochaines chansons. Les anciennes restent conservées.');};
-$('#show-speed').onchange=e=>showSpeed=Number(e.target.value);
-$('#show-pause').onclick=()=>{if(showReady(world.performance)){world.performance.presentationStarted=true;showPaused=false;save();}else showPaused=!showPaused;showBudget=0;renderShows();save();};
-function updateSoundButton(){$('#sound-state').textContent=soundEnabled?'Son : ON':'Son : OFF';$('#sound').setAttribute('aria-pressed',String(soundEnabled));$('#sound').setAttribute('aria-label',soundEnabled?'Couper le son':'Activer le son');}
-$('#sound').onclick=async()=>{soundEnabled=!soundEnabled&&await enableAudio();updateSoundButton();if(soundEnabled)playSound({type:'card',instrument:'keys'});};
-$('#reduced-effects').onchange=e=>{reducedEffects=e.target.checked;document.body.classList.toggle('reduce-effects',reducedEffects);saveUI();};
-$('#stage').onclick=e=>{const show=world.performance;if(!show)return;const {x,y}=stagePoint(e.currentTarget,e.clientX,e.clientY);if(y<220){const index=show.actors.findIndex((a,i)=>{const p=actorPosition(show,i);return Math.hypot(p.x-x,p.y-p.size/2-y)<32;});if(index>=0){inspectActor(show.actors[index].id);return;}}const fan=[...show.fans].sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];if(fan&&Math.hypot(fan.x-x,fan.y-y)<45){selectedFan=fan.id;inspectFan(fan);renderShows();}};
-$('#stage').onkeydown=e=>{if(!world.performance)return;if(e.key==='Enter'&&selectedFan){inspectFan(world.performance.fans.find(f=>f.id===selectedFan));return;}if(!['ArrowRight','ArrowLeft'].includes(e.key))return;e.preventDefault();const fans=world.performance.fans,index=fans.findIndex(f=>f.id===selectedFan);selectedFan=fans[(index+(e.key==='ArrowRight'?1:fans.length-1)+fans.length)%fans.length].id;renderShows();};
-const headerObserver=new ResizeObserver(()=>document.documentElement.style.setProperty('--header-height',$('header').getBoundingClientRect().height+'px'));headerObserver.observe($('header'));document.documentElement.style.setProperty('--header-height',$('header').getBoundingClientRect().height+'px');
-document.addEventListener('change',e=>{
- const el=e.target;
- if(el.id==='show-slot'){showPlan.slotId=el.value;renderShows();}
- if(el.dataset.setSong){showPlan.setlist[Number(el.dataset.setSong)]=el.value==='free'?null:Number(el.value);renderShows();}
- if(el.id==='band-archives'){bandArchives=el.checked;renderGroups();}
- if(el.dataset.bagCustom){const p=world.people.find(p=>p.id===el.dataset.bagCustom);p.bag.custom=el.checked;updateProfile();save();}
- if(el.dataset.bagWeight){const [id,key]=el.dataset.bagWeight.split(':');editBag(world.people.find(p=>p.id===id),key,el.value);updateProfile();save();}
- if(el.dataset.bagLock){const [id,key]=el.dataset.bagLock.split(':'),p=world.people.find(p=>p.id===id);p.bag.locked=el.checked?[...new Set([...p.bag.locked,key])]:p.bag.locked.filter(x=>x!==key);save();}
- if(el.id==='show-group'){showPlan.editBookingId=null;showPlan.setlist=null;showPlan.groupId=el.value;showPlan.songId=undefined;showPlan.members=null;showPlan.actorId=null;showFeedback=null;renderShows();}
- if(el.id==='show-song'){showPlan.songId=el.value==='free'?null:Number(el.value);showFeedback=null;renderShows();}
- if(el.id==='show-opportunity'){showPlan.editBookingId=null;showPlan.opportunityId=el.value;showFeedback=null;renderShows();}
- if(el.id==='show-intention'){showPlan.intention=el.value;renderShows();}
- if(el.dataset.showMember){showPlan.members=el.checked?[...new Set([...showPlan.members,el.dataset.showMember])]:showPlan.members.filter(id=>id!==el.dataset.showMember);renderShows();}
- if(el.name==='deck-card')$('#deck-count').textContent=$$('input[name="deck-card"]:checked').length+' cartes choisies · 8 à 10 requises';
+function tree(x, y, r = 17) {
+  rect(x - 2, y, 4, 17, "#929d76", 2);
+  ctx.fillStyle = "#cbd8b9";
+  ctx.beginPath();
+  ctx.arc(x + 2, y + 5, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#b1c59c";
+  ctx.beginPath();
+  ctx.arc(x - 3, y, r * 0.8, 0, Math.PI * 2);
+  ctx.fill();
+}
+function draw() {
+  let width = canvas.clientWidth,
+    height = canvas.clientHeight,
+    dpr = Math.min(devicePixelRatio || 1, 2);
+  if (
+    canvas.width !== Math.round(width * dpr) ||
+    canvas.height !== Math.round(height * dpr)
+  ) {
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  let scale = Math.min(width / 1100, height / 670),
+    ox = (width - 1100 * scale) / 2,
+    oy = (height - 670 * scale) / 2;
+  ctx.translate(ox, oy);
+  ctx.scale(scale, scale);
+  rect(0, 0, 1100, 670, "#e8ecdc");
+  ctx.fillStyle = "#d9e1cd";
+  for (let i = 0; i < 140; i++) {
+    let x = (i * 137 + 31) % 1100,
+      y = (i * 89 + 71) % 670;
+    rect(x, y, 2, 2, "#d5dec6");
+  }
+  rect(0, 290, 1100, 100, "#ced2c6");
+  rect(0, 310, 1100, 60, "#babeb7");
+  rect(0, 292, 1100, 4, "#eef0e5");
+  rect(0, 384, 1100, 4, "#eef0e5");
+  ctx.strokeStyle = "#e5e6d9";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([18, 20]);
+  ctx.beginPath();
+  ctx.moveTo(0, 340);
+  ctx.lineTo(1100, 340);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  label("R U E   D E S   É R A B L E S", 550, 345, "#909789", 9);
+  for (const pl of PLACES) {
+    const { x, y, w, h, color } = pl;
+    rect(
+      pl.door.x - 15,
+      Math.min(pl.door.y, 290),
+      30,
+      Math.abs(pl.door.y - 290) + (pl.door.y > 340 ? 50 : 0),
+      "#d5dac9",
+    );
+    if (pl.kind === "park") {
+      rect(x - 12, y - 8, w + 24, h + 10, "#d8e3c7", 18);
+      tree(x + 30, y + 35, 27);
+      tree(x + w - 30, y + 40, 23);
+      tree(x + 90, y + 105, 19);
+      rect(x + 112, y + 38, 55, 10, "#a7a188", 3);
+      rect(x + 125, y + 65, 36, 26, "#c4c0a3", 5);
+      label("PARC DES AMPLIS", x + w / 2, y + h + 19, "#6b7d5c", 11);
+      continue;
+    }
+    rect(x + 7, y + 9, w, h, "#b6c1a238", 8);
+    rect(x, y, w, h, color, 7);
+    rect(x, y, w, 20, "#00000012", 7);
+    rect(x + 12, y + 28, w - 24, h - 40, "#ffffff16", 3);
+    if (pl.kind === "garage") {
+      rect(x + 28, y + 55, w - 56, 62, "#edeadf", 3);
+      for (let j = 0; j < 4; j++)
+        rect(x + 28, y + 64 + j * 12, w - 56, 1, "#cccec3");
+      rect(x + 62, y + 41, w - 124, 12, "#567061", 3);
+      label(pl.id === "g1" ? "01" : "02", x + w - 22, y + 38, "#586b53", 10);
+    } else if (pl.kind === "home") {
+      for (let j = 0; j < 3; j++) {
+        rect(x + 15 + j * 64, y + 37, 51, 73, "#e8e1d3", 3);
+        rect(x + 22 + j * 64, y + 45, 14, 20, "#a4b9b2", 2);
+        rect(x + 39 + j * 64, y + 76, 16, 34, "#b2a18e", 2);
+      }
+    } else {
+      for (let j = 0; j < 3; j++)
+        rect(x + 20 + j * 55, y + 45, 39, 36, "#edf0d7", 2);
+      rect(x + 20, y + 89, w - 40, 10, color, 2);
+      label(
+        pl.kind === "cafe" ? "CHEZ JO" : "DISQUES",
+        x + w / 2,
+        y + 32,
+        "#6b6659",
+        11,
+      );
+    }
+    label(
+      pl.name,
+      pl.door.x,
+      pl.door.y + (pl.door.y < 340 ? 31 : -25),
+      "#64745b",
+      11,
+    );
+  }
+  [
+    [40, 120],
+    [360, 105],
+    [697, 185],
+    [1020, 126],
+    [47, 470],
+    [330, 522],
+    [735, 505],
+    [1030, 550],
+    [340, 240],
+    [1030, 260],
+    [55, 600],
+    [1060, 60],
+  ].forEach(([x, y]) => tree(x, y));
+  rect(340, 276, 40, 7, "#9f9f83", 3);
+  rect(690, 400, 40, 7, "#9f9f83", 3);
+  label("QUARTIER DES MUSICIENS", 550, 625, "#8f9c80", 9);
+  // Shared activity highlights represent actual concurrent activity, not mere proximity.
+  for (const session of liveSessions(world)) {
+    const positions = session.participants
+      .map((id) => displayPos.get(id))
+      .filter(Boolean);
+    if (positions.length < 2) continue;
+    const minX = Math.min(...positions.map((p) => p.x)) - 22,
+      maxX = Math.max(...positions.map((p) => p.x)) + 22,
+      minY = Math.min(...positions.map((p) => p.y)) - 27,
+      maxY = Math.max(...positions.map((p) => p.y)) + 9;
+    const color = session.type === "jam" ? "#9a83b7" : "#649b83";
+    rect(minX, minY, maxX - minX, maxY - minY, color + "26", 13);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(minX, minY, maxX - minX, maxY - minY, 13);
+    ctx.stroke();
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    positions.forEach((p, i) =>
+      i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y),
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const text = session.label + " · " + positions.length,
+      center = (minX + maxX) / 2;
+    ctx.font = "11px ui-sans-serif, system-ui";
+    const w = Math.min(275, ctx.measureText(text).width + 18);
+    rect(center - w / 2, minY - 24, w, 19, "#fffef4eb", 5);
+    label(text, center, minY - 11, color, 10);
+  }
+  if ($("#links").checked) {
+    for (let i = 0; i < world.people.length; i++)
+      for (let j = i + 1; j < world.people.length; j++) {
+        const a = world.people[i],
+          b = world.people[j],
+          r = relationship(world, a, b),
+          r2 = relationship(world, b, a);
+        let affinity = (r.affinity + r2.affinity) / 2,
+          tension = Math.max(r.tension, r2.tension);
+        if (Math.abs(affinity) < 12 && tension < 15) continue;
+        const pa = displayPos.get(a.id),
+          pb = displayPos.get(b.id);
+        ctx.strokeStyle =
+          Math.max(r.love, r2.love) > 15
+            ? "#be7d9caa"
+            : tension > 25 || affinity < 0
+              ? "#ca866299"
+              : "#75977888";
+        ctx.lineWidth = a.id === selected || b.id === selected ? 2 : 1;
+        ctx.setLineDash(tension > 25 ? [5, 4] : []);
+        ctx.beginPath();
+        ctx.moveTo(pa.x, pa.y - 10);
+        ctx.lineTo(pb.x, pb.y - 10);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+  }
+  if ($("#paths").checked) {
+    const p = current(),
+      pos = displayPos.get(p.id);
+    ctx.strokeStyle = "#788c6988";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 5]);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    p.action?.route.forEach((r) => ctx.lineTo(r.x, r.y));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  screenPositions = [];
+  for (const p of [...world.people].sort((a, b) => a.y - b.y)) {
+    let pos = displayPos.get(p.id),
+      x = pos.x,
+      y = pos.y;
+    const visualTime = performance.now() / 1000;
+    if (!reducedEffects) {
+      if (p.identity.movement === "nervous")
+        x += Math.sin(visualTime * 12) * 0.9;
+      else if (p.identity.movement === "flamboyant")
+        y -= Math.abs(Math.sin(visualTime * 3)) * 2;
+      else if (p.identity.movement === "shy") y += 1;
+      else y -= Math.sin(visualTime * 1.5) * 0.5;
+    }
+    let isSelected = p.id === selected,
+      size = isSelected ? 23 : 19;
+    ctx.fillStyle = "#82916828";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 4, 16, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (isSelected) {
+      ctx.strokeStyle = "#476f4e";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(x, y + 3, 22, 9, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    rect(x - size / 2, y - size, size, size, p.color, 3);
+    rect(x - size / 2, y - size, size, 5, "#ffffff38", 3);
+    rect(x + size / 2 - 5, y - size + 4, 5, size - 4, "#00000015", 2);
+    decorateCube(ctx, x, y, size, p);
+    if (isMember(world, p)) {
+      rect(x - size / 2, y - 2, size, 3, "#fff8d2");
+    }
+    rect(x - 5, y - 11, 2, 2, "#ffffff");
+    rect(x + 3, y - 11, 2, 2, "#ffffff");
+    if (p.action) {
+      ctx.fillStyle = "#f9fbf0ed";
+      ctx.beginPath();
+      ctx.arc(x + 17, y - 30, 10, 0, Math.PI * 2);
+      ctx.fill();
+      const em = dominantEmotion(p);
+      label(
+        p.action.route.length ? "↗" : ACTIONS[p.action.key].icon,
+        x + 17,
+        y - 26,
+        "#66805a",
+        12,
+      );
+      if ($("#emotional-map").checked && em.active) {
+        rect(x - 30, y - 42, 20, 18, "#f9fbf0ed", 6);
+        label(
+          EMOTIONS[em.key].icon,
+          x - 20,
+          y - 29,
+          EMOTIONS[em.key].color,
+          12,
+        );
+      }
+    }
+    if (p.togetherId) {
+      ctx.strokeStyle = "#c797ad";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x - 18, y - 35, 36, 38);
+    }
+    if (p.encounterVisual?.until > world.time) {
+      ctx.fillStyle =
+        p.encounterVisual.outcome === "conflict" ? "#b45f47" : "#aa6b93";
+      ctx.fillText(p.encounterVisual.partner, x, y - 43);
+    }
+    const tw = ctx.measureText(p.name).width;
+    rect(
+      x - tw / 2 - 6,
+      y + 10,
+      tw + 12,
+      16,
+      isSelected ? "#fffcf4ed" : "#f1f5e5cc",
+      3,
+    );
+    label(p.name, x, y + 21, isSelected ? "#365740" : "#6f7b62", 10);
+    screenPositions.push({
+      id: p.id,
+      x: ox + x * scale,
+      y: oy + (y - 9) * scale,
+      r: Math.max(15, size * scale),
+    });
+  }
+  const hour = (world.time % 1440) / 60;
+  if (hour >= 21 || hour < 6) {
+    rect(0, 0, 1100, 670, "#25395426");
+    $("#weather").textContent = "☾ Une autre nuit de musique";
+  } else
+    $("#weather").textContent =
+      hour < 12
+        ? "☀ Un beau matin en banlieue"
+        : hour < 18
+          ? "☀ Le quartier prend son rythme"
+          : "◐ La fin de journée s’étire";
+}
+canvas.addEventListener("click", (e) => {
+  const r = canvas.getBoundingClientRect(),
+    x = e.clientX - r.left,
+    y = e.clientY - r.top;
+  const hits = screenPositions
+    .filter((p) => Math.hypot(p.x - x, p.y - y) < p.r + 10)
+    .sort(
+      (a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y),
+    );
+  if (hits.length) select(hits[0].id);
 });
-document.addEventListener('click',e=>{
- const el=e.target.closest('button');if(!el)return;
- if(el.dataset.groupSelect){selectedGroup=el.dataset.groupSelect;renderGroups();}
- if(el.dataset.inviteBand)modal(invitationHTML(world,el.dataset.inviteBand));
- if(el.dataset.v6AddSong||el.dataset.v6RemoveSong){const [groupId,songId]=(el.dataset.v6AddSong||el.dataset.v6RemoveSong).split(':'),g=world.groups.find(g=>g.id===groupId);submit({type:'repertoire',actorId:g.members[0],groupId,songId:Number(songId),remove:!!el.dataset.v6RemoveSong});}
- if(el.dataset.bagReset){world.people.find(p=>p.id===el.dataset.bagReset).bag.custom=false;updateProfile();save();}
- if(el.dataset.moduleAction){changeModule(el.dataset.module,el.dataset.moduleAction);renderProfile(true);}
- if(el.hasAttribute('data-reset-layout')){resetLayout();renderProfile(true);}
- if(el.dataset.personJournal){selected=el.dataset.personJournal;filter='selected';$('#event-filter').value='selected';changeView('journal');}
- if(el.dataset.stageActor)inspectActor(el.dataset.stageActor);
- if(el.dataset.stageDeck)inspectShow(deckInspectionHTML(world.performance,el.dataset.stageDeck));
- if(el.dataset.inspectCard)inspectShow(cardInspectionHTML(world.performance,el.dataset.inspectCard));
- if(el.id==='start-show')$('#show-pause').click();
- if(el.id==='set-add'){showPlan.setlist.push(null);renderShows();}
- if(el.dataset.setRemove!==undefined){showPlan.setlist.splice(Number(el.dataset.setRemove),1);renderShows();}
- if(el.dataset.setUp!==undefined){const i=Number(el.dataset.setUp);if(i>0)[showPlan.setlist[i-1],showPlan.setlist[i]]=[showPlan.setlist[i],showPlan.setlist[i-1]];renderShows();}
- if(el.id==='skip-show'){skipShow(world);renderShows();save();}
- if(el.id==='skip-evening'){skipShow(world,true);finishLive();renderShows();save();}
- if(el.id==='next-slot'){restorePreview();if(nextSlot(world)){showPaused=false;showBudget=0;lastShowId=null;showSpeed=1;$('#show-speed').value='1';}else finishLive();renderShows();save();}
- if(el.dataset.historyReplay){if(liveEvent){notify('Termine la soirée avant de revoir un ancien show.');return;}const r=world.showHistory.find(r=>r.id===el.dataset.historyReplay);if(r?.trace){world.performance=JSON.parse(JSON.stringify(r.trace));world.performance.preview=true;world.performance.applied=true;showingPerformance=true;launchPreview(true);}}
- if(el.dataset.avatar){submit({type:'avatar',actorId:el.dataset.avatar});showPlan.groupId=null;showPlan.members=null;if(view==='shows')renderShows();}
- if(el.hasAttribute('data-start-band'))modal(invitationHTML(world));
- if(el.dataset.inviteGroup)modal(invitationHTML(world,el.dataset.inviteGroup));
- if(el.dataset.invite){const [targetId,groupId]=el.dataset.invite.split(':');const r=submit({type:'invite',targetId,groupId:groupId||null});if(r.ok)$('#dialog').close();else replacePreserving('#dialog-content',invitationHTML(world,groupId||null));}
- if(el.dataset.deck){const p=world.people.find(p=>p.id===el.dataset.deck);if(p)modal(deckEditorHTML(p));}
- if(el.dataset.saveDeck){const r=submit({type:'deck',actorId:el.dataset.saveDeck,cards:$$('input[name="deck-card"]:checked').map(c=>c.value)});if(r.ok)$('#dialog').close();}
- if(el.dataset.excess)submit({type:'excess',actorId:el.dataset.excess});
- if(el.dataset.rehearse){const [groupId,songId]=el.dataset.rehearse.split(':'),g=world.groups.find(g=>g.id===groupId);submit({type:'rehearse',actorId:g?.members[0],groupId,songId:songId?Number(songId):g?.repertoire[0]?.songId??null});}
- if(el.dataset.addSong){const select=$(`select[data-repertoire-select="${el.dataset.addSong}"]`);if(select)submit({type:'repertoire',groupId:el.dataset.addSong,songId:Number(select.value)});}
- if(el.dataset.removeSong){const [groupId,songId]=el.dataset.removeSong.split(':');submit({type:'repertoire',groupId,songId:Number(songId),remove:true});}
- if(el.hasAttribute('data-open-shows')){if(el.dataset.openShows){showPlan.editBookingId=null;showPlan.groupId=el.dataset.openShows;showPlan.actorId=null;showPlan.members=null;showPlan.songId=undefined;showPlan.setlist=null;}showFeedback=null;showingPerformance=world.performance?.status==='playing'||liveEvent;changeView('shows');}
- if(el.dataset.opportunity){if(view!=='shows')changeView('shows');const o=world.season.opportunities.find(o=>o.id===el.dataset.opportunity);showingPerformance=false;if(o.time>world.time&&['open','booked'].includes(o.status)){showPlan.editBookingId=null;showPlan.opportunityId=o.id;showFeedback=null;}else{const played=world.showHistory.filter(r=>r.opportunityId===o.id&&r.time>=world.season.started);showFeedback={message:played.length?played.map(r=>`${r.groupName} : ${r.conquered}/${r.total} fans, accueil ${r.score}/100.`).join(' '):'Cette date est passée. Choisis une des quatre prochaines dates.'};}renderShows();}
- if(el.dataset.editBooking){const b=world.bookings.find(b=>b.id===el.dataset.editBooking);if(b){Object.assign(showPlan,{editBookingId:b.id,slotId:b.slotId,setlist:[...(b.setlist||[b.songId])],groupId:b.groupId,songId:b.songId,actorId:b.members[0],opportunityId:b.opportunityId,intention:b.intention,members:[...b.members]});showFeedback={message:'La formation confirmée est affichée. Modifie la setlist et reconfirme; un échec conserve la réservation précédente.'};showingPerformance=false;renderShows();}}
- if(el.id==='book-show'){const r=plannedCommand('book');showFeedback=r;notify(r.message);renderShows();if(r.ok){showPlan.editBookingId=null;$('#main').scrollTop=0;}save();}
- if(el.id==='planned-rehearsal'){const r=plannedCommand('rehearse');showFeedback=r;notify(r.message);if(r.ok){setPlaybackSpeed(playback,playback.resumeSpeed);changeView('map');}else renderShows();save();}
- if(el.id==='preview-show')launchPreview();
- if(el.id==='last-show'){showingPerformance=true;changeView('shows');$('#main').scrollTop=0;}
- if(el.hasAttribute('data-return-preparation')){if(restorePreview()){renderShows();return;}if(liveEvent&&!nextSlot(world))finishLive();showingPerformance=false;changeView('shows');$('#main').scrollTop=0;}
- if(el.hasAttribute('data-close-preparation')){changeView('map');setSpeed(playback.resumeSpeed);}
- if(el.id==='stop-show'){if(restorePreview()){showPaused=true;renderShows();save();return;}const interrupted=world.performance,actorId=world.performance?.actors[0]?.id,r=command(world,{type:'cancelPerformance',actorId});showFeedback=r;showingPerformance=false;showPaused=false;showBudget=0;if(liveEvent){if(!nextSlot(world,interrupted))finishLive();else{showingPerformance=true;showSpeed=1;$('#show-speed').value='1';}}else setPlaybackSpeed(playback,0);renderShows();save();}
- if(el.hasAttribute('data-season-bilan')){showingPerformance=false;changeView('shows');$('#main').scrollTop=0;}
- if(el.id==='replay-show')launchPreview(true);
- if(el.dataset.advanceBooking){const r=advanceToBooking(world,el.dataset.advanceBooking);showFeedback=r;notify(r.message);showPaused=false;showBudget=0;setPlaybackSpeed(playback,world.performance?.status==='playing'?1:0);render();changeView('shows');if(world.performance?.status==='playing')$('#main').scrollTop=0;save();}
- if(el.dataset.cancelBooking){const b=world.bookings.find(b=>b.id===el.dataset.cancelBooking);if(b){showFeedback=command(world,{type:'cancelBooking',bookingId:b.id,actorId:b.members.find(id=>world.people.some(p=>p.id===id))});Object.assign(showPlan,{groupId:b.groupId,songId:b.songId,actorId:b.members[0],opportunityId:b.opportunityId,intention:b.intention,members:[...b.members]});renderShows();save();}}
- if(el.dataset.archiveSong){submit({type:'archive',songId:Number(el.dataset.archiveSong),restore:el.dataset.restoreSong==='yes'});renderJournal();}
- if(el.dataset.revive){const g=world.groups.find(g=>g.id===el.dataset.revive);submit({type:'revive',groupId:el.dataset.revive,actorId:g?.members.includes(world.playerId)?world.playerId:g?.members[0]});}
- if(el.hasAttribute('data-toggle-archives')){showArchives=!showArchives;$('#show-archives').checked=showArchives;renderProfile();if(view==='journal')renderJournal();saveUI();}
- if(el.id==='more-songs'){catalogueLimit+=50;renderJournal();}
- if(el.id==='more-profile-songs'){profileSongLimit+=30;renderProfileSongs(current());}
- if(el.hasAttribute('data-new-season')){showingPerformance=false;const r=newSeason(world);showFeedback=r;notify(r.message);showPlan.opportunityId=null;setPlaybackSpeed(playback,0);renderShows();save();}
- if(el.id==='profile-customize'){const active=$('#inspector').classList.toggle('customizing');el.setAttribute('aria-pressed',String(active));el.textContent=active?'Terminer':'Organiser';}
- if(el.id==='profile-wide')$('#inspector').classList.toggle('expanded');
+document.addEventListener("visibilitychange", () => {
+  tabInactive = document.hidden;
+  playback.budget = 0;
+  playback.last = performance.now();
+  updatePositions(world.people, displayPos, { visible: false });
+  save();
+});
+window.addEventListener("pagehide", save);
+function filteredJournal() {
+  const category = (e) =>
+    e.session
+      ? ["practice", "jam", "write"].includes(e.key)
+        ? "music"
+        : e.key === "social"
+          ? "relations"
+          : "life"
+      : ["music", "jam", "project", "song"].includes(e.type)
+        ? "music"
+        : ["social", "conflict", "support", "romance"].includes(e.type)
+          ? "relations"
+          : e.type === "group"
+            ? "groups"
+            : ["show", "booking", "season"].includes(e.type)
+              ? "shows"
+              : "life";
+  return journalEntries(world, { raw: rawJournal, filter, selected }).filter(
+    (e) =>
+      journalTypes.has(category(e)) &&
+      !(hideRest && e.session && ["sleep", "relax"].includes(e.key)),
+  );
+}
+function renderShows() {
+  renderTransport();
+  replacePreserving(
+    "#show-setup",
+    showSetupHTML(world, showPlan, showFeedback),
+  );
+  replacePreserving("#season-report", seasonHTML(world));
+  const show = world.performance;
+  $(".workspace").classList.toggle(
+    "show-layout",
+    !!show && showingPerformance && view === "shows",
+  );
+  document.body.classList.toggle(
+    "show-mode",
+    !!show && showingPerformance && view === "shows",
+  );
+  $(".stage-shell").classList.toggle(
+    "show-finished",
+    show?.status === "finished",
+  );
+  if (show?.status === "playing" || liveEvent) showingPerformance = true;
+  const feedback = $("#show-feedback");
+  if (feedback) {
+    feedback.hidden = !showFeedback;
+    feedback.innerHTML = showFeedback
+      ? `<b>${esc(showFeedback.message)}</b>${showFeedback.refused?.length ? `<ul>${showFeedback.refused.map((r) => `<li>${esc(world.people.find((p) => p.id === r.id)?.name)} : ${esc(r.reason)}</li>`).join("")}</ul>` : ""}`
+      : "";
+  }
+  $("#performance-wrap").hidden = !show || !showingPerformance;
+  $("#show-setup").hidden = !!show && showingPerformance;
+  $("#season-report").hidden = !!show && showingPerformance;
+  $(".topline").hidden = !!show && showingPerformance;
+  if (!show) return;
+  $("#stop-show").hidden = show.status !== "playing";
+  $("#skip-show").hidden = show.status !== "playing";
+  $("#skip-evening").hidden = show.preview || show.status !== "playing";
+  $("#stop-show").textContent = show.preview
+    ? "Arrêter l’essai"
+    : "Interrompre le show";
+  replacePreserving("#show-status", showStatusHTML(world));
+  $("#show-pause").textContent = showReady(show)
+    ? "▶ Lancer le show"
+    : showPaused
+      ? "▶ Reprendre"
+      : "Ⅱ Pause";
+  $("#show-pause").disabled = show.status !== "playing";
+  replacePreserving(
+    "#show-feed",
+    show.events
+      .filter((e) => e.type === "card")
+      .map(
+        (e) =>
+          `<button class="show-history-card" data-inspect-card="${e.id}">${esc(show.actors.find((a) => a.id === e.actorId)?.name)} · ${esc(CARDS[e.cardId].name)}</button>`,
+      )
+      .join("") ||
+      "<p>Le band se prépare. Les cartes arrivent dans leur ordre musical.</p>",
+  );
+  replacePreserving(
+    "#show-explanation",
+    show.events
+      .filter((e) => e.type !== "card")
+      .map(
+        (e) =>
+          `<p data-stable="show-cause-${e.id}"><b>${songSeconds(show, e.tick).toFixed(1)} s</b> · ${esc(e.text)}${e.type === "impact" ? ` · ${e.touched} touchés, +${e.gain} points de jauges` : ""}</p>`,
+      )
+      .join(""),
+  );
+  document.body.classList.toggle("reduce-effects", reducedEffects);
+  updateSoundButton();
+  $("#reduced-effects").checked = reducedEffects;
+  if (selectedFan) {
+    const fan = show.fans.find((f) => f.id === selectedFan);
+    if (fan)
+      $("#fan-detail").textContent =
+        `${fan.name} · aime ${fan.style} · sensible à ${SKILLS[fan.instrument]} · ${round(fan.meter)}/100 · ${emotionDefinition(fan.emotion).label} · ${fan.reacted ? "conquis" : "encore à toucher"} · réaction : ${{ euphoria: "euphorie", emotion: "émotion", trance: "transe" }[fan.reaction]}`;
+  }
+  renderLivePresentation(show);
+  drawStage($("#stage"), show, { reduced: reducedEffects, selectedFan });
+}
+function submit(cmd) {
+  const r = command(world, cmd);
+  notify(r.message);
+  render();
+  if (view === "groups") renderGroups();
+  if (view === "shows") renderShows();
+  save();
+  return r;
+}
+function plannedCommand(type) {
+  const prep = resolveShowPlan(world, showPlan);
+  if (type === "book" && !prep.ready)
+    return { ok: false, message: prep.reason };
+  if (!prep.group) return { ok: false, message: prep.reason };
+  showPlan.songId = showPlan.setlist?.[0] ?? showPlan.songId;
+  for (const id of showPlan.setlist || []) {
+    if (id === null) continue;
+    const r = command(world, {
+      type: "repertoire",
+      groupId: showPlan.groupId,
+      actorId: showPlan.actorId,
+      songId: id,
+    });
+    if (!r.ok) return r;
+  }
+  if (showPlan.songId !== null) {
+    const r = command(world, {
+      type: "repertoire",
+      groupId: showPlan.groupId,
+      actorId: showPlan.actorId,
+      songId: showPlan.songId,
+    });
+    if (!r.ok) return r;
+  }
+  return command(world, {
+    type: type === "book" && showPlan.editBookingId ? "modifyBooking" : type,
+    bookingId: showPlan.editBookingId,
+    ...showPlan,
+  });
+}
+function launchPreview(replay = false) {
+  if (replay && liveEvent && !world.performance?.preview)
+    previewReturn = world.livePreviewReturn = structuredClone(
+      world.performance,
+    );
+  const r = replay
+    ? command(world, { type: "replay" })
+    : plannedCommand("preview");
+  showFeedback = r;
+  if (!r.ok) notify(r.message);
+  else {
+    clearTimeout(notify.timer);
+    $("#toast").style.display = "none";
+  }
+  render();
+  save();
+  if (!r.ok) {
+    previewReturn = null;
+    delete world.livePreviewReturn;
+  }
+  if (r.ok) {
+    showingPerformance = true;
+    showPaused = true;
+    showClock = null;
+    stagePresentationKey = null;
+    showBudget = 0;
+    showSpeed = 1;
+    $("#show-speed").value = "1";
+    setPlaybackSpeed(playback, playback.speed || 1);
+    changeView("shows");
+    $("#main").scrollTop = 0;
+  }
+}
+$("#version").onclick = (e) => {
+  e.stopPropagation();
+  window.open("docs/versions.html#v064", "_blank", "noopener");
+};
+$("#brand-home").onclick = (e) => {
+  e.preventDefault();
+  changeView("map");
+};
+$("#new-game").onclick = () => $("#reset").click();
+$("#new-events").onclick = () => {
+  journalPinnedIds = null;
+  $("#main").scrollTop = 0;
+  renderJournal();
+};
+$("#hide-rest").checked = hideRest;
+$("#show-archives").checked = showArchives;
+$("#archive-threshold").value = world.archiveThreshold;
+for (const checkbox of $$("#journal-types input[value]"))
+  checkbox.checked = journalTypes.has(checkbox.value);
+$("#journal-types").onchange = (e) => {
+  if (e.target.id === "hide-rest") hideRest = e.target.checked;
+  else if (e.target.checked) journalTypes.add(e.target.value);
+  else journalTypes.delete(e.target.value);
+  journalPinnedIds = null;
+  renderJournal();
+  saveUI();
+};
+$("#show-archives").onchange = (e) => {
+  showArchives = e.target.checked;
+  catalogueLimit = 50;
+  renderJournal();
+  renderProfile();
+  saveUI();
+};
+$("#archive-threshold").onchange = (e) => {
+  world.archiveThreshold = clamp(Number(e.target.value));
+  e.target.value = world.archiveThreshold;
+  save();
+  notify(
+    "Seuil appliqué aux prochaines chansons. Les anciennes restent conservées.",
+  );
+};
+$("#show-speed").onchange = (e) => (showSpeed = Number(e.target.value));
+$("#show-pause").onclick = () => {
+  if (showReady(world.performance)) {
+    world.performance.presentationStarted = true;
+    showPaused = false;
+    save();
+  } else showPaused = !showPaused;
+  showBudget = 0;
+  renderShows();
+  save();
+};
+function updateSoundButton() {
+  $("#sound-state").textContent = soundEnabled ? "Son : ON" : "Son : OFF";
+  $("#sound").setAttribute("aria-pressed", String(soundEnabled));
+  $("#sound").setAttribute(
+    "aria-label",
+    soundEnabled ? "Couper le son" : "Activer le son",
+  );
+}
+$("#sound").onclick = async () => {
+  soundEnabled = !soundEnabled && (await enableAudio());
+  updateSoundButton();
+  if (soundEnabled) playSound({ type: "card", instrument: "keys" });
+};
+$("#reduced-effects").onchange = (e) => {
+  reducedEffects = e.target.checked;
+  document.body.classList.toggle("reduce-effects", reducedEffects);
+  saveUI();
+};
+$("#stage").onclick = (e) => {
+  const show = world.performance;
+  if (!show) return;
+  const { x, y } = stagePoint(e.currentTarget, e.clientX, e.clientY);
+  if (y < 220) {
+    const index = show.actors.findIndex((a, i) => {
+      const p = actorPosition(show, i);
+      return Math.hypot(p.x - x, p.y - p.size / 2 - y) < 32;
+    });
+    if (index >= 0) {
+      inspectActor(show.actors[index].id);
+      return;
+    }
+  }
+  const fan = [...show.fans].sort(
+    (a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y),
+  )[0];
+  if (fan && Math.hypot(fan.x - x, fan.y - y) < 45) {
+    selectedFan = fan.id;
+    inspectFan(fan);
+    renderShows();
+  }
+};
+$("#stage").onkeydown = (e) => {
+  if (!world.performance) return;
+  if (e.key === "Enter" && selectedFan) {
+    inspectFan(world.performance.fans.find((f) => f.id === selectedFan));
+    return;
+  }
+  if (!["ArrowRight", "ArrowLeft"].includes(e.key)) return;
+  e.preventDefault();
+  const fans = world.performance.fans,
+    index = fans.findIndex((f) => f.id === selectedFan);
+  selectedFan =
+    fans[
+      (index + (e.key === "ArrowRight" ? 1 : fans.length - 1) + fans.length) %
+        fans.length
+    ].id;
+  renderShows();
+};
+const headerObserver = new ResizeObserver(() =>
+  document.documentElement.style.setProperty(
+    "--header-height",
+    $("header").getBoundingClientRect().height + "px",
+  ),
+);
+headerObserver.observe($("header"));
+document.documentElement.style.setProperty(
+  "--header-height",
+  $("header").getBoundingClientRect().height + "px",
+);
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.id === "show-slot") {
+    showPlan.slotId = el.value;
+    renderShows();
+  }
+  if (el.dataset.setSong) {
+    showPlan.setlist[Number(el.dataset.setSong)] =
+      el.value === "free" ? null : Number(el.value);
+    renderShows();
+  }
+  if (el.id === "band-archives") {
+    bandArchives = el.checked;
+    renderGroups();
+  }
+  if (el.dataset.bagWeight) {
+    const [id, key] = el.dataset.bagWeight.split(":");
+    if (
+      !editBag(
+        world.people.find((p) => p.id === id),
+        key,
+        el.value,
+      )
+    )
+      notify(
+        "Quantité entière de 0 à 100; le sac doit garder au moins un jeton.",
+      );
+    updateProfile();
+    save();
+  }
+  if (el.id === "show-group") {
+    showPlan.editBookingId = null;
+    showPlan.setlist = null;
+    showPlan.groupId = el.value;
+    showPlan.songId = undefined;
+    showPlan.members = null;
+    showPlan.actorId = null;
+    showFeedback = null;
+    renderShows();
+  }
+  if (el.id === "show-song") {
+    showPlan.songId = el.value === "free" ? null : Number(el.value);
+    showFeedback = null;
+    renderShows();
+  }
+  if (el.id === "show-opportunity") {
+    showPlan.editBookingId = null;
+    showPlan.opportunityId = el.value;
+    showFeedback = null;
+    renderShows();
+  }
+  if (el.id === "show-intention") {
+    showPlan.intention = el.value;
+    renderShows();
+  }
+  if (el.dataset.showMember) {
+    showPlan.members = el.checked
+      ? [...new Set([...showPlan.members, el.dataset.showMember])]
+      : showPlan.members.filter((id) => id !== el.dataset.showMember);
+    renderShows();
+  }
+  if (el.name === "deck-card")
+    $("#deck-count").textContent =
+      $$('input[name="deck-card"]:checked').length +
+      " cartes choisies · 8 à 10 requises";
+});
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("button");
+  if (!el) return;
+  if (el.dataset.groupSelect) {
+    selectedGroup = el.dataset.groupSelect;
+    renderGroups();
+  }
+  if (el.dataset.inviteBand)
+    modal(invitationHTML(world, el.dataset.inviteBand));
+  if (el.dataset.v6AddSong || el.dataset.v6RemoveSong) {
+    const [groupId, songId] = (
+        el.dataset.v6AddSong || el.dataset.v6RemoveSong
+      ).split(":"),
+      g = world.groups.find((g) => g.id === groupId);
+    submit({
+      type: "repertoire",
+      actorId: g.members[0],
+      groupId,
+      songId: Number(songId),
+      remove: !!el.dataset.v6RemoveSong,
+    });
+  }
+  if (el.dataset.moduleAction) {
+    changeModule(el.dataset.module, el.dataset.moduleAction);
+    renderProfile(true);
+  }
+  if (el.hasAttribute("data-reset-layout")) {
+    resetLayout();
+    renderProfile(true);
+  }
+  if (el.dataset.personJournal) {
+    selected = el.dataset.personJournal;
+    filter = "selected";
+    $("#event-filter").value = "selected";
+    changeView("journal");
+  }
+  if (el.dataset.stageActor) inspectActor(el.dataset.stageActor);
+  if (el.dataset.stageDeck)
+    inspectShow(deckInspectionHTML(world.performance, el.dataset.stageDeck));
+  if (el.dataset.inspectCard)
+    inspectShow(cardInspectionHTML(world.performance, el.dataset.inspectCard));
+  if (el.id === "start-show") $("#show-pause").click();
+  if (el.id === "set-add") {
+    showPlan.setlist.push(null);
+    renderShows();
+  }
+  if (el.dataset.setRemove !== undefined) {
+    showPlan.setlist.splice(Number(el.dataset.setRemove), 1);
+    renderShows();
+  }
+  if (el.dataset.setUp !== undefined) {
+    const i = Number(el.dataset.setUp);
+    if (i > 0)
+      [showPlan.setlist[i - 1], showPlan.setlist[i]] = [
+        showPlan.setlist[i],
+        showPlan.setlist[i - 1],
+      ];
+    renderShows();
+  }
+  if (el.id === "skip-show") {
+    skipShow(world);
+    renderShows();
+    save();
+  }
+  if (el.id === "skip-evening") {
+    skipShow(world, true);
+    finishLive();
+    renderShows();
+    save();
+  }
+  if (el.id === "next-slot") {
+    restorePreview();
+    if (nextSlot(world)) {
+      showPaused = false;
+      showBudget = 0;
+      lastShowId = null;
+      showSpeed = 1;
+      $("#show-speed").value = "1";
+    } else finishLive();
+    renderShows();
+    save();
+  }
+  if (el.dataset.historyReplay) {
+    if (liveEvent) {
+      notify("Termine la soirée avant de revoir un ancien show.");
+      return;
+    }
+    const r = world.showHistory.find((r) => r.id === el.dataset.historyReplay);
+    if (r?.trace) {
+      world.performance = JSON.parse(JSON.stringify(r.trace));
+      world.performance.preview = true;
+      world.performance.applied = true;
+      showingPerformance = true;
+      launchPreview(true);
+    }
+  }
+  if (el.dataset.avatar) {
+    submit({ type: "avatar", actorId: el.dataset.avatar });
+    showPlan.groupId = null;
+    showPlan.members = null;
+    if (view === "shows") renderShows();
+  }
+  if (el.hasAttribute("data-start-band")) modal(invitationHTML(world));
+  if (el.dataset.inviteGroup)
+    modal(invitationHTML(world, el.dataset.inviteGroup));
+  if (el.dataset.invite) {
+    const [targetId, groupId] = el.dataset.invite.split(":");
+    const r = submit({ type: "invite", targetId, groupId: groupId || null });
+    if (r.ok) $("#dialog").close();
+    else
+      replacePreserving(
+        "#dialog-content",
+        invitationHTML(world, groupId || null),
+      );
+  }
+  if (el.dataset.deck) {
+    const p = world.people.find((p) => p.id === el.dataset.deck);
+    if (p) modal(deckEditorHTML(p));
+  }
+  if (el.dataset.saveDeck) {
+    const r = submit({
+      type: "deck",
+      actorId: el.dataset.saveDeck,
+      cards: $$('input[name="deck-card"]:checked').map((c) => c.value),
+    });
+    if (r.ok) $("#dialog").close();
+  }
+  if (el.dataset.excess) submit({ type: "excess", actorId: el.dataset.excess });
+  if (el.dataset.rehearse) {
+    const [groupId, songId] = el.dataset.rehearse.split(":"),
+      g = world.groups.find((g) => g.id === groupId);
+    submit({
+      type: "rehearse",
+      actorId: g?.members[0],
+      groupId,
+      songId: songId ? Number(songId) : (g?.repertoire[0]?.songId ?? null),
+    });
+  }
+  if (el.dataset.addSong) {
+    const select = $(`select[data-repertoire-select="${el.dataset.addSong}"]`);
+    if (select)
+      submit({
+        type: "repertoire",
+        groupId: el.dataset.addSong,
+        songId: Number(select.value),
+      });
+  }
+  if (el.dataset.removeSong) {
+    const [groupId, songId] = el.dataset.removeSong.split(":");
+    submit({
+      type: "repertoire",
+      groupId,
+      songId: Number(songId),
+      remove: true,
+    });
+  }
+  if (el.hasAttribute("data-open-shows")) {
+    if (el.dataset.openShows) {
+      showPlan.editBookingId = null;
+      showPlan.groupId = el.dataset.openShows;
+      showPlan.actorId = null;
+      showPlan.members = null;
+      showPlan.songId = undefined;
+      showPlan.setlist = null;
+    }
+    showFeedback = null;
+    showingPerformance = world.performance?.status === "playing" || liveEvent;
+    changeView("shows");
+  }
+  if (el.dataset.opportunity) {
+    if (view !== "shows") changeView("shows");
+    const o = world.season.opportunities.find(
+      (o) => o.id === el.dataset.opportunity,
+    );
+    showingPerformance = false;
+    if (o.time > world.time && ["open", "booked"].includes(o.status)) {
+      showPlan.editBookingId = null;
+      showPlan.opportunityId = o.id;
+      showFeedback = null;
+    } else {
+      const played = world.showHistory.filter(
+        (r) => r.opportunityId === o.id && r.time >= world.season.started,
+      );
+      showFeedback = {
+        message: played.length
+          ? played
+              .map(
+                (r) =>
+                  `${r.groupName} : ${r.conquered}/${r.total} fans, accueil ${r.score}/100.`,
+              )
+              .join(" ")
+          : "Cette date est passée. Choisis une des quatre prochaines dates.",
+      };
+    }
+    renderShows();
+  }
+  if (el.dataset.editBooking) {
+    const b = world.bookings.find((b) => b.id === el.dataset.editBooking);
+    if (b) {
+      Object.assign(showPlan, {
+        editBookingId: b.id,
+        slotId: b.slotId,
+        setlist: [...(b.setlist || [b.songId])],
+        groupId: b.groupId,
+        songId: b.songId,
+        actorId: b.members[0],
+        opportunityId: b.opportunityId,
+        intention: b.intention,
+        members: [...b.members],
+      });
+      showFeedback = {
+        message:
+          "La formation confirmée est affichée. Modifie la setlist et reconfirme; un échec conserve la réservation précédente.",
+      };
+      showingPerformance = false;
+      renderShows();
+    }
+  }
+  if (el.id === "book-show") {
+    const r = plannedCommand("book");
+    showFeedback = r;
+    notify(r.message);
+    renderShows();
+    if (r.ok) {
+      showPlan.editBookingId = null;
+      $("#main").scrollTop = 0;
+    }
+    save();
+  }
+  if (el.id === "planned-rehearsal") {
+    const r = plannedCommand("rehearse");
+    showFeedback = r;
+    notify(r.message);
+    if (r.ok) {
+      setPlaybackSpeed(playback, playback.resumeSpeed);
+      changeView("map");
+    } else renderShows();
+    save();
+  }
+  if (el.id === "preview-show") launchPreview();
+  if (el.id === "last-show") {
+    showingPerformance = true;
+    changeView("shows");
+    $("#main").scrollTop = 0;
+  }
+  if (el.hasAttribute("data-return-preparation")) {
+    if (restorePreview()) {
+      renderShows();
+      return;
+    }
+    if (liveEvent && !nextSlot(world)) finishLive();
+    showingPerformance = false;
+    changeView("shows");
+    $("#main").scrollTop = 0;
+  }
+  if (el.hasAttribute("data-close-preparation")) {
+    changeView("map");
+    setSpeed(playback.resumeSpeed);
+  }
+  if (el.id === "stop-show") {
+    if (restorePreview()) {
+      showPaused = true;
+      renderShows();
+      save();
+      return;
+    }
+    const interrupted = world.performance,
+      actorId = world.performance?.actors[0]?.id,
+      r = command(world, { type: "cancelPerformance", actorId });
+    showFeedback = r;
+    showingPerformance = false;
+    showPaused = false;
+    showBudget = 0;
+    if (liveEvent) {
+      if (!nextSlot(world, interrupted)) finishLive();
+      else {
+        showingPerformance = true;
+        showSpeed = 1;
+        $("#show-speed").value = "1";
+      }
+    } else setPlaybackSpeed(playback, 0);
+    renderShows();
+    save();
+  }
+  if (el.hasAttribute("data-season-bilan")) {
+    showingPerformance = false;
+    changeView("shows");
+    $("#main").scrollTop = 0;
+  }
+  if (el.id === "replay-show") launchPreview(true);
+  if (el.dataset.advanceBooking) {
+    const r = advanceToBooking(world, el.dataset.advanceBooking);
+    showFeedback = r;
+    notify(r.message);
+    showPaused = false;
+    showBudget = 0;
+    setPlaybackSpeed(playback, world.performance?.status === "playing" ? 1 : 0);
+    render();
+    changeView("shows");
+    if (world.performance?.status === "playing") $("#main").scrollTop = 0;
+    save();
+  }
+  if (el.dataset.cancelBooking) {
+    const b = world.bookings.find((b) => b.id === el.dataset.cancelBooking);
+    if (b) {
+      showFeedback = command(world, {
+        type: "cancelBooking",
+        bookingId: b.id,
+        actorId: b.members.find((id) => world.people.some((p) => p.id === id)),
+      });
+      Object.assign(showPlan, {
+        groupId: b.groupId,
+        songId: b.songId,
+        actorId: b.members[0],
+        opportunityId: b.opportunityId,
+        intention: b.intention,
+        members: [...b.members],
+      });
+      renderShows();
+      save();
+    }
+  }
+  if (el.dataset.archiveSong) {
+    submit({
+      type: "archive",
+      songId: Number(el.dataset.archiveSong),
+      restore: el.dataset.restoreSong === "yes",
+    });
+    renderJournal();
+  }
+  if (el.dataset.revive) {
+    const g = world.groups.find((g) => g.id === el.dataset.revive);
+    submit({
+      type: "revive",
+      groupId: el.dataset.revive,
+      actorId: g?.members.includes(world.playerId)
+        ? world.playerId
+        : g?.members[0],
+    });
+  }
+  if (el.hasAttribute("data-toggle-archives")) {
+    showArchives = !showArchives;
+    $("#show-archives").checked = showArchives;
+    renderProfile();
+    if (view === "journal") renderJournal();
+    saveUI();
+  }
+  if (el.id === "more-songs") {
+    catalogueLimit += 50;
+    renderJournal();
+  }
+  if (el.id === "more-profile-songs") {
+    profileSongLimit += 30;
+    renderProfileSongs(current());
+  }
+  if (el.hasAttribute("data-new-season")) {
+    showingPerformance = false;
+    const r = newSeason(world);
+    showFeedback = r;
+    notify(r.message);
+    showPlan.opportunityId = null;
+    setPlaybackSpeed(playback, 0);
+    renderShows();
+    save();
+  }
+  if (el.id === "profile-customize") {
+    const active = $("#inspector").classList.toggle("customizing");
+    el.setAttribute("aria-pressed", String(active));
+    el.textContent = active ? "Terminer" : "Organiser";
+  }
+  if (el.id === "profile-wide") $("#inspector").classList.toggle("expanded");
 });
 
-function frame(now){
-if(world.showEventId&&world.performance?.status==='finished'&&view!=='shows'&&!liveEvent){liveEvent=true;showingPerformance=true;changeView('shows');}
-const dt=advancePlayback(playback,now,!tabInactive&&!liveEvent&&world.performance?.status!=='playing',minutes=>step(world,minutes));
-if(world.performance?.status==='playing'){
- if(!world.performance.preview&&!liveEvent){savedWorldSpeed=playback.speed;liveEvent=true;world.showEventId=world.performance.opportunityId;showingPerformance=true;showPaused=showReady(world.performance);showClock=null;showSpeed=1;$('#show-speed').value='1';changeView('shows');$('#main').scrollTop=0;}
- if(!tabInactive&&!showPaused&&!showReady(world.performance)&&!$('#dialog').open&&view==='shows'){showClock ||= createShowClock(world.performance);const ticks=advanceShowClock(showClock,world.performance,dt,showSpeed);if(ticks)playTicks(world,ticks);}
- if(lastShowId!==world.performance.id+':'+(world.performance.songIndex||0)){lastShowId=world.performance.id+':'+(world.performance.songIndex||0);lastSoundEvent=0;showBudget=0;selectedFan=null;}
- const freshSounds=world.performance.events.filter(e=>e.id>lastSoundEvent);
- for(const event of freshSounds.toSorted((a,b)=>(b.type==='impact')-(a.type==='impact'))){if(soundEnabled&&['card','impact','reaction','curse'].includes(event.type))playSound({...event,instrument:world.performance.actors.find(a=>a.id===event.actorId)?.instrument});}
- if(freshSounds.length)lastSoundEvent=Math.max(...freshSounds.map(e=>e.id));
- const beat=showBeat(world.performance,stageGeometry($('#stage'))),shotKey=beat.event?`${songKey(world.performance)}:${beat.event.id}`:null;
- if(beat.phase==='shot'&&!showPaused&&lastShotEvent!==shotKey){lastShotEvent=shotKey;if(soundEnabled&&!showPaused)playSound({type:'shot',cardId:beat.event.cardId,instrument:world.performance.actors.find(a=>a.id===beat.event.actorId)?.instrument});}
- if(world.performance.status==='finished'){showPaused=true;save();if(view==='shows')renderShows();}
+function frame(now) {
+  if (
+    world.showEventId &&
+    world.performance?.status === "finished" &&
+    view !== "shows" &&
+    !liveEvent
+  ) {
+    liveEvent = true;
+    showingPerformance = true;
+    changeView("shows");
+  }
+  const dt = advancePlayback(
+    playback,
+    now,
+    !tabInactive && !liveEvent && world.performance?.status !== "playing",
+    (minutes) => {
+      step(world, minutes);
+      if (world.people.every((p) => p.action?.key === "sleep"))
+        advanceSleeping(world);
+    },
+  );
+  if (world.performance?.status === "playing") {
+    if (!world.performance.preview && !liveEvent) {
+      savedWorldSpeed = playback.speed;
+      liveEvent = true;
+      world.showEventId = world.performance.opportunityId;
+      showingPerformance = true;
+      showPaused = showReady(world.performance);
+      showClock = null;
+      showSpeed = 1;
+      $("#show-speed").value = "1";
+      changeView("shows");
+      $("#main").scrollTop = 0;
+    }
+    if (
+      !tabInactive &&
+      !showPaused &&
+      !showReady(world.performance) &&
+      !$("#dialog").open &&
+      view === "shows"
+    ) {
+      showClock ||= createShowClock(world.performance);
+      const ticks = advanceShowClock(
+        showClock,
+        world.performance,
+        dt,
+        showSpeed,
+      );
+      if (ticks) playTicks(world, ticks);
+    }
+    if (
+      lastShowId !==
+      world.performance.id + ":" + (world.performance.songIndex || 0)
+    ) {
+      lastShowId =
+        world.performance.id + ":" + (world.performance.songIndex || 0);
+      lastSoundEvent = 0;
+      showBudget = 0;
+      selectedFan = null;
+    }
+    const freshSounds = world.performance.events.filter(
+      (e) => e.id > lastSoundEvent,
+    );
+    for (const event of freshSounds.toSorted(
+      (a, b) => (b.type === "impact") - (a.type === "impact"),
+    )) {
+      if (
+        soundEnabled &&
+        ["card", "impact", "reaction", "curse"].includes(event.type)
+      )
+        playSound({
+          ...event,
+          instrument: world.performance.actors.find(
+            (a) => a.id === event.actorId,
+          )?.instrument,
+        });
+    }
+    if (freshSounds.length)
+      lastSoundEvent = Math.max(...freshSounds.map((e) => e.id));
+    const beat = showBeat(world.performance, stageGeometry($("#stage"))),
+      shotKey = beat.event
+        ? `${songKey(world.performance)}:${beat.event.id}`
+        : null;
+    if (beat.phase === "shot" && !showPaused && lastShotEvent !== shotKey) {
+      lastShotEvent = shotKey;
+      if (soundEnabled && !showPaused)
+        playSound({
+          type: "shot",
+          cardId: beat.event.cardId,
+          instrument: world.performance.actors.find(
+            (a) => a.id === beat.event.actorId,
+          )?.instrument,
+        });
+    }
+    if (world.performance.status === "finished") {
+      showPaused = true;
+      save();
+      if (view === "shows") renderShows();
+    }
+  }
+  updatePositions(world.people, displayPos, {
+    visible: view === "map" && !tabInactive,
+    paused:
+      playback.speed === 0 ||
+      liveEvent ||
+      world.performance?.status === "playing",
+    dt,
+  });
+  if (now - lastUI > 350) {
+    render();
+    lastUI = now;
+  }
+  if (now - lastSaved > 12000) {
+    save();
+    lastSaved = now;
+  }
+  if (view === "map") draw();
+  if (view === "shows" && world.performance) {
+    renderLivePresentation(world.performance);
+    drawStage($("#stage"), world.performance, {
+      reduced: reducedEffects,
+      selectedFan,
+    });
+  }
+  requestAnimationFrame(frame);
 }
-updatePositions(world.people,displayPos,{visible:view==='map'&&!tabInactive,paused:playback.speed===0||liveEvent||world.performance?.status==='playing',dt});
-if(now-lastUI>350){render();lastUI=now;}
-if(now-lastSaved>12000){save();lastSaved=now;}
-if(view==='map')draw();if(view==='shows'&&world.performance){renderLivePresentation(world.performance);drawStage($('#stage'),world.performance,{reduced:reducedEffects,selectedFan});}
-requestAnimationFrame(frame);}
 
-renderPeople();renderProfile(true);renderSettings();render();if(showingPerformance&&world.performance){changeView('shows');showPaused=world.performance.status==='finished'||world.performance.presentationPaused||showReady(world.performance);}requestAnimationFrame(frame);if(saveProblem)notify('Sauvegarde locale non disponible ou incompatible ; nouveau quartier chargé.');
-
-function restorePreview(){if(!previewReturn)return false;world.performance=previewReturn;previewReturn=null;delete world.livePreviewReturn;showingPerformance=true;showPaused=true;showBudget=0;return true;}
-function finishLive(){previewReturn=null;delete world.livePreviewReturn;world.showEventId=null;liveEvent=false;showingPerformance=false;showPaused=false;setPlaybackSpeed(playback,savedWorldSpeed);changeView('map');save();}
-function showReady(show){return show?.status==='playing'&&show.tick===0&&!show.presentationStarted;}
-function renderLivePresentation(show){
- const geometry=stageGeometry($('#stage'));const field=$('.stage-field');field.style.setProperty('--show-card-width',geometry.cardWidth+'px');field.style.setProperty('--show-card-height',geometry.cardHeight+'px');
- const signature=`${geometry.width}:${geometry.height}:${songKey(show)}:${show.events.length}:${show.status}:${showReady(show)}:${showBeat(show,geometry).phase}`;
- if(signature!==stagePresentationKey){stagePresentationKey=signature;replacePreserving('#show-overlay',show.status==='playing'?showOverlayHTML(show,{ready:showReady(show),geometry}):'');replacePreserving('#show-resources',showResourcesHTML(show));}
- const counter=$('[data-song-time]');if(counter)counter.textContent=`${Math.floor(songSeconds(show))} / 30 s`;
- const progress=$('.song-progress .bar i');if(progress)progress.style.width=songSeconds(show)/30*100+'%';
+renderPeople();
+renderProfile(true);
+renderSettings();
+render();
+if (showingPerformance && world.performance) {
+  changeView("shows");
+  showPaused =
+    world.performance.status === "finished" ||
+    world.performance.presentationPaused ||
+    showReady(world.performance);
 }
-function inspectShow(html,fan=null){if(!html)return;if(!resumeInspectedShow){const previous=showPaused;resumeInspectedShow=()=>{showPaused=previous;showBudget=0;renderShows();};}showPaused=true;showBudget=0;modal(html);const dialog=$('#dialog');dialog.classList.toggle('show-fan-inspection',!!fan);if(fan){const stage=$('#stage'),g=stageGeometry(stage),r=stage.getBoundingClientRect(),x=r.left+g.ox+fan.x*g.scale,y=r.top+g.oy+fan.y*g.scale;dialog.style.setProperty('--fan-x',Math.max(10,Math.min(innerWidth-350,x+20))+'px');dialog.style.setProperty('--fan-y',Math.max(10,Math.min(innerHeight-370,y-120))+'px');}renderShows();}
-function inspectFan(fan){if(!fan)return;const hit=fan.lastHit,show=world.performance;inspectShow(`<h2>${esc(fan.name)}</h2><p>Aime ${esc(fan.style)} · sensible à ${SKILLS[fan.instrument]}</p><p>${EMOTIONS[fan.emotion].label} · <b>${round(fan.meter)}/100</b> · ${fan.reacted?'Conquis':'Attend son moment'}</p><p>Réaction : ${({euphoria:'Euphorie : +13 de jauge aux voisins proches.',emotion:'Émotion : +5 de jauge et +0,18 de réceptivité aux voisins proches.',trance:'Transe : zone qui renforce les cartes rythmiques de 40 %.'})[fan.reaction]}</p><p>Réceptivité actuelle : ×${fan.receptivity.toFixed(2)}</p>${hit?`<p>${esc(CARDS[hit.cardId].name)} par ${esc(show.actors.find(a=>a.id===hit.actorId)?.name)} : <b>+${hit.gain}</b> à la jauge.</p>`:''}<p class="muted">La lecture reprend dans son état précédent à la fermeture.</p>`,fan);}
-function inspectActor(id){const actor=world.performance?.actors.find(p=>p.id===id);if(!actor)return;inspectShow(`<h2>${esc(actor.name)} · ${SKILLS[actor.instrument]}</h2><p>Énergie ${round(actor.energy)} · maîtrise ${round(actor.skill)} · ${actor.errors} erreurs</p><p><b>${actor.played.length}/5 cartes jouées</b> · ${5-actor.played.length} à venir</p>${actor.played.length?actor.played.map(id=>`<p>${esc(CARDS[id].name)} : ${esc(CARDS[id].description)}</p>`).join(''):'<p>Aucune carte jouée pour cette chanson.</p>'}<button data-stage-deck="${actor.id}">Voir le deck complet</button>`);}
-document.addEventListener('input',e=>{if(e.target.id==='band-search'){bandQuery=e.target.value;renderGroups();}});
+requestAnimationFrame(frame);
+if (saveProblem)
+  notify(
+    "Sauvegarde locale non disponible ou incompatible ; nouveau quartier chargé.",
+  );
 
-setupDocSearch({modal,playback,setPlaybackSpeed:(state,speed)=>{setPlaybackSpeed(state,speed);renderTransport();},suspendShow:()=>{const previous=showPaused;showPaused=true;return()=>{showPaused=previous;showBudget=0;};}});
+function restorePreview() {
+  if (!previewReturn) return false;
+  world.performance = previewReturn;
+  previewReturn = null;
+  delete world.livePreviewReturn;
+  showingPerformance = true;
+  showPaused = true;
+  showBudget = 0;
+  return true;
+}
+function finishLive() {
+  previewReturn = null;
+  delete world.livePreviewReturn;
+  world.showEventId = null;
+  liveEvent = false;
+  showingPerformance = false;
+  showPaused = false;
+  setPlaybackSpeed(playback, savedWorldSpeed);
+  changeView("map");
+  save();
+}
+function showReady(show) {
+  return (
+    show?.status === "playing" && show.tick === 0 && !show.presentationStarted
+  );
+}
+function renderLivePresentation(show) {
+  const geometry = stageGeometry($("#stage"));
+  const field = $(".stage-field");
+  field.style.setProperty("--show-card-width", geometry.cardWidth + "px");
+  field.style.setProperty("--show-card-height", geometry.cardHeight + "px");
+  const signature = `${geometry.width}:${geometry.height}:${songKey(show)}:${show.events.length}:${show.status}:${showReady(show)}:${showBeat(show, geometry).phase}`;
+  if (signature !== stagePresentationKey) {
+    stagePresentationKey = signature;
+    replacePreserving(
+      "#show-overlay",
+      show.status === "playing"
+        ? showOverlayHTML(show, { ready: showReady(show), geometry })
+        : "",
+    );
+    replacePreserving("#show-resources", showResourcesHTML(show));
+  }
+  const counter = $("[data-song-time]");
+  if (counter) counter.textContent = `${Math.floor(songSeconds(show))} / 30 s`;
+  const progress = $(".song-progress .bar i");
+  if (progress) progress.style.width = (songSeconds(show) / 30) * 100 + "%";
+}
+function inspectShow(html, fan = null) {
+  if (!html) return;
+  if (!resumeInspectedShow) {
+    const previous = showPaused;
+    resumeInspectedShow = () => {
+      showPaused = previous;
+      showBudget = 0;
+      renderShows();
+    };
+  }
+  showPaused = true;
+  showBudget = 0;
+  modal(html);
+  const dialog = $("#dialog");
+  dialog.classList.toggle("show-fan-inspection", !!fan);
+  if (fan) {
+    const stage = $("#stage"),
+      g = stageGeometry(stage),
+      r = stage.getBoundingClientRect(),
+      x = r.left + g.ox + fan.x * g.scale,
+      y = r.top + g.oy + fan.y * g.scale;
+    dialog.style.setProperty(
+      "--fan-x",
+      Math.max(10, Math.min(innerWidth - 350, x + 20)) + "px",
+    );
+    dialog.style.setProperty(
+      "--fan-y",
+      Math.max(10, Math.min(innerHeight - 370, y - 120)) + "px",
+    );
+  }
+  renderShows();
+}
+function inspectFan(fan) {
+  if (!fan) return;
+  const hit = fan.lastHit,
+    show = world.performance;
+  inspectShow(
+    `<h2>${esc(fan.name)}</h2><p>Aime ${esc(fan.style)} · sensible à ${SKILLS[fan.instrument]}</p><p>${emotionDefinition(fan.emotion).label} · <b>${round(fan.meter)}/100</b> · ${fan.reacted ? "Conquis" : "Attend son moment"}</p><p>Réaction : ${{ euphoria: "Euphorie : +13 de jauge aux voisins proches.", emotion: "Émotion : +5 de jauge et +0,18 de réceptivité aux voisins proches.", trance: "Transe : zone qui renforce les cartes rythmiques de 40 %." }[fan.reaction]}</p><p>Réceptivité actuelle : ×${fan.receptivity.toFixed(2)}</p>${hit ? `<p>${esc(CARDS[hit.cardId].name)} par ${esc(show.actors.find((a) => a.id === hit.actorId)?.name)} : <b>+${hit.gain}</b> à la jauge.</p>` : ""}<p class="muted">La lecture reprend dans son état précédent à la fermeture.</p>`,
+    fan,
+  );
+}
+function inspectActor(id) {
+  const actor = world.performance?.actors.find((p) => p.id === id);
+  if (!actor) return;
+  inspectShow(
+    `<h2>${esc(actor.name)} · ${SKILLS[actor.instrument]}</h2><p>Énergie ${round(actor.energy)} · maîtrise ${round(actor.skill)} · ${actor.errors} erreurs</p><p><b>${actor.played.length}/5 cartes jouées</b> · ${5 - actor.played.length} à venir</p>${actor.played.length ? actor.played.map((id) => `<p>${esc(CARDS[id].name)} : ${esc(CARDS[id].description)}</p>`).join("") : "<p>Aucune carte jouée pour cette chanson.</p>"}<button data-stage-deck="${actor.id}">Voir le deck complet</button>`,
+  );
+}
+document.addEventListener("input", (e) => {
+  if (e.target.id === "band-search") {
+    bandQuery = e.target.value;
+    renderGroups();
+  }
+});
+
+setupDocSearch({
+  modal,
+  playback,
+  setPlaybackSpeed: (state, speed) => {
+    setPlaybackSpeed(state, speed);
+    renderTransport();
+  },
+  suspendShow: () => {
+    const previous = showPaused;
+    showPaused = true;
+    return () => {
+      showPaused = previous;
+      showBudget = 0;
+    };
+  },
+});
+
+document.addEventListener("input", (e) => {
+  if (e.target.matches("[data-trait-search]")) {
+    const query = e.target.value.toLocaleLowerCase();
+    document
+      .querySelectorAll("[data-catalog-trait]")
+      .forEach(
+        (row) => (row.hidden = !row.dataset.catalogTrait.includes(query)),
+      );
+  }
+  if (e.target.dataset.edit?.startsWith("emotions:")) {
+    updateTraits(current());
+    updateProfile();
+  }
+});
+$("#v7-catalogue").innerHTML = catalogueHTML() + connectionsHTML();

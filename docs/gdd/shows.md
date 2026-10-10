@@ -1,4 +1,4 @@
-# Shows, calendrier et public
+# DDD — Shows, calendrier et public
 
 ## Quatre occasions continues
 
@@ -45,3 +45,14 @@ Les zones sont représentées par des cercles de rayon exact, même si des lumi�
 Le show remplit l’espace sous la navigation. Le nom du groupe et la chanson se trouvent dans l’arène, avec la progression en haut et les ressources et commandes au bas. Le transport du quartier se retire pendant cette vue. La carte garde une taille et un emplacement fixes; elle disparaît avant la trajectoire du musicien vers la cible annoncée dans la foule. Le canvas utilise une transformation uniforme, avec une place réservée à la carte, et le clic utilise la même transformation. Aucun résultat de simulation ne dépend de cette mise en page.
 
 Le bouton **Son : ON/OFF** est visible à côté de la pause, sans ouvrir Options. Le tir a une attaque courte; le contact ajoute un son grave et un claquement. Recul, projectile, flash, onde et « BANG ! » accompagnent le contact sans modifier les règles. « Effets réduits » garde les indications et gains, en retirant secousses, recul et éclats.
+
+
+## Raccord V7 des émotions et du sommeil
+
+Les effets du bilan sur les personnages utilisent exaltation base +22 à partir d’un score de 45, détresse base +14 sinon, avec réaction personnelle. L’énergie perd 15 plus les erreurs cumulées des morceaux; confiance ajoute +2 ou −1 entre partenaires, complicité +2, et au moins deux erreurs ajoutent tension +3. Les coûts Tout donner et le moral collectif restent conservés.
+
+Les cartes émotionnelles gardent leur puissance liée à l’intensité de la chanson. Pour les nouvelles prestations `rulesVersion: 7`, la compatibilité ×1,20 reconnaît explicitement exaltation avec les sensibilités musicales joie, enthousiasme ou affection du public, et détresse avec tristesse, colère ou peur. C’est une correspondance de deux axes larges, pas une reconstitution des six émotions du personnage. Une chanson historique garde sa compatibilité exacte. Une prestation sauvegardée de règles antérieures conserve son calcul exact et son résultat; le replay historique reste identique.
+
+Le public et ses sensibilités ne sont pas le moteur émotionnel des voisins. Aucun nouveau type de carte, fan ou récompense n’est ajouté. Le moteur de trajectoires et la présentation V0.6.4 sont conservés.
+
+Un engagement nocturne prend priorité sur le coucher. Les réservations de jetons non commencées sont rendues au départ; un sommeil interrompu peut reprendre après l’engagement. Les seuils de musiciens présents et fonctionnels restent actifs, sans récupération cachée. Les confirmations de candidature et répétition conservent leur probabilité de carrière, distincte du tirage social du quartier.
