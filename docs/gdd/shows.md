@@ -1,5 +1,7 @@
 # DDD — Shows, calendrier et public
 
+Version 0.7.1.
+
 ## Quatre occasions continues
 
 Le calendrier montre toujours quatre dates futures. Chaque événement a un identifiant permanent. Tous les quatre événements, une grosse fête accueille trois bands; les autres soirées ont deux créneaux. Espacement de deux jours; une première annonce laisse trois jours pour décider. Les dates terminées restent dans l’historique.
@@ -14,7 +16,7 @@ Les bands évaluent les dates toutes les trois heures au plus, selon ambition, d
 
 ## Direct et cartes
 
-Le quartier se met en pause quand le spectacle commence. La vue s’ouvre au début à ×1 et attend « Lancer le show ». Chaque musicien possède 8–10 cartes; cinq sont pigées sans remise. Rythme, impact, émotion et soutien produisent des effets réels. La carte explique son effet pendant une brève apparition; elle disparaît avant que le musicien vise et tire dans la foule. Les fans touchés et les gains sont visibles au contact et consultables dans l’historique.
+Le quartier se met en pause quand le spectacle commence. La vue s’ouvre au début à ×1 et attend « Lancer le show ». Chaque musicien prépare 8–10 cartes musicales ; la déchéance ajoute ses cartes nuisibles. Cinq exemplaires sont pigés sans remise. Rythme, impact, émotion et soutien produisent des effets réels. La carte explique son effet pendant une brève apparition; elle disparaît avant que le musicien vise et tire dans la foule. Les fans touchés et les gains sont visibles au contact et consultables dans l’historique.
 
 Une chanson dure 30 secondes à ×1; ×0,5/1/2/4 changent uniquement la lecture. Pause, inspection et onglet navigateur masqué suspendent le show. Sauter résout le même tirage; Revoir n’ajoute aucune récompense. Le quartier reprend au même instant simulé, sans rattrapage.
 
@@ -28,7 +30,7 @@ Liens : [musique](./musique.md), [relations](./relations.md), [sauvegardes](./te
 
 ## Voir les enchaînements
 
-Les piles sous les musiciens représentent leurs decks. La carte active apparaît brièvement au même emplacement. Elle disparaît avant la visée; la trajectoire part du musicien vers sa cible dans la foule. Les cartes précédentes restent consultables dans « Cartes jouées », sans pile par-dessus la scène. Le deck contient 8 à 10 cartes et la main de cinq cartes est déterminée au début par un mélange reproductible sans remise; seules les cartes déjà jouées sont révélées dans l’inspection.
+Les piles sous les musiciens représentent leurs decks. La carte active apparaît brièvement au même emplacement. Elle disparaît avant la visée; la trajectoire part du musicien vers sa cible dans la foule. Les cartes précédentes restent consultables dans « Cartes jouées », sans pile par-dessus la scène. Le deck contient 8 à 10 cartes musicales plus les exemplaires nuisibles ; la main de cinq exemplaires est déterminée au début par un mélange reproductible sans remise; seules les cartes déjà jouées sont révélées dans l’inspection.
 
 Cinq phrases rythment chaque chanson. Pour un quartet, vingt cartes disposent d’environ 26 secondes, plus le départ et les dernières réactions. Le temps de présentation est indépendant du temps musical du moteur : les zones, déplacements et résultats conservent leurs règles. Les animations n’utilisent aucun tirage aléatoire du monde.
 
@@ -51,8 +53,14 @@ Le bouton **Son : ON/OFF** est visible à côté de la pause, sans ouvrir Option
 
 Les effets du bilan sur les personnages utilisent exaltation base +22 à partir d’un score de 45, détresse base +14 sinon, avec réaction personnelle. L’énergie perd 15 plus les erreurs cumulées des morceaux; confiance ajoute +2 ou −1 entre partenaires, complicité +2, et au moins deux erreurs ajoutent tension +3. Les coûts Tout donner et le moral collectif restent conservés.
 
-Les cartes émotionnelles gardent leur puissance liée à l’intensité de la chanson. Pour les nouvelles prestations `rulesVersion: 7`, la compatibilité ×1,20 reconnaît explicitement exaltation avec les sensibilités musicales joie, enthousiasme ou affection du public, et détresse avec tristesse, colère ou peur. C’est une correspondance de deux axes larges, pas une reconstitution des six émotions du personnage. Une chanson historique garde sa compatibilité exacte. Une prestation sauvegardée de règles antérieures conserve son calcul exact et son résultat; le replay historique reste identique.
+Les cartes émotionnelles gardent leur puissance liée à l’intensité de la chanson. Pour les nouvelles prestations `rulesVersion:71` (et 7 pour les anciennes prestations V7), la compatibilité ×1,20 reconnaît explicitement exaltation avec les sensibilités musicales joie, enthousiasme ou affection du public, et détresse avec tristesse, colère ou peur. C’est une correspondance de deux axes larges, pas une reconstitution des six émotions du personnage. Une chanson historique garde sa compatibilité exacte. Une prestation sauvegardée de règles antérieures conserve son calcul exact et son résultat; le replay historique reste identique.
 
-Le public et ses sensibilités ne sont pas le moteur émotionnel des voisins. Aucun nouveau type de carte, fan ou récompense n’est ajouté. Le moteur de trajectoires et la présentation V0.6.4 sont conservés.
+Le public et ses sensibilités ne sont pas le moteur émotionnel des voisins. Les exemplaires nuisibles réutilisent les types de cartes existants ; aucun nouveau fan ou récompense. Le moteur de trajectoires et la présentation V0.6.4 sont conservés.
 
-Un engagement nocturne prend priorité sur le coucher. Les réservations de jetons non commencées sont rendues au départ; un sommeil interrompu peut reprendre après l’engagement. Les seuils de musiciens présents et fonctionnels restent actifs, sans récupération cachée. Les confirmations de candidature et répétition conservent leur probabilité de carrière, distincte du tirage social du quartier.
+Un engagement nocturne prend priorité sur le coucher. Les jetons déjà pigés restent défaussés au départ ; un sommeil interrompu peut reprendre après l’engagement. Les seuils de musiciens présents et fonctionnels restent actifs, sans récupération cachée. Les confirmations de candidature et de pratique collective conservent leur probabilité de carrière, distincte du tirage social du quartier.
+
+## Préparer les morceaux en V7.1
+
+Pratiquer ensemble travaille un morceau du répertoire d’un même groupe. Jam reste expression libre et n’ajoute ni maîtrise de morceau ni Coordination. La préparation de setlist peut encore inclure une improvisation de scène ; cela ne transforme pas Jam du quartier en répétition. Une demande de répétition sans morceau est refusée explicitement.
+
+La qualité finale, la maîtrise personnelle et la maîtrise du répertoire sont consultables dans [Compositions et catalogue](./compositions.md). Les cartes ajoutées, leurs répétitions et les versions historiques sont détaillées dans [Déchéance](./decheance.md).

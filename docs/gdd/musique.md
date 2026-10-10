@@ -1,33 +1,34 @@
-# DDD — Musique, groupes et progression
+# DDD — Pratique, Jam et groupes
 
-Version 0.7.0. La V7 raccorde le moteur musical existant aux deux axes et aux traits; elle n’ajoute pas un nouveau moteur de composition.
+Version 0.7.1. Pratiquer développe la technique et prépare les morceaux. Jam favorise l’expression libre et les rencontres. Composer développe une œuvre persistante : [Compositions et catalogue](./compositions.md).
 
-## Apprentissage et besoins
+## Instruments, apprentissage et plateaux
 
-Pratiquer et Composer augmentent la compétence instrumentale de base `0,009 × Apprentissage` par minute, multipliée par 1,4 pour Oreille musicale. Composer ajoute `0,018 × Apprentissage` de compétence d’écriture; Jammer ajoute `0,013 × Apprentissage` instrumentale. Chaque gain de compétence passe par `gain × max(0,16; 1 − compétence/115)` : la progression ralentit à haut niveau. Les besoins créatifs sont dans le [DDD Actions](./actions.md).
+La pratique choisit le principal dans 85 % des choix lorsqu’il existe des secondaires ; sinon toujours le principal. Les secondaires sont les autres instruments avec compétence initiale ≥25, hors écriture ; leur liste est persistante. Les 15 % restants choisissent uniformément un secondaire. Le principal n’est pas réécrit par l’instrument d’une séance.
 
-## Projets persistants
+Chaque gain d’apprentissage passe par `gain × max(0,16 ; 1 − compétence/115) × (1 + exaltation/200 + (plaisir−50)/200)`. Dix pour cent donnent un petit gain immédiat ; 90 % alimentent un travail accumulé par compétence. Chaque tranche de 2 points accumulés produit une percée de 2 points et retire cette tranche du travail. Les compétences restent bornées à 100. Les compteurs persistent à la sauvegarde.
 
-Composer garde une idée, son titre, genre, sources et travail entre séances et interruptions. La cible vaut `300 + (100−discipline) ×0,75`. Le travail par minute vaut `Rythme de composition × (0,85 + discipline/300) × max(0,1; 1 + traits writing)`. Idée sous 25 %, ébauche ensuite, prête à 100 %. À la fin d’une séance ayant atteint la cible, créer une seule chanson et clore le projet.
+Bases instrumentales : Pratiquer et Composer 0,009 × Apprentissage/min ; Oreille musicale ×1,4. Jam 0,013 × Apprentissage/min. Composer ajoute 0,018 × Apprentissage/min d’écriture. Les moments d’apprentissage musical ont leurs gains propres, également soumis aux plateaux. Les souvenirs et la chimie en répétition ne modulent pas directement ces plateaux : [Raccords](./raccords-v7.md).
 
-Les 75 premières minutes créatives échantillonnées fixent axe, intensité moyenne et sources. Ensuite, la phase de développement ne lave pas l’origine. Exaltation et détresse produisent respectivement les tonalités exaltée et tourmentée; sous 10 d’intensité, posée. Les titres combinent les anciens vocabulaires positifs ou négatifs, le lieu, groupe et souvenirs, sans nouvelle jauge. Une idée issue d’une jam peut nourrir le prochain projet une fois par auteur pendant 24 heures.
+## Pratiquer et répéter
 
-Les chansons historiques conservent intégralement leurs six anciennes nuances. **La diversité de six émotions n’est pas reproduite par deux nombres.** Ce raccord de nuances est signalé comme débranché; le genre, les origines, qualité et résultats musicaux restent actifs.
+Une séance alterne instruments, technique et morceaux par cycles de 15 minutes. Avec des morceaux admissibles, leur choix est favorisé à 65 % ; sinon travail technique. Le choix est réévalué à la fin d’un cycle si le personnage continue. La pratique n’ajoute aucune expression par défaut.
 
-## Qualité et écho public
+Un personnage peut travailler ses œuvres et les morceaux de ses groupes. Le travail solo du morceau augmente sa maîtrise personnelle de 0,08/min. Cette valeur est distincte de la compétence instrumentale et de la maîtrise collective.
 
-Qualité = maîtrise + expression + ensemble + modificateurs qualité des traits + variation − surcharge, bornée 0–100 puis arrondie :
+La pratique collective exige un groupe actif commun et un morceau. Une personne ayant pigé Pratiquer peut demander à rejoindre une pratique de morceau ; après acceptation, elle se déplace vers son partenaire. La séance attribue explicitement groupe et morceau ; des appartenances multiples ne créditent pas tous les groupes. Le contenu collectif change ensemble à la fin des cycles.
 
-| Terme | Calcul |
-|---|---|
-| Maîtrise | écriture ×0,45 + instrument ×0,25 |
-| Expression | intensité/100 × (6 + créativité ×0,12) |
-| Ensemble | moyenne des échantillons de qualité de jam, bornée 0–12 |
-| Traits | somme des effets quality : Perfectionniste +8, Exigeant +4, Inspiré +6 |
-| Variation | tirage entre 3 et 13 |
-| Surcharge | max(0; intensité−72) × (100−stabilité)/190 |
+Avec au moins deux membres effectivement présents, la répétition augmente Coordination de `0,07 × min(1 ; présents/4)`/min. La maîtrise collective du morceau augmente de `0,12 × (0,65 + coordination/200) × min(1 ; présents/membres du groupe)`/min. Une paire ne reçoit ce crédit qu’une fois par minute. Le compteur de répétition et les moments du groupe avancent à chaque cycle travaillé. Une personne seule peut continuer son travail personnel.
 
-L’écho simulé vaut qualité ×0,65 + intensité ×0,2 + tirage 0–18, borné et arrondi. À partir de 80, la chanson est marquée comme succès; ce n’est pas une réception déjà jouée devant le public physique. La sortie donne une hausse d’exaltation de base 21 pour un succès, 11 sinon. Une chanson sous le seuil d’archive reste conservée et restaurable. Catalogue, répertoire et setlist restent distincts.
+Les commandes Répéter lancent maintenant Pratiquer avec les confirmations de membres existantes. Elles n’utilisent plus Jam pour préparer un morceau. Une demande sans morceau doit être refusée ou passée explicitement à Jam ; elle ne doit pas produire une répétition de technique présentée comme morceau travaillé.
+
+## Jam ouverte et solo
+
+Le libellé est Jam. Le premier musicien joue seul dès son arrivée ; aucun minimum de deux, aucune attente de 90 minutes. Une personne ayant pigé Jam peut rejoindre une séance après demande et acceptation. Les séances ayant moins de 180 minutes jouées et moins de 360 minutes d’âge sont candidates ; ces bornes limitent la recherche, pas une obligation de participer.
+
+Chaque arrivant a son temps personnel et sa fourchette. La séance garde une seule horloge musicale, un échange de paire toutes les 15 minutes jouées quand des partenaires sont présents. Un participant peut partir à la fin d’un cycle ; le dernier continue solo. Les paires ayant réellement joué gagnent une connaissance de chimie à la fin d’une participation terminée.
+
+Expression, plaisir et instrument augmentent ; le gain social continu demande au moins deux présents. Aucun crédit direct de répertoire, Coordination, chanson terminée ou réputation. Les idées peuvent nourrir une composition ultérieure ; les gains de talent ou de relations peuvent avoir des conséquences indirectes sur la carrière. Le temps de jam est du temps qui n’avance pas les projets de carrière.
 
 ## Six moments techniques de jam
 
@@ -58,8 +59,6 @@ L’initiateur peut plutôt rejoindre un groupe du destinataire si au moins la m
 
 Après 48 heures sans activité commune, la coordination baisse de 0,24 par heure. À zéro, le groupe s’archive sans effacement; il peut être relancé. Réputation et moral de scène restent distincts. Le bonus provisoire de partenaires utilise bien la coordination : `1 + development/8`, maximum si plusieurs groupes communs. L’attachement individuel reste reporté.
 
-## Déchéance et sortie
+## Déchéance et carrière
 
-La déchéance est conservée entre 0 et 100. Un excès volontaire donne +18 et énergie −8; il donne aussi exaltation base +26. Une nuit musicale sacrifiée avec énergie sous 25 entre 22 h et 6 h donne +0,025/min. Le sommeil réel retire 0,025/min; Décrocher retire 0,006/min; un soutien favorable retire 2. Les spectacles Tout donner gardent leur coût de déchéance. Les seuils de cartes maudites restent 25, 50, 70 et 85; récupérer retire les cartes dont le seuil n’est plus atteint. Le succès seul ne cause pas la déchéance.
-
-Liens : [shows](./shows.md), [interactions](./interactions.md), [relations](./relations.md), [raccords](./raccords-v7.md).
+Les règles d’excès, chaînes, récupération et paquets contaminés sont dans [Déchéance](./decheance.md). Les chansons, répertoires et qualités sont dans [Compositions](./compositions.md). La préparation et l’accueil du public restent dans [Shows](./shows.md).

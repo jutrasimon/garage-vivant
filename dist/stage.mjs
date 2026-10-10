@@ -1,3 +1,4 @@
+import { decadenceCount } from "./v71.mjs?v=0.7.1";
 // New songs match the two broad V7 axes; legacy performances keep exact matching.
 export function emotionCompatible(song,fan,version=7){return song===fan||version>=7&&(song==='exaltation'&&['joy','excitement','affection'].includes(fan)||song==='distress'&&['sadness','anger','fear'].includes(fan));}
 // The stage is a deterministic simulation. Rendering and audio never change it.
@@ -13,10 +14,10 @@ export const INTENTIONS = {
   wild: {label:'Tout donner', description:'Impacts plus forts, énergie dépensée et tentation des excès après le show.'}
 };
 export const CURSES = [
-  {id:'hangover', threshold:25, name:'Gueule de bois', icon:'☠', tag:'curse', kind:'hangover', description:'Énergie −8. Cette carte remplace une carte musicale.'},
-  {id:'blank', threshold:50, name:'Trou de mémoire', icon:'?', tag:'curse', kind:'blank', description:'Perd le groove et le crescendo préparés.'},
-  {id:'ego', threshold:70, name:'Ego en roue libre', icon:'★', tag:'curse', kind:'ego', description:'Un solo faible détourne le soutien collectif.'},
-  {id:'absent', threshold:85, name:'Absence au mauvais moment', icon:'…', tag:'curse', kind:'absent', description:'Aucune contribution pour cette phrase.'}
+  {id:'hangover', threshold:20, name:'Gueule de bois', icon:'☠', tag:'curse', kind:'hangover', description:'Énergie −8. Cette carte s’ajoute au paquet musical.'},
+  {id:'blank', threshold:40, name:'Trou de mémoire', icon:'?', tag:'curse', kind:'blank', description:'Perd le groove et le crescendo préparés.'},
+  {id:'ego', threshold:60, name:'Ego en roue libre', icon:'★', tag:'curse', kind:'ego', description:'Un solo faible détourne le soutien collectif.'},
+  {id:'absent', threshold:80, name:'Absence au mauvais moment', icon:'…', tag:'curse', kind:'absent', description:'Aucune contribution pour cette phrase.'}
 ];
 export const CARDS = {};
 function card(id, name, tag, power, radius, extra = {}) {
@@ -43,6 +44,7 @@ card('spark','Une idée folle','impact',17,145,{personal:'creative',description:
 card('steady','Tenir le cap','rhythm',13,125,{kind:'crescendo',personal:'discipline',description:'La discipline du musicien prépare le prochain crescendo.'});
 card('hello','Salut le quartier !','emotion',14,145,{personal:'outgoing',description:'Le charisme du musicien donne une portée personnelle au refrain.'});
 for (const curse of CURSES) CARDS[curse.id] = curse;
+for(let i=0;i<6;i++){const type=CURSES[Math.min(i,3)];CARDS[`curse-${i}`]={...type,id:`curse-${i}`,typeId:type.id};}
 
 export function availableCards(p) {
   const base = ['pulse','accent','breath','listen','crescendo'];
@@ -60,8 +62,7 @@ export function activeDeck(p) {
   let deck = [...new Set((p.deck||defaultDeck(p)).filter(id => allowed.has(id)))];
   for(const id of defaultDeck(p)) if(deck.length<8 && !deck.includes(id)) deck.push(id);
   deck = deck.slice(0,10);
-  const curses = CURSES.filter(c=>p.decadence>=c.threshold);
-  curses.forEach((c,i)=>deck[deck.length-1-i]=c.id);
+  for(let i=0;i<decadenceCount(p);i++)deck.push(`curse-${i}`);
   return deck;
 }
 function random(s) {s.rng=(Math.imul(s.rng,1664525)+1013904223)>>>0;return s.rng/4294967296;}
@@ -69,7 +70,7 @@ function shuffled(s, xs) {const a=[...xs];for(let i=a.length-1;i>0;i--){const j=
 
 export function createPerformance({id, seed, people, group, song, opportunity, intention='tight', preview=false,totalTicks=SHOW_TICKS}) {
   if(people.length<2 || !INTENTIONS[intention]) throw Error('Il faut au moins deux musiciens et une intention valide.');
-  const s = {id,rulesVersion:7,totalTicks,rng:seed>>>0,seed:seed>>>0,tick:0,status:'playing',applied:false,preview,groupId:group.id,groupName:group.name,opportunityId:opportunity.id,opportunityName:opportunity.name,sourceOpportunity:{...opportunity},genre:song.genre,song:{id:song.id,title:song.title,quality:song.quality,intensity:song.intensity||0,emotion:song.emotion,tone:song.tone},mastery:group.repertoire?.find(r=>r.songId===song.id)?.mastery||0,morale:group.stageMorale??60,development:group.development||0,intention,actors:[],fans:[],cues:[],nextCue:0,impacts:[],zones:[],events:[],support:0,crescendo:0,result:null};
+  const s = {id,rulesVersion:71,totalTicks,rng:seed>>>0,seed:seed>>>0,tick:0,status:'playing',applied:false,preview,groupId:group.id,groupName:group.name,opportunityId:opportunity.id,opportunityName:opportunity.name,sourceOpportunity:{...opportunity},genre:song.genre,song:{id:song.id,title:song.title,quality:song.quality,intensity:song.intensity||0,emotion:song.emotion,tone:song.tone},mastery:group.repertoire?.find(r=>r.songId===song.id)?.mastery||0,morale:group.stageMorale??60,development:group.development||0,intention,actors:[],fans:[],cues:[],nextCue:0,impacts:[],zones:[],events:[],support:0,crescendo:0,result:null};
   // Bass and drums prepare first. This order is visible in the show’s explanation.
   const order = {bass:0,drums:1,percussion:2,keys:3,guitar:4,sax:5,trumpet:6,voice:7};
   for(const p of [...people].sort((a,b)=>order[a.instrument]-order[b.instrument]||a.id.localeCompare(b.id))) {
@@ -193,7 +194,7 @@ export function validatePerformance(s) {
   const ids=new Set();
   if(typeof s.applied!=='boolean'||typeof s.preview!=='boolean'||!s.sourceOpportunity||!number(s.song.intensity,0,100)||!styles.includes(s.genre)||typeof s.song.title!=='string')throw Error('État de spectacle invalide.');
   for(const p of s.actors) {
-    if(typeof p.id!=='string'||ids.has(p.id)||typeof p.name!=='string'||!instruments.includes(p.instrument)||!number(p.energy,0,100)||!number(p.skill,0,100)||!number(p.decadence,0,100)||!Array.isArray(p.deck)||p.deck.length<8||p.deck.length>10||new Set(p.deck).size!==p.deck.length||p.deck.some(id=>!CARDS[id])||!Array.isArray(p.hand)||p.hand.length!==5||new Set(p.hand).size!==5||p.hand.some(id=>!p.deck.includes(id))||!Array.isArray(p.played)||p.played.some(id=>!p.hand.includes(id))||!number(p.errors,0,5)||!number(p.energyLoss,0,100)) throw Error('Deck de spectacle invalide.');
+    if(typeof p.id!=='string'||ids.has(p.id)||typeof p.name!=='string'||!instruments.includes(p.instrument)||!number(p.energy,0,100)||!number(p.skill,0,100)||!number(p.decadence,0,100)||!Array.isArray(p.deck)||p.deck.length<8||p.deck.length>(s.rulesVersion===71?16:10)||new Set(p.deck).size!==p.deck.length||p.deck.some(id=>!CARDS[id])||!Array.isArray(p.hand)||p.hand.length!==5||new Set(p.hand).size!==5||p.hand.some(id=>!p.deck.includes(id))||!Array.isArray(p.played)||p.played.some(id=>!p.hand.includes(id))||!number(p.errors,0,5)||!number(p.energyLoss,0,100)) throw Error('Deck de spectacle invalide.');
     ids.add(p.id);
     const expected=s.cues.filter(c=>c.actorId===p.id&&c.tick<=s.tick).map(c=>c.cardId);
     if(p.played.length!==expected.length||p.played.some((id,i)=>id!==expected[i]))throw Error('Cartes jouées incohérentes.');

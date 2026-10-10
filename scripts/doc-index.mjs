@@ -15,7 +15,8 @@ export function indexDocument(file,markdown){
   for(const part of markdown.split(/^##? /m)){
     if(!part.trim())continue;
     const [heading,...lines]=part.split('\n'),title=plainText(heading);system||=title;
-    const slug=title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');
+    // Same normalization and punctuation handling as VitePress 1.6's heading anchors.
+    const slug=heading.match(/\{#([^}]+)\}/)?.[1]||title.normalize('NFKD').replace(/[\u0300-\u036F]/g,'').replace(/[\u0000-\u001f]/g,'').replace(/[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'“”‘’<>,.?/]+/g,'-').replace(/-{2,}/g,'-').replace(/^-+|-+$/g,'').replace(/^(\d)/,'_$1').toLowerCase();
     entries.push({title,system,topic:file.includes('/gdd/')?file.split('/').at(-1).replace('.md',''):'guide',root:title===system,text:plainText(lines.join('\n')).slice(0,6000),url:'docs/'+file.slice(5).replace(/\.md$/,'.html')+(title===system?'':'#'+slug)});
   }
   if(entries[0]&&!entries[0].text)entries[0].text=entries.find(e=>!e.root&&e.text)?.text||'';

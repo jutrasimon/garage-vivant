@@ -1,5 +1,6 @@
-import { returnToken } from "./v7.mjs?v=0.7.0";
-import { initializeV6Person } from "./social.mjs?v=0.7.0";
+import { plateauGain, decadenceCount } from "./v71.mjs?v=0.7.1";
+import { editTokens } from "./v7.mjs?v=0.7.1";
+import { initializeV6Person } from "./social.mjs?v=0.7.1";
 import {
   initializeCalendar,
   upgradeCalendar,
@@ -11,7 +12,7 @@ import {
   morale,
   moraleEffect,
   validateCalendar,
-} from "./calendar.mjs?v=0.7.0";
+} from "./calendar.mjs?v=0.7.1";
 import {
   clamp,
   round,
@@ -27,7 +28,7 @@ import {
   ACTIONS,
   step,
   refreshReputation,
-} from "./engine.mjs?v=0.7.0";
+} from "./engine.mjs?v=0.7.1";
 import {
   CARDS,
   CURSES,
@@ -37,7 +38,7 @@ import {
   createPerformance,
   advancePerformance,
   validatePerformance,
-} from "./stage.mjs?v=0.7.0";
+} from "./stage.mjs?v=0.7.1";
 
 export function initializePerson(p) {
   initializeV6Person(p);
@@ -112,10 +113,10 @@ export function bandStage(g) {
           : "Affirmé";
 }
 export function nextCurse(p) {
-  return CURSES.find((c) => c.threshold > p.decadence) || null;
+  const count=decadenceCount(p);return count<Math.min(5,Math.ceil(p.deck.length*.6))?{...CURSES[Math.min(count,3)],threshold:(count+1)*20}:null;
 }
 export function learningGain(p, key, gain) {
-  return gain * Math.max(0.16, 1 - p.skills[key] / 115);
+  return plateauGain(p,key,gain);
 }
 export function changeDecadence(s, p, amount, reason) {
   const before = p.decadence;
@@ -128,8 +129,8 @@ export function changeDecadence(s, p, amount, reason) {
     });
     p.decadenceHistory = p.decadenceHistory.slice(0, 8);
   }
-  const previous = CURSES.filter((c) => before >= c.threshold).length,
-    current = CURSES.filter((c) => p.decadence >= c.threshold).length;
+  if(p.bag){const count=decadenceCount(p);if(count!==p.decadenceTokens){editTokens(p,"decadence",count);p.decadenceTokens=count;}}
+  const previous=decadenceCount({...p,decadence:before}),current=decadenceCount(p);
   if (current !== previous)
     log(
       s,
@@ -141,18 +142,18 @@ export function changeDecadence(s, p, amount, reason) {
 }
 export function archiveSong(s, song) {
   if (
-    song.quality < s.archiveThreshold &&
+    song.weak &&
     !s.songArchive.some((x) => x.id === song.id)
   )
     s.songArchive.push({
       id: song.id,
       time: s.time,
-      reason: `Qualité ${song.quality} sous le seuil ${s.archiveThreshold}`,
+      reason: `Qualité ${song.quality} comparée à la référence de l’auteur ${song.qualityReference}`,
       auto: true,
     });
 }
 export function isArchivedSong(s, id) {
-  return s.songArchive.some((x) => x.id === id);
+  return s.songArchive.some((x) => x.id === id) || !!s.songs.find(x=>x.id===id)?.weak;
 }
 export function eligibleSongs(s, g) {
   return s.songs.filter((song) =>
@@ -160,33 +161,13 @@ export function eligibleSongs(s, g) {
   );
 }
 export function groupRehearsal(s, j, present) {
-  const common = s.groups.filter(
-    (g) =>
-      g.archivedAt === null && present.every((p) => g.members.includes(p.id)),
-  );
-  if (!j.groupId && common.length === 1) j.groupId = common[0].id;
-  const g = s.groups.find((g) => g.id === j.groupId && g.archivedAt === null);
-  if (
-    !g ||
-    present.length < 2 ||
-    present.some((p) => !g.members.includes(p.id))
-  )
-    return;
-  g.lastWorked = s.time;
-  g.development = clamp(g.development + 0.07 * Math.min(1, present.length / 4));
-  if (!j.songId && !g.members.includes(s.playerId) && g.repertoire.length)
-    j.songId = [...g.repertoire].sort(
-      (a, b) => b.mastery - a.mastery,
-    )[0].songId;
-  const row = g.repertoire.find((r) => r.songId === j.songId);
-  if (row)
-    row.mastery = clamp(
-      row.mastery +
-        0.12 *
-          (0.65 + g.development / 200) *
-          Math.min(1, present.length / g.members.length),
-    );
-  if (j.elapsed === 85) {
+  const g=s.groups.find(g=>g.id===j.groupId&&g.archivedAt===null);
+  const row=g?.repertoire.find(r=>r.songId===j.songId);
+  if(!g||!row||present.length<2||present.some(p=>!g.members.includes(p.id)))return;
+  g.lastWorked=s.time;
+  g.development=clamp(g.development+0.07*Math.min(1,present.length/4));
+  row.mastery=clamp(row.mastery+0.12*(0.65+g.development/200)*Math.min(1,present.length/g.members.length));
+  if (j.elapsed % 15 === 0) {
     if (row) row.rehearsals++;
     g.moments.unshift({
       time: s.time,
@@ -318,6 +299,7 @@ function rehearse(s, cmd) {
     !g.repertoire.some((r) => r.songId === Number(cmd.songId))
   )
     return result(false, "Cette chanson ne fait pas partie du répertoire.");
+  if(cmd.songId===null)return result(false,"La pratique collective demande un morceau du répertoire. Choisis Jam pour improviser.");
   const partners = g.members
     .map((id) => s.people.find((p) => p.id === id))
     .filter(
@@ -343,18 +325,20 @@ function rehearse(s, cmd) {
       false,
       "Les membres disponibles préfèrent poursuivre leur activité.",
     );
-  decide(s, host, "jam", {
+  decide(s, host, "practice", {
     newSession: true,
     groupId: g.id,
     songId: cmd.songId === null ? null : Number(cmd.songId),
     noInvite: true,
   });
-  const sid = host.action.sessionId,
-    j = s.jams.find((j) => j.id === sid);
+  const sid = host.action.activityId,
+    j = host.action;
   j.groupId = g.id;
   j.songId = cmd.songId === null ? null : Number(cmd.songId);
   for (const p of chosen) {
-    decide(s, p, "jam", { sessionId: sid, noInvite: true });
+    decide(s, p, "practice", { groupId:g.id, songId:j.songId, noInvite: true });
+    p.action.dest=host.action.dest;
+    p.action.route=host.action.route.map(x=>({...x}));
     p.action.why = `Répétition acceptée avec ${g.name}`;
   }
   host.action.why = `Répétition de ${g.name}`;
@@ -417,6 +401,7 @@ export function command(s, cmd) {
       return result(true, `Tu incarnes ${actor.name}.`);
     case "action":
       if (!ACTIONS[cmd.key]) return result(false, "Action inconnue.");
+      if(cmd.projectId&&!s.projects.some(x=>x.id===cmd.projectId&&x.authors.includes(actor.id)&&!['finished','abandoned'].includes(x.status)))return result(false,"Projet absent, abandonné ou attribué à un autre auteur.");
       if (actor.engagement)
         return result(false, "Ce musicien est en route vers un show.");
       if (actor.action?.key === "sleep")
@@ -440,7 +425,7 @@ export function command(s, cmd) {
           return result(false, `${actor.name} décline la proposition.`);
         }
       }
-      decide(s, actor, cmd.key);
+      decide(s, actor, cmd.key, {projectId:cmd.projectId,newProject:cmd.newProject});
       return result(true, `${actor.name} : ${ACTIONS[cmd.key].label}.`);
     case "invite":
       return invite(s, cmd);
@@ -491,7 +476,7 @@ export function command(s, cmd) {
       actor.deck = [...cmd.cards];
       return result(
         true,
-        "Deck préparé. Les cartes maudites remplacent toujours des emplacements.",
+        "Deck préparé. La déchéance ajoute ses cartes maudites.",
       );
     }
     case "excess":
@@ -509,7 +494,7 @@ export function command(s, cmd) {
         [actor.id],
       );
       feel(s, actor, { exaltation: 26 }, ev);
-      decide(s, actor, "relax");
+      decide(s, actor, "decadence");
       return result(
         true,
         "La fête se prolonge. Les effets sur le deck restent visibles.",
@@ -517,6 +502,7 @@ export function command(s, cmd) {
     case "archive": {
       const song = s.songs.find((x) => x.id === Number(cmd.songId));
       if (!song) return result(false, "Chanson introuvable.");
+      if(cmd.restore){song.keepActive=true;song.weak=false;}
       if (cmd.restore)
         s.songArchive = s.songArchive.filter((x) => x.id !== song.id);
       else if (!isArchivedSong(s, song.id))
@@ -703,7 +689,7 @@ function assemble(s, b) {
       }
       if (old.elapsed > 0) p.actionCounts[old.key].interrupted++;
     }
-    returnToken(p);
+
     if (old?.key === "sleep") {
       p.sleep.nextBedtime = s.time;
       p.sleep.wakeAt = null;
@@ -810,14 +796,13 @@ export function lifeMinute(s) {
         const candidate = eligibleSongs(s, g)
           .filter(
             (song) =>
-              !isArchivedSong(s, song.id) &&
               !g.repertoire.some((r) => r.songId === song.id),
           )
           .sort(
             (a, b) =>
-              b.quality +
+              (isArchivedSong(s,b.id)?-1000:0)+b.quality +
               (b.genre === g.genre ? 20 : 0) -
-              (a.quality + (a.genre === g.genre ? 20 : 0)),
+              ((isArchivedSong(s,a.id)?-1000:0)+a.quality + (a.genre === g.genre ? 20 : 0)),
           )[0];
         if (candidate) {
           g.repertoire.push({

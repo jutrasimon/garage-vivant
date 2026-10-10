@@ -1,6 +1,6 @@
 # DDD — Personnages, besoins et émotions
 
-Version 0.7.0. Ces règles décrivent le moteur livré; les anciennes propositions se trouvent dans les plans historiques.
+Version 0.7.1. Ces règles décrivent le moteur livré; les anciennes propositions se trouvent dans les plans historiques.
 
 ## Identité et personnalité
 
@@ -11,11 +11,11 @@ Un voisin possède nom, âge, couleur, instrument, style, compétences et six di
 | Créativité | Progression qualitative, expression d’une chanson, idées de jam et chimie musicale. |
 | Extraversion | Érosion du besoin social; accessoire/gestuelle hérités et cartes personnelles. |
 | Empathie | Poids et qualité du soutien; apprentissage entre musiciens, gains relationnels des moments musicaux, chimie. |
-| Discipline | Travail et cible des projets, consolidation musicale, chimie, décisions de candidature aux shows. |
+| Discipline | Travail des projets, consolidation musicale, chimie, décisions de candidature aux shows. |
 | Stabilité | Décroissance et réaction émotionnelles; intensité descriptive des souvenirs; pénalité d’intensité extrême en composition. |
 | Ambition | Choix autonomes de candidatures aux shows. |
 
-Ces valeurs ne modifient pas les jetons ni la pige. Les anciens scores, priorités et curseurs d’attrait musical/social sont retirés de l’expérience V7. Le [catalogue des traits](./traits.md) distingue sources permanentes et conditionnelles.
+Ces valeurs ne modifient pas les jetons ni la pige. Les anciens scores, priorités et curseurs d’attrait musical/social sont retirés de l’expérience V7.1. Le [catalogue des traits](./traits.md) distingue sources permanentes et conditionnelles.
 
 ## Quatre besoins
 

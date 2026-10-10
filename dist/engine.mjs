@@ -1,3 +1,4 @@
+import { V71_RULES, initializeV71, setupAction, chooseInstrument, shouldLeave, musicName, reserveMusicName, classifySongs, upgradeV71, validateV71, decadenceCount } from "./v71.mjs?v=0.7.1";
 import {
   NEED_DRAIN,
   ACTIVITY_EFFECTS,
@@ -10,21 +11,19 @@ import {
   effectiveTraits,
   bagRowsV7,
   reserveToken,
-  consumeToken,
-  returnToken,
   emotionalMinute,
   weightedChoice,
   partnerWeight,
   interactionProbabilities,
   coolRelationV7,
   validateV7,
-} from "./v7.mjs?v=0.7.0";
+} from "./v7.mjs?v=0.7.1";
 import {
   initializeV6Person,
   upgradeV6,
   markGrief,
   repairGrief,
-} from "./social.mjs?v=0.7.0";
+} from "./social.mjs?v=0.7.1";
 import {
   initializePerson,
   initializeGroup,
@@ -38,8 +37,8 @@ import {
   lifeMinute,
   refreshOpportunity,
   validateLife,
-} from "./life.mjs?v=0.7.0";
-export const VERSION = "0.7.0";
+} from "./life.mjs?v=0.7.1";
+export const VERSION = "0.7.1";
 export const NEEDS = {
   energy: "Énergie",
   social: "Lien social",
@@ -149,32 +148,32 @@ export const PRIORITIES = {
 };
 export const ACTIONS = {
   relax: {
-    label: "Décrocher",
+    label: "Détente",
     icon: "☀",
     duration: 45,
     description:
-      "Pause pendant l’éveil : énergie +0,16 et plaisir +0,8 par minute; détresse −0,07. Ne remplace pas une nuit.",
+      "Pause pendant l’éveil : énergie +0,16 et plaisir +0,12 par minute; détresse −0,07. Ne remplace pas une nuit.",
   },
   social: {
     label: "Socialiser",
     icon: "♡",
     duration: 50,
     description:
-      "Rejoint une personne ou une discussion. Acceptation puis résultat; recherche limitée à 30 minutes.",
+      "Admission initiale, puis échanges directs et départ selon les besoins. Recherche limitée à 30 minutes.",
   },
   practice: {
     label: "Pratiquer",
     icon: "♫",
     duration: 65,
     description:
-      "Pratique son instrument seul; expression et compétence progressent.",
+      "Travaille instruments et morceaux par cycles, sans expression par défaut. Ensemble : morceau du même groupe.",
   },
   jam: {
-    label: "Jammer",
+    label: "Jam",
     icon: "♬",
     duration: 85,
     description:
-      "Propose ou rejoint une séance ouverte. La musique commence à deux; échanges toutes les 15 minutes de séance.",
+      "Joue solo ou rejoint une séance ouverte. Expression libre ; aucune maîtrise de répertoire ni coordination directe.",
   },
   write: {
     label: "Composer",
@@ -183,6 +182,7 @@ export const ACTIONS = {
     description:
       "Avance un projet persistant; plusieurs séances terminent une chanson.",
   },
+  decadence: {label:"Déchéance",icon:"☠",duration:50,description:"Fête et excès ; épisodes rapprochés, jetons de déchéance et cartes nuisibles."},
   sleep: {
     label: "Dormir",
     icon: "☾",
@@ -540,70 +540,36 @@ const TITLE_PARTS = {
     "Le premier refrain",
   ],
 };
-function projectTitle(s, emotion, p = null) {
-  const endings = [
-    "du quartier",
-    "à minuit",
-    "dans le garage",
-    "sous la pluie",
-    "du canal",
-    "sans détour",
-    "en suspens",
-    "au loin",
-    "de septembre",
-    "au bout de la rue",
-    "en mouvement",
-    "à contretemps",
-  ];
-  const group =
-    p &&
-    s.groups.find((g) => g.archivedAt === null && g.members.includes(p.id));
-  const memory = p?.memories[0]?.text || "";
-  const place = p && PLACES.find((l) => l.id === p.place);
-  const context = memory.includes("déclinées")
-    ? "après les adieux"
-    : memory.includes("Écouté")
-      ? "après les mots"
-      : group
-        ? "de " + group.name.slice(0, 30)
-        : place?.id === "g2"
-          ? "au canal"
-          : null;
-  const base =
-    pick(
-      s,
-      emotion === "distress"
-        ? [...TITLE_PARTS.sadness, ...TITLE_PARTS.anger, ...TITLE_PARTS.fear]
-        : emotion === "exaltation"
-          ? [...TITLE_PARTS.joy, ...TITLE_PARTS.excitement]
-          : TITLE_PARTS[emotion] || TITLE_PARTS.joy,
-    ) +
-    " " +
-    (context && rand(s) < 0.55 ? context : pick(s, endings));
-  let title = base,
-    n = 2;
-  while (
-    s.projects.some((x) => x.title === title) ||
-    s.songs.some((x) => x.title === title)
-  )
-    title = base + " · " + n++;
-  return title;
+function projectTitle(s) { return musicName(s,'song',()=>rand(s)); }
+export function selectProject(s,p,projectId=null){
+ if(p.draft.projectId)p.drafts[p.draft.projectId]=structuredClone(p.draft);
+ const project=projectId?s.projects.find(x=>x.id===projectId&&x.authors?.includes(p.id)&&!['finished','abandoned'].includes(x.status)):null;
+ p.draft=project?(p.drafts[project.id]||{...defaultDraft(),projectId:project.id}):defaultDraft();
+ p.songProgress=project?clamp(project.work/project.target*100):0;
+ return project;
 }
 function ensureProject(s, p) {
   let project = s.projects.find(
     (x) => x.id === p.draft.projectId && x.status !== "finished",
   );
-  if (project) return project;
+  if (project && !["finished","abandoned"].includes(project.status)) return project;
+  const title=projectTitle(s);
+  if(!title){log(s,'system',`${p.name} ne crée pas de projet : banque de titres épuisée.`,[p.id]);if(p.action?.key==='write'){closeActivity(s,p,'cancelled');p.action=null;}return null;}
   const emotion = dominantEmotion(p).key;
   project = {
     id: `c${s.nextProjectId++}`,
     author: p.id,
-    title: projectTitle(s, emotion, p),
+    authorNames: {[p.id]:p.name},
+    authors: [p.id],
+    groupId: p.action?.groupId || null,
+    minutes: 0,
+    contributions: {},
+    title,
     genre: p.genre,
     created: s.time,
     updated: s.time,
     work: 0,
-    target: 300 + (100 - p.personality.discipline) * 0.75,
+    target: 300 + (p.skills.writing * .45 + p.skills[p.instrument] * .25) * 6,
     sessions: 0,
     status: "idea",
     emotion,
@@ -622,6 +588,7 @@ function ensureProject(s, p) {
   };
   s.projects.push(project);
   p.draft.projectId = project.id;
+  if(p.action?.key==='write')p.action.projectId=project.id;
   const idea = s.activities
     .flatMap((a) => a.events)
     .filter(
@@ -648,19 +615,23 @@ function ensureProject(s, p) {
 export function compositionProject(s, p) {
   return (
     s.projects.find(
-      (x) => x.id === p.draft.projectId && x.status !== "finished",
+      (x) => x.id === p.draft.projectId && !["finished","abandoned"].includes(x.status),
     ) || null
   );
 }
 function advanceProject(s, p) {
   const project = ensureProject(s, p);
+  if(!project)return;
   project.work = Math.min(
     project.target,
     project.work +
       s.params.compositionPace *
         (0.85 + p.personality.discipline / 300) *
-        Math.max(0.1, 1 + traitEffect(p, "writing")),
+        Math.max(0.1, 1 + traitEffect(p, "writing")) *
+        (1+Math.min(p.emotions.exaltation,p.emotions.distress)/100*1.5),
   );
+  project.minutes++;
+  project.contributions[p.id]=(project.contributions[p.id]||0)+1;
   project.updated = s.time;
   project.status =
     project.work / project.target < 0.25
@@ -687,7 +658,6 @@ function advanceProject(s, p) {
       project.intensity < 10
         ? "posée"
         : emotionDefinition(project.emotion).tone;
-    project.sources = [...p.draft.sources];
   }
 }
 
@@ -838,6 +808,8 @@ export function addPerson(s) {
   };
   initializePerson(p);
   initializeV7Person(p, s.time, () => rand(s));
+  initializeV71(p, () => rand(s));
+  p.drafts = {};
   s.people.push(p);
   if (!s.playerId) s.playerId = p.id;
   for (const b of s.people)
@@ -865,6 +837,7 @@ export function createWorld(seed = 2040, count = 8) {
     activities: [],
     socialSessions: [],
     projects: [],
+    musicNames: [],
     people: [],
     rels: {},
     events: [],
@@ -987,20 +960,12 @@ export function createGroup(s, ids, { name = null, manual = false } = {}) {
     p = s.people.find((x) => x.id === founders[0]),
     q = s.people.find((x) => x.id === founders[1]);
   if (!manual && !formationEligible(s, p, q)) return null;
+  if(name&&!reserveMusicName(s,"group",name))return null;
+  const groupName=name || musicName(s,'group',()=>rand(s));
+  if(!groupName){log(s,'system','Création de groupe refusée : banque de noms épuisée.',members);return null;}
   const group = {
     id: `g${s.nextGroupId++}`,
-    name:
-      name ||
-      pick(s, [
-        "Les Amplis du coin",
-        "Rue des Érables",
-        "Les Notes de travers",
-        "Minuit au garage",
-        "Les Voisins électriques",
-        "Le Dernier Accord",
-      ]) +
-        " " +
-        (s.nextGroupId - 1),
+    name: groupName,
     members,
     founders,
     created: s.time,
@@ -1029,6 +994,7 @@ export function scores(s, p) {
 function destination(s, p, key) {
   if (key === "sleep") return PLACES.find((x) => x.id === p.home);
   if (key === "relax") return PLACES.find((x) => x.kind === "park");
+  if(key==="decadence")return pick(s,PLACES.filter(x=>["cafe","park"].includes(x.kind)));
   if (key === "social") {
     const peers = s.people.filter(
       (q) =>
@@ -1090,9 +1056,10 @@ export function decide(s, p, forced = null, options = {}) {
   if (p.action?.remaining > 0) {
     if (p.action.elapsed > 0) p.actionCounts[p.action.key].interrupted++;
     closeActivity(s, p, p.action.elapsed > 0 ? "interrupted" : "cancelled");
-    returnToken(p);
+
   }
   const key = forced || reserveToken(p, () => rand(s));
+  if(!key){p.action=null;log(s,"system",`${p.name} attend : inventaire d’actions vide.`,[p.id]);return null;}
   if (!ACTIONS[key]) throw Error("Action V7 inconnue");
   // Record the counts used for this draw, including a freshly refilled cycle.
   p.candidates = forced
@@ -1119,7 +1086,7 @@ export function decide(s, p, forced = null, options = {}) {
       ? key === "sleep"
         ? "Sommeil quotidien hors sac"
         : "Intervention manuelle hors sac"
-      : `Jeton ${ACTIONS[key].label} réservé sans remise · cycle ${p.bag.cycle}`,
+      : `Jeton ${ACTIONS[key].label} défaussé sans remise · cycle ${p.bag.cycle}`,
     route: [],
     quality: 0,
     partners: [],
@@ -1130,8 +1097,10 @@ export function decide(s, p, forced = null, options = {}) {
     sessionId: null,
     recovery: key === "sleep" ? "sleep" : key === "relax" ? "pause" : null,
     target: p.nextPartner || null,
-    tokenStarted: false,
+    tokenStarted: true,
   };
+  setupAction(p,()=>rand(s));
+  if(key==="practice")choosePractice(s,p,options);
   if (key === "jam") {
     const j = assignJam(s, p, options.sessionId, options);
     p.action.sessionId = j.id;
@@ -1139,7 +1108,15 @@ export function decide(s, p, forced = null, options = {}) {
   }
   routeTo(s, p, p.action, dest);
   beginActivity(s, p, p.action);
-  if (key === "write") ensureProject(s, p);
+  if(key==="write"){
+    p.action.groupId=s.groups.find(g=>g.id===options.groupId&&g.archivedAt===null&&g.members.includes(p.id))?.id||null;
+    const candidates=s.projects.filter(x=>x.authors.includes(p.id)&&!["finished","abandoned"].includes(x.status)&&(!options.groupId||!x.groupId||x.groupId===options.groupId));
+    if(options.newProject)selectProject(s,p);
+    else if(options.projectId)selectProject(s,p,options.projectId);
+    else if(candidates.length&&rand(s)<.8)selectProject(s,p,pick(s,candidates).id);
+    else selectProject(s,p);
+    const project=ensureProject(s,p);if(!project)return null;p.action.projectId=project.id;p.action.groupId=project.groupId;
+  }
   log(
     s,
     "decision",
@@ -1157,7 +1134,7 @@ export function conflictRisk(s, a, b) {
     s.params.conflict,
   ).negative;
 }
-export function interaction(s, a, b, type = "discuss", music = false) {
+export function interaction(s, a, b, type = "discuss", music = false, admitted = false) {
   if (
     a === b ||
     a.action?.key === "sleep" ||
@@ -1177,8 +1154,8 @@ export function interaction(s, a, b, type = "discuss", music = false) {
   )
     return null;
   const probs = interactionProbabilities(a, b, rb, type, s.params.conflict);
-  const acceptRoll = rand(s),
-    accepted = acceptRoll < probs.acceptance;
+  const acceptRoll = admitted ? null : rand(s),
+    accepted = admitted || acceptRoll < probs.acceptance;
   if (type === "advance") ra.lastAdvance = s.time;
   const roll = accepted ? rand(s) : null;
   const outcome = !accepted
@@ -1192,6 +1169,7 @@ export function interaction(s, a, b, type = "discuss", music = false) {
     discuss: "discuter",
     support: "soutenir",
     advance: "faire une avance",
+    activity: "proposer une activité",
   }[type];
   const event = log(
     s,
@@ -1357,9 +1335,10 @@ export function support(s, a, b) {
 export function advance(s, a, b) {
   return interaction(s, a, b, "advance");
 }
-export function interact(s, a, b, music = false) {
+export function interact(s, a, b, music = false, admitted = false) {
   const weights = {
     discuss: 10,
+    activity: !music&&admitted&&s.time-(s.socialSessions.find(x=>x.id===a.action?.socialSessionId)?.created||s.time)>=30&&relationship(s,a,b).affinity>20 ? .4 : 0,
     support:
       b.emotions.distress >= 15
         ? Math.max(0, a.personality.kind / 20 + traitEffect(a, "support"))
@@ -1378,7 +1357,8 @@ export function interact(s, a, b, music = false) {
     (k) => weights[k],
     () => rand(s),
   );
-  const result = interaction(s, a, b, type, music);
+  const result = interaction(s, a, b, type, music, admitted);
+  if(type==="activity"&&result){const group=s.groups.find(g=>g.archivedAt===null&&g.members.includes(a.id)&&g.members.includes(b.id));const keys=group?["relax",...(group.repertoire.length?["practice"]:[]),"jam","write","decadence"]:["relax","jam","decadence"];const key=pick(s,keys);result.event.proposedActivity=key;if(result.outcome==="favorable")startJointActivity(s,a,b,key,group);}
   return result?.outcome === "unfavorable"
     ? "conflict"
     : result?.outcome === "favorable"
@@ -1530,7 +1510,9 @@ function sampleDraft(s, p) {
   if (d.samples >= 75) return;
   d.samples++;
   for (const k of Object.keys(EMOTIONS)) d.emotions[k] += p.emotions[k];
-  d.authors = [...new Set([...d.authors, p.id, ...p.action.partners])];
+  d.authors = [...new Set([...d.authors, p.id])];
+  const project=compositionProject(s,p);
+  if(project)project.authors=[...new Set([...project.authors,p.id])];
   const e = dominantEmotion(p);
   if (e.active)
     for (const source of p.emotionSources[e.key] || []) {
@@ -1538,6 +1520,7 @@ function sampleDraft(s, p) {
         d.sources.push({ ...source, emotion: e.key });
     }
   d.sources = d.sources.slice(-8);
+  if(project){project.sources=[...new Map([...project.sources,...d.sources].map(x=>[x.id,x])).values()].slice(-8);}
   if (p.action.partners.length) {
     d.jamQuality += p.action.quality / Math.max(1, p.action.elapsed / 15);
     d.jamSamples++;
@@ -1555,7 +1538,9 @@ export function songOutcome(s, p) {
   )[0];
   const emotion = project?.emotion || sampleEmotion,
     intensity = project?.intensity ?? sampleIntensity;
-  const craft = p.skills.writing * 0.45 + p.skills[p.instrument] * 0.25;
+  const contributors=project?.authors.map(id=>({p:s.people.find(x=>x.id===id),minutes:project.contributions[id]||0})).filter(x=>x.p&&x.minutes>0)||[];
+  const totalWork=contributors.reduce((n,x)=>n+x.minutes,0);
+  const craft=totalWork?contributors.reduce((n,x)=>n+(x.p.skills.writing*.45+x.p.skills[x.p.instrument]*.25)*x.minutes,0)/totalWork:p.skills.writing*.45+p.skills[p.instrument]*.25;
   const expression = (intensity / 100) * (6 + p.personality.creative * 0.12);
   const overwhelm =
     (Math.max(0, intensity - 72) * (100 - p.personality.stable)) / 190;
@@ -1595,12 +1580,15 @@ function releaseSong(s, p) {
     time: s.time,
     ...result,
     genre: project.genre,
-    authors: [p.id],
-    sources: [...p.draft.sources],
+    authors: [...project.authors],
+    authorNames: {...project.authorNames},
+    groupId: project.groupId,
+    sources: [...project.sources],
     hit: result.resonance >= 80,
   };
   s.songs.unshift(song);
-  archiveSong(s, song);
+  classifySongs(s);
+
   project.status = "finished";
   project.songId = song.id;
   project.updated = s.time;
@@ -1614,6 +1602,7 @@ function releaseSong(s, p) {
   );
   feel(s, p, { exaltation: song.hit ? 21 : 11 }, ev);
   memory(s, p, "Une chanson terminée", 5);
+  for(const id of project.authors){const author=s.people.find(x=>x.id===id);if(author?.draft.projectId===project.id){author.draft=defaultDraft();author.songProgress=0;}if(author)delete author.drafts[project.id];}
   p.draft = defaultDraft();
   p.songProgress = 0;
   refreshReputation(s, p);
@@ -1641,7 +1630,8 @@ function finish(s, p) {
   }
   p.actionCounts[a.key].completed++;
   if (a.key === "write") {
-    const project = ensureProject(s, p);
+    const project = compositionProject(s,p);
+    if(!project){closeActivity(s,p);decide(s,p);return;}
     project.sessions++;
     log(
       s,
@@ -1665,8 +1655,8 @@ function assignJam(s, p, sessionId, options = {}) {
           s.jams.filter(
             (j) =>
               j.status !== "finished" &&
-              j.elapsed < 60 &&
-              s.time - j.created < 180,
+              j.elapsed < 180 &&
+              s.time - j.created < 360,
           ),
           (j) => {
             const peers = j.participants
@@ -1681,6 +1671,7 @@ function assignJam(s, p, sessionId, options = {}) {
           },
           () => rand(s),
         );
+  if(session){const host=s.people.find(x=>session.participants.includes(x.id)&&x!==p);if(host&&!options.sessionId&&!admission(s,p,host,"jam"))session=null;}
   if (!session) {
     const dest = PLACES.find((x) => x.id === p.action.dest);
     session = {
@@ -1692,6 +1683,7 @@ function assignJam(s, p, sessionId, options = {}) {
       elapsed: 0,
       status: "waiting",
       playedPairs: [],
+      creditedPairs: [],
       outcomes: {},
       groupId: options.groupId || null,
       songId: options.songId || null,
@@ -1759,32 +1751,12 @@ function updateJams(s) {
       }
       continue;
     }
-    if (present.length < 2) {
-      j.status = "waiting";
-      if (row) row.status = "waiting";
-      for (const p of present) {
-        p.action.waited++;
-        if (p.action.waited >= V7_RULES.jamSearchMinutes) {
-          log(
-            s,
-            "jam",
-            `${p.name} n’a plus de partenaire : la jam est annulée, le jeton est reporté sans remplacer la jam par une pratique.`,
-            [p.id],
-          );
-          returnToken(p);
-          p.action.remaining = 0;
-          closeActivity(s, p, "cancelled");
-          p.action = null;
-          p.waitUntil = s.time + 15;
-        }
-      }
-      continue;
-    }
+    if(!present.length){j.status='waiting';continue;}
     if (j.status !== "active")
       log(
         s,
         "jam",
-        `${present.map((x) => x.name).join(" et ")} commencent à jammer ensemble.`,
+        `${present.map((x) => x.name).join(" et ")} ${present.length===1?"commence à jammer, invitation ouverte":"commencent à jammer ensemble"}.`,
         present.map((x) => x.id),
       );
     j.status = "active";
@@ -1801,21 +1773,21 @@ function updateJams(s) {
     for (const p of present) {
       const a = p.action;
       if (!a.tokenStarted) {
-        consumeToken(p);
+
         a.tokenStarted = true;
       }
       a.elapsed++;
-      a.remaining = Math.max(0, 85 - j.elapsed);
+      a.remaining = Math.max(0, a.duration - a.elapsed);
       a.partners = present.filter((q) => q !== p).map((q) => q.id);
       for (const [need, change] of Object.entries(ACTIVITY_EFFECTS.jam))
-        p.needs[need] = clamp(p.needs[need] + change);
+        if(need!=="social"||present.length>1)p.needs[need] = clamp(p.needs[need] + change);
       p.skills[p.instrument] = clamp(
         p.skills[p.instrument] +
           learningGain(p, p.instrument, 0.013 * s.params.learning),
       );
     }
-    groupRehearsal(s, j, present);
-    if (j.elapsed % 15 === 0) {
+
+    if (present.length>1 && j.elapsed % 15 === 0) {
       const a = weightedChoice(
           present,
           (p) => Math.max(0.05, 1 + traitEffect(p, "initiative")),
@@ -1826,39 +1798,17 @@ function updateJams(s) {
           (q) => partnerWeight(s, a, q, relationship(s, a, q)),
           () => rand(s),
         );
-      const result = interact(s, a, b, true);
+      const result = interact(s, a, b, true, true);
       if (result === "positive" || result === "neutral")
         musicalOutcome(s, a, b, j);
     }
-    if (j.elapsed >= 85) {
-      j.status = "finished";
-      if (row) {
-        row.status = "completed";
-        row.end = s.time;
-      }
-      for (const key of j.playedPairs) {
-        const [aid, bid] = key.split("/"),
-          a = s.people.find((x) => x.id === aid),
-          b = s.people.find((x) => x.id === bid);
-        if (a && b) {
-          relationship(s, a, b).musicSessions++;
-          relationship(s, b, a).musicSessions++;
-        }
-      }
-      log(
-        s,
-        "jam",
-        `La jam se termine : ${present.map((x) => x.name).join(", ")}.`,
-        present.map((x) => x.id),
-      );
-      for (const p of participants) {
-        p.action.remaining = 0;
-        if (p.action.elapsed > 0) p.actionCounts.jam.completed++;
-        refreshReputation(s, p);
-        returnToken(p);
-        decide(s, p);
+    if(j.elapsed%V71_RULES.cycleMinutes===0){
+      for(const p of present)if(shouldLeave(p,()=>rand(s))){
+        for(const q of present)if(q!==p){const key=[p.id,q.id].sort().join('/');if(!j.creditedPairs.includes(key)){j.creditedPairs.push(key);relationship(s,p,q).musicSessions++;relationship(s,q,p).musicSessions++;}}
+        finish(s,p);
       }
     }
+
   }
   s.jams = s.jams.filter(
     (j) => j.status !== "finished" || s.time - j.created < 300,
@@ -1902,77 +1852,99 @@ function sleepMinute(s, p) {
   }
   return false;
 }
-function socialSessionsMinute(s) {
-  s.socialSessions ||= [];
-  const active = [];
-  for (const place of PLACES) {
-    const initiators = s.people.filter(
-      (p) =>
-        p.action?.key === "social" &&
-        !p.action.route.length &&
-        !p.engagement &&
-        p.place === place.id,
-    );
-    const peers = s.people.filter(
-      (p) =>
-        p.action &&
-        ["social", "relax"].includes(p.action.key) &&
-        !p.action.route.length &&
-        !p.engagement &&
-        p.place === place.id,
-    );
-    if (!initiators.length || peers.length < 2) continue;
-    let session = s.socialSessions.find(
-      (x) => x.place === place.id && !x.ended,
-    );
-    if (!session) {
-      session = {
-        id: "social-" + s.nextActivityId++,
-        place: place.id,
-        members: [],
-        created: s.time,
-        nextExchange: s.time,
-        ended: null,
-      };
-      s.socialSessions.push(session);
-    }
-    session.members = peers.map((p) => p.id);
-    active.push(session.id);
-    if (s.time < session.nextExchange) continue;
-    session.nextExchange = s.time + V7_RULES.exchangeMinutes;
-    const initiator = weightedChoice(
-      initiators,
-      (p) => Math.max(0.05, 1 + traitEffect(p, "initiative")),
-      () => rand(s),
-    );
-    const recipient =
-      peers.find((p) => p.id === initiator.action.target && p !== initiator) ||
-      weightedChoice(
-        peers.filter((p) => p !== initiator),
-        (q) => partnerWeight(s, initiator, q, relationship(s, initiator, q)),
-        () => rand(s),
-      );
-    for (const p of [initiator, recipient])
-      if (p.action.key === "social") {
-        if (!p.action.tokenStarted) {
-          consumeToken(p);
-          p.action.tokenStarted = true;
-        }
-        p.action.hadContact = true;
-      }
-    initiator.action.target = null;
-    const outcome = interact(s, initiator, recipient);
-    initiator.encounterVisual = recipient.encounterVisual = {
-      until: s.time + 15,
-      outcome,
-      partner: outcome === "conflict" ? "#!$?" : "♡",
-    };
-  }
-  for (const session of s.socialSessions)
-    if (!session.ended && !active.includes(session.id)) session.ended = s.time;
-  s.socialSessions = s.socialSessions.filter(
-    (x) => !x.ended || s.time - x.ended < 1440,
-  );
+function admission(s,requester,host,key){
+ if(requester===host||requester.engagement||host.engagement||[requester,host].some(p=>p.action?.key==='sleep'))return false;
+ const chances=interactionProbabilities(requester,host,relationship(s,host,requester),'discuss',s.params.conflict),roll=rand(s),accepted=roll<chances.acceptance;
+ log(s,'social',`${requester.name} demande à rejoindre ${ACTIONS[key].label} avec ${host.name} : ${accepted?'accepté':'refusé'}.`,[requester.id,host.id],{admission:key,accepted,chance:chances.acceptance,roll});
+ return accepted;
+}
+function leaveSocial(s,p,reason){
+ log(s,'social',`${p.name} termine sa socialisation : ${reason}.`,[p.id]);finish(s,p);
+}
+function socialSessionsMinute(s){
+ for(const session of s.socialSessions){
+  if(session.ended)continue;
+  session.members=session.members.filter(id=>{const p=s.people.find(x=>x.id===id);return p?.place===session.place&&p?.action?.key==='social'&&p.action.socialSessionId===session.id&&!p.action.route.length&&!p.engagement;});
+  if(session.members.length<2){session.ended=s.time;for(const id of session.members){const p=s.people.find(x=>x.id===id);p.action.admitted=false;p.action.socialSessionId=null;}continue;}
+ }
+ for(const p of s.people.filter(x=>x.action?.key==='social'&&!x.action.route.length&&!x.engagement&&!x.action.admitted)){
+  const peers=s.people.filter(q=>q!==p&&q.place===p.place&&!q.engagement&&!q.action?.route.length&&['social','relax'].includes(q.action?.key)&&!p.action.admissionAttempts.includes(q.id));
+  const host=peers.find(q=>q.id===p.action.target)||weightedChoice(peers,q=>partnerWeight(s,p,q,relationship(s,p,q)),()=>rand(s));
+  if(!host)continue;
+  p.action.admissionAttempts.push(host.id);
+  if(!admission(s,p,host,'social'))continue;
+  let session=s.socialSessions.find(x=>!x.ended&&x.members.includes(host.id));
+  if(!session){session={id:'social-'+s.nextActivityId++,place:p.place,members:[host.id],created:s.time,nextExchange:s.time,intensity:0,ended:null};s.socialSessions.push(session);}
+  if(host.action.key==='relax')decide(s,host,'social');
+  for(const member of [p,host]){member.action.route=[];member.action.dest=session.place;member.place=session.place;member.action.admitted=true;member.action.socialSessionId=session.id;member.action.hadContact=true;member.action.target=null;if(!session.members.includes(member.id))session.members.push(member.id);}
+ }
+ for(const session of s.socialSessions){
+  if(session.ended||session.members.length<2||s.time<session.nextExchange)continue;
+  session.nextExchange=s.time+V71_RULES.cycleMinutes;
+  const peers=session.members.map(id=>s.people.find(x=>x.id===id)).filter(p=>p?.action?.socialSessionId===session.id);
+  if(peers.length<2)continue;
+  const a=weightedChoice(peers,p=>Math.max(.05,1+traitEffect(p,'initiative')),()=>rand(s)),b=weightedChoice(peers.filter(x=>x!==a),q=>partnerWeight(s,a,q,relationship(s,a,q)),()=>rand(s));
+  const result=interact(s,a,b,false,true);
+  session.intensity=clamp((session.intensity||0)+(result==='positive'?4:result==='conflict'?-8:-1),-100,100);
+  if(b.action?.key==='social'&&shouldLeave(b,()=>rand(s),result==='conflict'||session.intensity<-40))leaveSocial(s,b,'besoins et déroulement des échanges');
+ }
+ s.socialSessions=s.socialSessions.filter(x=>!x.ended||s.time-x.ended<1440);
+}
+function startJointActivity(s,a,b,key,group){
+ if(!decide(s,a,key,{groupId:group?.id,songId:key==='practice'?group?.repertoire[0]?.songId:undefined}))return false;
+ const options={groupId:group?.id,sessionId:a.action.sessionId,projectId:a.action.projectId,songId:a.action.songId};
+ if(key==='write'){
+  const project=compositionProject(s,a);if(!project)return false;
+  project.groupId=group.id;project.authors=[...new Set([...project.authors,b.id])];project.authorNames[b.id]=b.name;
+ }
+ if(!decide(s,b,key,options))return false;
+ if(a.action&&b.action)routeTo(s,b,b.action,PLACES.find(x=>x.id===a.action.dest));
+ return true;
+}
+export function proposeActivity(s,a,b,key){
+ if(!ACTIONS[key]||key==='sleep'||key==='social'||a.engagement||b.engagement||[a,b].some(p=>p.action?.key==='sleep'))return false;
+ const group=s.groups.find(g=>g.archivedAt===null&&g.members.includes(a.id)&&g.members.includes(b.id));
+ if(['practice','write'].includes(key)&&!group||key==='practice'&&!group?.repertoire.length)return false;
+ const result=interaction(s,a,b,'activity',false,true);if(result)result.event.proposedActivity=key;
+ if(result?.outcome!=='favorable')return false;
+ return startJointActivity(s,a,b,key,group);
+}
+function joinComposition(s,p){
+ const host=weightedChoice(s.people.filter(q=>q!==p&&q.action?.key==='write'&&!q.action.route.length&&s.groups.some(g=>g.archivedAt===null&&g.members.includes(p.id)&&g.members.includes(q.id))),q=>partnerWeight(s,p,q,relationship(s,p,q)),()=>rand(s));
+ if(!host||!admission(s,p,host,'write'))return;
+ const project=compositionProject(s,host),group=s.groups.find(g=>g.archivedAt===null&&g.members.includes(p.id)&&g.members.includes(host.id)&&(!project?.groupId||project.groupId===g.id));
+ if(!project||!group)return;
+ project.authors=[...new Set([...project.authors,p.id])];project.authorNames[p.id]=p.name;project.groupId=group.id;
+ selectProject(s,p,project.id);p.action.projectId=project.id;host.action.groupId=p.action.groupId=group.id;
+ routeTo(s,p,p.action,PLACES.find(x=>x.id===host.action.dest));
+}
+function choosePractice(s,p,options={}){
+ const a=p.action;a.instrument=chooseInstrument(p,()=>rand(s));
+ const group=options.groupId?s.groups.find(g=>g.id===options.groupId&&g.members.includes(p.id)&&g.archivedAt===null):null;
+ const songs=s.songs.filter(x=>x.authors.includes(p.id)||s.groups.some(g=>g.members.includes(p.id)&&g.repertoire.some(r=>r.songId===x.id)));
+ const choices=group?songs.filter(x=>group.repertoire.some(r=>r.songId===x.id)):songs;
+ const song=options.songId?choices.find(x=>x.id===options.songId):choices.length&&(group||rand(s)<.65)?pick(s,choices):null;
+ a.groupId=group?.id||null;a.songId=song?.id||null;a.content=song?'song':'technique';
+}
+function practiceMinute(s,p){
+ const a=p.action;
+ if(a.songId)p.songMastery[a.songId]=clamp((p.songMastery[a.songId]||0)+.08);
+ if(a.elapsed===1&&!a.groupId){
+  const hosts=s.people.filter(q=>q!==p&&q.action?.key==='practice'&&!q.action.route.length&&q.action.songId&&s.groups.some(g=>g.archivedAt===null&&g.members.includes(p.id)&&g.members.includes(q.id)&&(!q.action.groupId||g.id===q.action.groupId)&&g.repertoire.some(r=>r.songId===q.action.songId)));
+  const host=weightedChoice(hosts,q=>partnerWeight(s,p,q,relationship(s,p,q)),()=>rand(s));
+  if(host&&admission(s,p,host,'practice')){const group=s.groups.find(g=>g.archivedAt===null&&g.members.includes(p.id)&&g.members.includes(host.id)&&(!host.action.groupId||g.id===host.action.groupId)&&g.repertoire.some(r=>r.songId===host.action.songId));host.action.groupId=a.groupId=group.id;a.songId=host.action.songId;a.content='song';routeTo(s,p,a,PLACES.find(x=>x.id===host.action.dest));}
+ }
+ const members=s.people.filter(q=>q.action?.key==='practice'&&!q.action.route.length&&q.place===p.place&&a.groupId&&q.action.groupId===a.groupId&&q.action.songId===a.songId);
+ if(members.length>=2&&members[0]===p)groupRehearsal(s,{groupId:a.groupId,songId:a.songId,elapsed:a.elapsed},members);
+ if(--a.cycleRemaining>0)return;
+ a.cycles++;
+ if(shouldLeave(p,()=>rand(s))){finish(s,p);return;}
+ const group=s.groups.find(g=>g.id===a.groupId&&g.archivedAt===null);
+ if(group&&members.length>1){if(members[0]===p){const options={groupId:group.id,songId:group.repertoire.length?pick(s,group.repertoire).songId:a.songId};for(const q of members){choosePractice(s,q,options);q.action.cycleRemaining=V71_RULES.cycleMinutes;}}else a.cycleRemaining=V71_RULES.cycleMinutes;}
+ else{choosePractice(s,p);a.cycleRemaining=V71_RULES.cycleMinutes;}
+}
+function projectMaintenance(s){
+ for(const project of s.projects)if(!['finished','abandoned'].includes(project.status)&&s.time-project.updated>=V71_RULES.abandonMinutes){project.status='abandoned';log(s,'project',`« ${project.title} » est abandonné après une longue période sans travail.`,project.authors);for(const p of s.people)if(p.draft.projectId===project.id){p.drafts[project.id]=structuredClone(p.draft);p.draft=defaultDraft();}}
 }
 export function step(s, minutes = 1) {
   for (let tick = 0; tick < minutes; tick++) {
@@ -2000,6 +1972,7 @@ export function step(s, minutes = 1) {
         if (s.time < p.waitUntil) continue;
         decide(s, p);
       }
+      if(!p.action)continue;
       const action = p.action;
       if (action.route.length) {
         const t = action.route[0],
@@ -2018,7 +1991,7 @@ export function step(s, minutes = 1) {
       }
       if (action.key === "jam" || action.key === "sleep") continue;
       if (!action.tokenStarted && action.key !== "social") {
-        consumeToken(p);
+
         action.tokenStarted = true;
       }
       const row = s.activities.find((x) => x.id === action.activityId);
@@ -2027,7 +2000,7 @@ export function step(s, minutes = 1) {
         row.activeMinutes = action.elapsed + 1;
       }
       action.elapsed++;
-      action.remaining--;
+      action.remaining=Math.max(0,action.remaining-1);
       const effects = ACTIVITY_EFFECTS[action.key];
       for (const [k, d] of Object.entries(effects))
         p.needs[k] = clamp(
@@ -2039,12 +2012,15 @@ export function step(s, minutes = 1) {
                 : 1),
         );
       if (action.key === "relax") feel(s, p, { distress: -0.07 });
+      if(action.key==="practice")practiceMinute(s,p);
+      if(p.action!==action)continue;
       if (musical.includes(action.key)) {
-        p.skills[p.instrument] = clamp(
-          p.skills[p.instrument] +
+        const instrument=action.instrument||p.instrument;
+        p.skills[instrument] = clamp(
+          p.skills[instrument] +
             learningGain(
               p,
-              p.instrument,
+              instrument,
               0.009 *
                 s.params.learning *
                 (effectiveTraits(p).includes("virtuoso") ? 1.4 : 1),
@@ -2055,32 +2031,33 @@ export function step(s, minutes = 1) {
             p.skills.writing +
               learningGain(p, "writing", 0.018 * s.params.learning),
           );
+          if(action.elapsed===1&&!s.people.some(q=>q!==p&&q.action?.key==='write'&&q.action.projectId===action.projectId))joinComposition(s,p);
+          if(action.route.length)continue;
+          if(!compositionProject(s,p)){selectProject(s,p);if(!ensureProject(s,p))continue;}
           sampleDraft(s, p);
           advanceProject(s, p);
+          p.drafts[p.draft.projectId]=structuredClone(p.draft);
         }
       }
-      if (
-        action.key === "social" &&
-        !action.tokenStarted &&
-        action.elapsed >= V7_RULES.searchMinutes
-      ) {
-        returnToken(p);
-        closeActivity(s, p, "cancelled");
-        p.action = null;
-        p.waitUntil = s.time + 15;
-        log(
-          s,
-          "social",
-          `${p.name} reporte son jeton social : personne disponible. Aucun refus.`,
-          [p.id],
-        );
-        continue;
+      if(action.key==='social'){
+        if(action.admitted&&(action.elapsed>=p.actionRanges.social.max||p.needs.energy<12)){leaveSocial(s,p,'fatigue ou fin de sa fourchette');continue;}
+        if(!action.admitted&&action.elapsed>=V71_RULES.searchMinutes){log(s,'social',`${p.name} termine sa recherche sociale sans partenaire.`,[p.id]);closeActivity(s,p,'cancelled');p.action=null;}
+      }else if(action.key==='relax'&&action.remaining<=0)finish(s,p);
+      else if(['write','decadence'].includes(action.key)&&--action.cycleRemaining<=0){
+        action.cycleRemaining=V71_RULES.cycleMinutes;action.cycles++;
+        if(action.key==='decadence'){
+          if(action.cycles===1){p.excessEpisodes=p.excessEpisodes.filter(t=>s.time-t<V71_RULES.chainMinutes);p.excessEpisodes.push(s.time);}
+          const chain=p.excessEpisodes.filter(t=>s.time-t<V71_RULES.chainMinutes).length;
+          changeDecadence(s,p,3*Math.max(1,chain),'Cycle d’excès rapprochés');feel(s,p,{exaltation:3});
+        }
+        if(shouldLeave(p,()=>rand(s)))finish(s,p);
       }
-      if (action.remaining <= 0) finish(s, p);
+
     }
     updateJams(s);
     socialSessionsMinute(s);
     lifeMinute(s);
+    if(s.time%60===0)projectMaintenance(s);
     for (const r of Object.values(s.rels)) coolRelationV7(r);
     if (s.time % 30 === 0)
       for (const p of s.people) {
@@ -2530,6 +2507,7 @@ export function restore(input) {
       "0.5.0",
       "0.5.1",
       "0.6.0",
+      "0.7.0",
       VERSION,
     ].includes(input.version) ||
     !Array.isArray(input.people) ||
@@ -2541,16 +2519,17 @@ export function restore(input) {
   )
     throw Error("Sauvegarde incompatible ou incomplète.");
   const raw = JSON.parse(JSON.stringify(input));
-  if (input.version !== VERSION) {
+  if (input.version !== VERSION && input.version !== "0.7.0") {
     migrate(raw);
     for (const p of raw.people)
       p.legacyActionCounts = {
         version: input.version,
-        counts: structuredClone(p.actionCounts),
+        counts: structuredClone(input.people.find(x=>x.id===p.id)?.actionCounts || p.actionCounts),
       };
     upgradeV6(raw);
     upgradeV7(raw);
   }
+  if(input.version!==VERSION)upgradeV71(raw,()=>rand(raw));
   const num = (v, min = 0, max = 100) =>
     Number.isFinite(v) && v >= min && v <= max;
   const source = (x) =>
@@ -2726,7 +2705,7 @@ export function restore(input) {
       !PLACES.some((p) => p.id === j.place) ||
       !Array.isArray(j.participants) ||
       j.participants.some((id) => !ids.has(id)) ||
-      !num(j.elapsed, 0, 85) ||
+      !num(j.elapsed, 0, 1e9) ||
       !Number.isFinite(j.created) ||
       !["waiting", "active", "finished"].includes(j.status)
     )
@@ -2768,7 +2747,7 @@ export function restore(input) {
       !num(project.work, 0, project.target) ||
       !Number.isInteger(project.sessions) ||
       project.sessions < 0 ||
-      !["idea", "draft", "ready", "finished"].includes(project.status) ||
+      !["idea", "draft", "ready", "finished", "abandoned"].includes(project.status) ||
       !emotionDefinition(project.emotion) ||
       !GENRES.includes(project.genre) ||
       !Array.isArray(project.sources) ||
@@ -2785,7 +2764,7 @@ export function restore(input) {
     if (
       p.draft.projectId &&
       (!projectIds.has(p.draft.projectId) ||
-        raw.projects.find((x) => x.id === p.draft.projectId).author !== p.id)
+        !raw.projects.find((x) => x.id === p.draft.projectId).authors.includes(p.id))
     )
       throw Error("Projet manquant.");
   if (
@@ -2834,5 +2813,6 @@ export function restore(input) {
     throw Error("Identifiant de personnage invalide.");
   validateLife(raw);
   validateV7(raw);
+  validateV71(raw);
   return raw;
 }

@@ -1,3 +1,5 @@
+import {DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.7.1";
+let catalogueFilters={...DEFAULT_FILTERS};
 import {
   thresholdsHTML,
   catalogueHTML,
@@ -5,13 +7,13 @@ import {
   exchangeTrace,
   sessionHTML,
   rapinHTML,
-} from "./v7-view.mjs?v=0.7.0";
+} from "./v7-view.mjs?v=0.7.1";
 import {
   effectiveTraits,
   updateTraits,
   TRAIT_CATALOG,
   BAG_ACTIONS,
-} from "./v7.mjs?v=0.7.0";
+} from "./v7.mjs?v=0.7.1";
 import {
   createShowClock,
   advanceShowClock,
@@ -21,22 +23,22 @@ import {
   songKey,
   stageGeometry,
   showBeat,
-} from "./show-playback.mjs?v=0.7.0";
+} from "./show-playback.mjs?v=0.7.1";
 import {
   showOverlayHTML,
   showResourcesHTML,
   deckInspectionHTML,
   cardInspectionHTML,
-} from "./show-view.mjs?v=0.7.0";
-import { setupDocSearch } from "./doc-search.mjs?v=0.7.0";
-import { calendarHTML } from "./v6-view.mjs?v=0.7.0";
-import { pendingBooking, eventById } from "./calendar.mjs?v=0.7.0";
-import { editBag } from "./social.mjs?v=0.7.0";
+} from "./show-view.mjs?v=0.7.1";
+import { setupDocSearch } from "./doc-search.mjs?v=0.7.1";
+import { calendarHTML } from "./v6-view.mjs?v=0.7.1";
+import { pendingBooking, eventById } from "./calendar.mjs?v=0.7.1";
+import { editBag } from "./social.mjs?v=0.7.1";
 import {
   profileMarkup,
   changeModule,
   resetLayout,
-} from "./profile-layout.mjs?v=0.7.0";
+} from "./profile-layout.mjs?v=0.7.1";
 import {
   VERSION,
   NEEDS,
@@ -75,7 +77,7 @@ import {
   compositionProject,
   journalEntries,
   chemistryKnowledge,
-} from "./engine.mjs?v=0.7.0";
+} from "./engine.mjs?v=0.7.1";
 import {
   command,
   bandStage,
@@ -90,20 +92,20 @@ import {
   newSeason,
   nextSlot,
   skipShow,
-} from "./life.mjs?v=0.7.0";
+} from "./life.mjs?v=0.7.1";
 import {
   CARDS,
   CURSES,
   INTENTIONS,
   SHOW_TICKS,
   createPerformance,
-} from "./stage.mjs?v=0.7.0";
-import { resolveShowPlan } from "./show-planning.mjs?v=0.7.0";
+} from "./stage.mjs?v=0.7.1";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.7.1";
 import {
   reconcile,
   createViewPositions,
   withReadingAnchor,
-} from "./ui-state.mjs?v=0.7.0";
+} from "./ui-state.mjs?v=0.7.1";
 import {
   quickHTML,
   skillHTML,
@@ -119,14 +121,14 @@ import {
   drawStage,
   enableAudio,
   playSound,
-} from "./v5-view.mjs?v=0.7.0";
+} from "./v5-view.mjs?v=0.7.1";
 import {
   createPlayback,
   snapSpeed,
   setPlaybackSpeed,
   advancePlayback,
   updatePositions,
-} from "./runtime.mjs?v=0.7.0";
+} from "./runtime.mjs?v=0.7.1";
 const playback = createPlayback();
 const $ = (q) => document.querySelector(q),
   $$ = (q) => [...document.querySelectorAll(q)],
@@ -151,8 +153,8 @@ try {
     const input = JSON.parse(saved);
     if (input.version !== VERSION) {
       try {
-        if (!localStorage.getItem("garage-vivant-before-v7"))
-          localStorage.setItem("garage-vivant-before-v7", saved);
+        if (!localStorage.getItem("garage-vivant-before-v7-1"))
+          localStorage.setItem("garage-vivant-before-v7-1", saved);
       } catch {}
     }
     world = restore(input);
@@ -423,7 +425,7 @@ function renderProfile(force = false) {
         )
         .join(
           "",
-        )}<span id="profile-traits" data-retain>${traitPills(p)}</span></div>${quickHTML(world, p)}<div id="reputation">${reputationHTML(p)}</div><div class="action-card"><strong data-action>${esc(actionLabel(p))}</strong><p data-reason>${esc(profileReason(p))}</p><div class="bar"><i data-progress style="width:${a ? clamp(((a.key === "jam" ? world.jams.find((j) => j.id === a.sessionId)?.elapsed || 0 : a.elapsed) / (a.key === "sleep" ? p.sleep.habitual : ACTIONS[a.key].duration)) * 100) : 0}%"></i></div></div>${skillHTML(p)}<section><div class="section-head">SES COMPOSITIONS <span id="profile-song-count" data-retain></span><button class="text-button" data-toggle-archives>${showArchives ? "Masquer archives" : "Archives ↗"}</button></div><div id="profile-songs" data-retain></div></section>${cardsHTML(p)}${decadenceHTML(p)}<section class="emotion-section"><div class="section-head">CE QUI L’HABITE <span id="emotion-label" data-retain></span></div><div id="emotion-bars">${emotionHTML(p)}</div><div id="emotion-source" data-retain class="emotion-source"></div></section><section><div class="section-head">BESOINS <span style="color:#8e9888;font-weight:400;letter-spacing:0">100 = comblé</span></div><div id="needs">${Object.entries(
+        )}<span id="profile-traits" data-retain>${traitPills(p)}</span></div>${quickHTML(world, p)}<div id="reputation">${reputationHTML(p)}</div><div class="action-card"><strong data-action>${esc(actionLabel(p))}</strong><p data-reason>${esc(profileReason(p))}</p><div class="bar"><i data-progress style="width:${a ? clamp((a.elapsed / (a.key === "sleep" ? p.sleep.habitual : a.duration)) * 100) : 0}%"></i></div></div>${skillHTML(p)}<section><div class="section-head">SES COMPOSITIONS <span id="profile-song-count" data-retain></span><button class="text-button" data-toggle-archives>${showArchives ? "Masquer archives" : "Archives ↗"}</button></div><div id="profile-songs" data-retain></div></section>${cardsHTML(p)}${decadenceHTML(p,world.time)}<section class="emotion-section"><div class="section-head">CE QUI L’HABITE <span id="emotion-label" data-retain></span></div><div id="emotion-bars">${emotionHTML(p)}</div><div id="emotion-source" data-retain class="emotion-source"></div></section><section><div class="section-head">BESOINS <span style="color:#8e9888;font-weight:400;letter-spacing:0">100 = comblé</span></div><div id="needs">${Object.entries(
         NEEDS,
       )
         .map(([k, l]) => bar(l, p.needs[k], k))
@@ -521,7 +523,7 @@ function decisionHTML(p) {
 function decisionNote(p) {
   return p.engagement || (p.action && p.action.mode !== "bag")
     ? "Cette activité suit la règle indiquée ci-dessus, sans nouvelle pige."
-    : "Jetons présents au moment de la pige. Un jeton est réservé sans remise, puis consommé au démarrage réel de l’activité.";
+    : "Jetons présents au moment de la pige. Le jeton est défaussé dès la pige, sans remise.";
 }
 function rankHTML(cs) {
   return cs
@@ -555,7 +557,7 @@ function profileReason(p) {
     return p.engagement.arrived
       ? "Le band est rassemblé pour son engagement."
       : "Un engagement commun détermine ce trajet.";
-  return `${PLACES.find((x) => x.id === a?.dest)?.name || ""} · ${a?.route.length ? "Le trajet précède l’activité" : a?.key === "jam" && world.jams.find((j) => j.id === a.sessionId)?.status !== "active" ? "La jam attend au moins 2 personnes sur place" : round(a?.remaining || 0) + " min restantes"}. ${locationReason(world, p)}`;
+  return `${PLACES.find((x) => x.id === a?.dest)?.name || ""} · ${a?.route.length ? "Le trajet précède l’activité" : a?.key === "jam" && world.jams.find((j) => j.id === a.sessionId)?.status !== "active" ? "Jam en solo, invitation ouverte" : ["sleep","relax"].includes(a?.key)?round(a?.remaining||0)+" min restantes":`${round(a?.elapsed||0)} min · fourchette ${p.actionRanges?.[a?.key]?.min||0}–${p.actionRanges?.[a?.key]?.max||0} min`}. ${locationReason(world, p)}`;
 }
 function updateModule(selector, html) {
   const target = $(selector);
@@ -577,7 +579,7 @@ function updateProfileContents() {
   updateModule('#profile [data-stable="quick"]', quickHTML(world, p));
   updateModule('#profile [data-stable="skills"]', skillHTML(p));
   updateModule('#profile [data-stable="deck"]', cardsHTML(p));
-  updateModule('#profile [data-stable="decadence"]', decadenceHTML(p));
+  updateModule('#profile [data-stable="decadence"]', decadenceHTML(p,world.time));
   updateTraits(p);
   replacePreserving("#profile-traits", traitPills(p));
   updateModule('#profile [data-stable="thresholds"]', thresholdsHTML(p, world));
@@ -591,7 +593,7 @@ function updateProfileContents() {
           ((a.key === "jam"
             ? world.jams.find((j) => j.id === a.sessionId)?.elapsed || 0
             : a.elapsed) /
-            (a.key === "sleep" ? p.sleep.habitual : ACTIONS[a.key].duration)) *
+            (a.key === "sleep" ? p.sleep.habitual : a.duration)) *
             100,
         )
       : 0) + "%";
@@ -640,7 +642,7 @@ function projectHTML(p, c = compositionProject(world, p)) {
   if (!c) return "";
   const progress = clamp((c.work / c.target) * 100),
     active = p && c.id === p.draft.projectId;
-  return `<div class="draft-note"><strong>✎ ${esc(c.title)}</strong><br>${c.status === "idea" ? "Idée" : c.status === "ready" ? "Prête à terminer" : "Ébauche"} · ${round(progress)} % · ${c.sessions} séance${c.sessions > 1 ? "s" : ""}<div class="bar"><i style="width:${progress}%"></i></div><small>${esc(c.genre)} · ${esc(c.tone)} · potentiel provisoire ${c.potential}/100<br>${active ? "Le projet reprend à la prochaine séance de composition." : "Projet conservé dans le carnet ; le scénario a lancé un autre projet."}</small>${c.sources.length ? `<details class="causes" data-key="project-${c.id}"><summary>Ce qui inspire ce projet</summary>${c.sources.map((x) => `<p>${esc(x.text)}</p>`).join("")}</details>` : ""}</div>`;
+  return `<div class="draft-note"><strong>✎ ${esc(c.title)}</strong><br>${c.status === "idea" ? "Idée" : c.status === "ready" ? "Prête à terminer" : "Ébauche"} · ${round(progress)} % · ${c.sessions} séance${c.sessions > 1 ? "s" : ""}<div class="bar"><i style="width:${progress}%"></i></div><small>${esc(c.genre)} · ${esc(c.tone)} · potentiel provisoire ${c.potential}/100<br>${active ? "Ce projet peut être repris à une prochaine séance." : "Projet conservé dans le carnet ; le scénario a lancé un autre projet."}</small>${c.sources.length ? `<details class="causes" data-key="project-${c.id}"><summary>Ce qui inspire ce projet</summary>${c.sources.map((x) => `<p>${esc(x.text)}</p>`).join("")}</details>` : ""}</div>`;
 }
 function renderProfileSongs(p) {
   const songs = world.songs.filter(
@@ -653,9 +655,9 @@ function renderProfileSongs(p) {
     `${allCount} terminées · ${songs.length} visibles`;
   replacePreserving(
     "#profile-songs",
-    `${world.projects
-      .filter((c) => c.author === p.id && c.status !== "finished")
-      .map((c) => projectHTML(p, c))
+    `<button class="text-button" data-open-catalogue="${p.id}">Ouvrir son catalogue complet ↗</button>${world.projects
+      .filter((c) => c.authors.includes(p.id) && !["finished","abandoned"].includes(c.status))
+      .slice(0,5).map((c) => projectHTML(p, c))
       .join("")}${
       songs.length
         ? `<div class="profile-catalog">${songs
@@ -823,11 +825,6 @@ function renderPair() {
   );
 }
 function renderJournal() {
-  if (
-    $("#archive-threshold") &&
-    document.activeElement !== $("#archive-threshold")
-  )
-    $("#archive-threshold").value = world.archiveThreshold;
   const complete = filteredJournal();
   let es = complete;
   if (view === "journal" && $("#main").scrollTop > 100) {
@@ -856,42 +853,17 @@ function renderJournal() {
     " terminées · " +
     world.songArchive.length +
     " archivées";
-  replacePreserving(
-    "#projects",
-    world.projects
-      .filter((c) => c.status !== "finished")
-      .map((c) => {
-        const p = world.people.find((x) => x.id === c.author);
-        return `<div class="project-card"><button class="text-button" ${p ? `data-person="${p.id}"` : ""}>${esc(p?.name || "Ancien voisin")} ↗</button>${projectHTML(p, c)}</div>`;
-      })
-      .join("") ||
-      '<p class="muted">Les projets apparaissent dès qu’un personnage commence à composer.</p>',
-  );
-  const visibleSongs = world.songs.filter(
-    (s) => showArchives || !isArchivedSong(world, s.id),
-  );
-  replacePreserving(
-    "#songs",
-    visibleSongs
-      .slice(0, catalogueLimit)
-      .map(
-        (s) =>
-          `<div class="song ${isArchivedSong(world, s.id) ? "archive" : ""}" data-entry="catalogue-${s.id}"><div class="song-title">♫ ${esc(s.title)} ${s.hit ? '<span class="pill member">Ça résonne !</span>' : ""}<strong>${s.quality}/100</strong></div><small>${esc(s.genre)} · ${s.authors
-            .map(
-              (id) =>
-                world.people.find((p) => p.id === id)?.name || "Ancien voisin",
-            )
-            .map(esc)
-            .join(
-              ", ",
-            )} · ${stamp(s.time)}</small><div class="song-tone"><span style="color:${emotionDefinition(s.emotion)?.color || "#819b6f"}">${emotionDefinition(s.emotion)?.icon || "♫"} ${esc(s.tone)} · intensité ${s.intensity}/100</span><span>Écho public ${s.resonance === null ? "non mesuré" : s.resonance + "/100"}</span></div><details class="causes" data-key="song-${s.id}"><summary>Les expériences derrière la chanson</summary>${s.sources?.length ? s.sources.map((c) => `<p><time>${stamp(c.time)}</time> ${esc(c.text)}</p>`).join("") : "<p>Pas d’événement émotionnel marqué pendant cette composition.</p>"}${s.breakdown ? `<p>Qualité : maîtrise ${s.breakdown.craft} + expression ${s.breakdown.expression} + ensemble ${s.breakdown.ensemble} + perfectionnisme ${s.breakdown.perfection} + variation ${s.breakdown.variance} − surcharge émotionnelle ${s.breakdown.overwhelm}. Les arrondis peuvent varier d’un point.</p>` : ""}<p>La tonalité conserve les émotions de la première phase créative ; les séances suivantes développent la chanson. L’écho public est un indicateur simulé.</p></details><button class="text-button song-archive-action" data-archive-song="${s.id}" data-restore-song="${isArchivedSong(world, s.id) ? "yes" : "no"}">${isArchivedSong(world, s.id) ? "Restaurer cette chanson" : "Archiver cette chanson"}</button></div>`,
-      )
-      .join("") +
-      (visibleSongs.length > catalogueLimit
-        ? '<button id="more-songs" class="text-button">Voir davantage de chansons</button>'
-        : "") ||
-      '<div class="empty">Plusieurs séances de composition font avancer un projet jusqu’à une chanson terminée. Les projets en cours sont visibles ci-dessus.</div>',
-  );
+  $("#show-archives").checked=catalogueFilters.status!=="active";
+  const controls=$("#catalogue-controls");
+  const signature=world.people.map(p=>p.id+p.name).join('|')+world.groups.map(g=>g.id+g.name).join('|')+[...world.songs,...world.projects].map(x=>x.genre).join('|');
+  if(controls.dataset.signature!==signature&&!controls.contains(document.activeElement)){
+    controls.innerHTML=catalogueControls(world);controls.dataset.signature=signature;
+    for(const el of controls.querySelectorAll('[data-catalogue-filter]'))el.value=catalogueFilters[el.dataset.catalogueFilter];
+  }
+  const catalogue=musicCatalogueHTML(world,catalogueFilters,catalogueLimit);
+  replacePreserving("#songs",catalogue.html);
+  $("#song-count").textContent=`${catalogue.count} résultats · ${world.projects.filter(x=>x.status!=="finished").length} projets · ${world.songs.length} chansons`;
+
 }
 function renderSettings() {
   $("#decision-mode").value = world.decisionMode;
@@ -916,7 +888,7 @@ const titles = {
   ],
   actions: [
     "Ce qu’ils peuvent faire.",
-    "Cinq actions d’éveil et le sommeil hors sac.",
+    "Six actions d’éveil et le sommeil hors sac.",
   ],
   groups: [
     "Les groupes qui se forment.",
@@ -1063,7 +1035,7 @@ dialogElement.addEventListener("click", (event) => {
 $("#dialog-close").onclick = () => dialogElement.close();
 $("#help").onclick = () =>
   modal(
-    "<h2>Bienvenue rue des Érables.</h2><p>Les cubes décident seuls. Clique un voisin pour voir ce qu’il fait, ce dont il a besoin et pourquoi il choisit son activité.</p><p><b>Quartier</b> : les trajets et les rencontres. <b>Relations</b> : les sentiments de chacun envers chacun. <b>Journal</b> : les événements. <b>Réglages</b> : le moteur et les scénarios.</p><p>Dans la fiche, ouvre les sections « modifier » pour changer un personnage. « Intervenir » te permet de forcer une activité. Le curseur règle la vitesse de 0 à 10 par pas de 0,1 ; 0 met en pause. +1 h avance d’une heure puis reste en pause. À ×1, une seconde réelle vaut 8 minutes simulées.</p><p>Actions expose les cinq activités, leurs compteurs et les jetons sans remise. Le sommeil quotidien est hors sac. Groupes montre les formations qui émergent des relations, avec plusieurs appartenances possibles. Exaltation et détresse activent des traits et modulent les interactions. Les besoins ne changent pas la pige. Les événements et les chansons exposent leurs causes. Les jams démarrent à deux sur place, sans attirer de force un musicien occupé. Leurs participants sont surlignés. Composer fait avancer une idée puis une ébauche persistante. Plusieurs séances terminent une chanson. Le journal regroupe les sessions ; ses détails exposent les causes. La chimie se découvre après des jams communes, avec une option de valeurs exactes au laboratoire. Les cubes restent devant les bâtiments pour être visibles. Shows propose quatre dates continues et une grosse scène tous les quatre événements. Chaque musicien pige cinq cartes de son deck. Les sons s’activent à ta demande. La déchéance ajoute des cartes maudites; le sommeil, les pauses et le soutien aident à récupérer.</p>",
+    "<h2>Bienvenue rue des Érables.</h2><p>Les cubes décident seuls. Clique un voisin pour voir ce qu’il fait, ce dont il a besoin et pourquoi il choisit son activité.</p><p><b>Quartier</b> : les trajets et les rencontres. <b>Relations</b> : les sentiments de chacun envers chacun. <b>Journal</b> : les événements. <b>Réglages</b> : le moteur et les scénarios.</p><p>Dans la fiche, ouvre les sections « modifier » pour changer un personnage. « Intervenir » te permet de forcer une activité. Le curseur règle la vitesse de 0 à 10 par pas de 0,1 ; 0 met en pause. +1 h avance d’une heure puis reste en pause. À ×1, une seconde réelle vaut 8 minutes simulées.</p><p>Actions expose les six activités, leurs compteurs et les jetons sans remise. Le sommeil quotidien est hors sac. Groupes montre les formations qui émergent des relations, avec plusieurs appartenances possibles. Exaltation et détresse activent des traits et modulent les interactions. Les besoins ne changent pas la pige. Les événements et les chansons exposent leurs causes. Jam commence solo et accueille les demandes de participation. Pratiquer prépare les morceaux du même groupe. Leurs participants sont surlignés. Composer fait avancer une idée puis une ébauche persistante. Plusieurs séances terminent une chanson. Le journal regroupe les sessions ; ses détails exposent les causes. La chimie se découvre après des jams communes, avec une option de valeurs exactes au laboratoire. Les cubes restent devant les bâtiments pour être visibles. Shows propose quatre dates continues et une grosse scène tous les quatre événements. Chaque musicien pige cinq cartes de son deck. Les sons s’activent à ta demande. La déchéance ajoute des cartes maudites; le sommeil, les pauses et le soutien aident à récupérer.</p>",
   );
 function setSpeed(value) {
   setPlaybackSpeed(playback, value);
@@ -1360,7 +1332,7 @@ function renderActions() {
     BAG_ACTIONS.map((k) => {
       const a = ACTIONS[k],
         c = p.actionCounts[k];
-      return `<div class="action-entry"><span class="action-symbol">${a.icon}</span><div><h3>${a.label}</h3><p>${a.description}</p><small>${a.duration} min · ${c.completed} terminées · ${c.started} lancées · ${c.interrupted} interrompues</small></div><button data-force="${k}">Lancer hors sac</button></div>`;
+      return `<div class="action-entry"><span class="action-symbol">${a.icon}</span><div><h3>${a.label}</h3><p>${a.description}</p><small>${p.actionRanges[k].min}–${p.actionRanges[k].max} min · ${c.completed} terminées · ${c.started} lancées · ${c.interrupted} interrompues</small></div><button data-force="${k}">Lancer hors sac</button></div>`;
     }).join(""),
   );
   replacePreserving(
@@ -1408,10 +1380,11 @@ document.addEventListener("click", (e) => {
       notify("Choisis au moins deux musiciens.");
       return;
     }
-    createGroup(world, ids, {
+    const created=createGroup(world, ids, {
       name: $("#group-name").value.trim() || null,
       manual: true,
     });
+    if(!created){notify("Nom déjà utilisé ou trop proche d’un autre groupe. Choisis un autre nom.");return;}
     $("#dialog").close();
     renderGroups();
     renderProfile(true);
@@ -1936,7 +1909,7 @@ $("#new-events").onclick = () => {
 };
 $("#hide-rest").checked = hideRest;
 $("#show-archives").checked = showArchives;
-$("#archive-threshold").value = world.archiveThreshold;
+
 for (const checkbox of $$("#journal-types input[value]"))
   checkbox.checked = journalTypes.has(checkbox.value);
 $("#journal-types").onchange = (e) => {
@@ -1948,20 +1921,14 @@ $("#journal-types").onchange = (e) => {
   saveUI();
 };
 $("#show-archives").onchange = (e) => {
+  catalogueFilters.status=e.target.checked?"all":"active";
   showArchives = e.target.checked;
   catalogueLimit = 50;
   renderJournal();
   renderProfile();
   saveUI();
 };
-$("#archive-threshold").onchange = (e) => {
-  world.archiveThreshold = clamp(Number(e.target.value));
-  e.target.value = world.archiveThreshold;
-  save();
-  notify(
-    "Seuil appliqué aux prochaines chansons. Les anciennes restent conservées.",
-  );
-};
+
 $("#show-speed").onchange = (e) => (showSpeed = Number(e.target.value));
 $("#show-pause").onclick = () => {
   if (showReady(world.performance)) {
@@ -2759,3 +2726,10 @@ document.addEventListener("input", (e) => {
   }
 });
 $("#v7-catalogue").innerHTML = catalogueHTML() + connectionsHTML();
+
+document.addEventListener('input',e=>{const key=e.target.dataset.catalogueFilter;if(!key)return;catalogueFilters[key]=['min','max'].includes(key)?clamp(Number(e.target.value)):e.target.value;catalogueLimit=50;renderJournal();});
+document.addEventListener('click',e=>{const details=e.target.closest('[data-song-details]');if(details){const [kind,id]=details.dataset.songDetails.split(':');const x=kind==='project'?world.projects.find(x=>x.id===id):world.songs.find(x=>String(x.id)===id);if(x)modal(songDetailsHTML(world,{...x,kind}));}if(e.target.closest('[data-catalogue-reset]')){catalogueFilters={...DEFAULT_FILTERS};catalogueLimit=50;$('#catalogue-controls').innerHTML=catalogueControls(world);renderJournal();}});
+
+document.addEventListener('click',e=>{const open=e.target.closest('[data-open-catalogue]');if(!open)return;catalogueFilters={...DEFAULT_FILTERS,author:open.dataset.openCatalogue};catalogueLimit=50;$('#catalogue-controls').dataset.signature='';changeView('journal');renderJournal();});
+
+document.addEventListener('click',e=>{const el=e.target.closest('[data-resume-project]');if(!el)return;const [projectId,actorId]=el.dataset.resumeProject.split(':');const r=submit({type:'action',key:'write',projectId,actorId});if(r.ok)$('#dialog').close();});

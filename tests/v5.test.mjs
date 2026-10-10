@@ -21,11 +21,11 @@ function prepared(seed=205,count=4){
  const s=createWorld(seed,count);
  for(const p of s.people){p.needs.energy=100;for(const k in p.priorities)p.priorities[k]=0;p.sleep.nextBedtime=1e12;decide(s,p,'relax');p.action.remaining=100000;}
  const p=s.people[0];let id;
- for(let n=0;n<8&&!s.songs.length;n++){p.needs.energy=100;decide(s,p,'write');id=compositionProject(s,p).id;const completed=p.actionCounts.write.completed;for(let t=0;t<220&&p.actionCounts.write.completed===completed;t++)step(s);}
+ for(let n=0;n<20&&!s.songs.length;n++){p.needs.energy=100;decide(s,p,'write',{projectId:p.draft.projectId});id=compositionProject(s,p).id;const completed=p.actionCounts.write.completed;for(let t=0;t<220&&p.actionCounts.write.completed===completed;t++)step(s);}
  assert(s.songs.length);const song=s.songs[0],g=createGroup(s,s.people.map(p=>p.id),{manual:true});
  for(const a of s.people)for(const b of s.people)if(a!==b)Object.assign(relationship(s,a,b),{affinity:80,trust:85,tension:0});
  assert(command(s,{type:'repertoire',groupId:g.id,songId:song.id}).ok);
- for(const p of s.people){decide(s,p,'relax');p.action.remaining=100000;p.bag=newBag();for(const field of ['composition','cycleComposition','remaining'])p.bag[field]={relax:10,social:0,practice:0,jam:0,write:0};}
+ for(const p of s.people){decide(s,p,'relax');p.action.remaining=100000;p.bag=newBag();for(const field of ['composition','cycleComposition','remaining'])p.bag[field]={relax:10,social:0,practice:0,jam:0,write:0,decadence:0};}
  return {s,g,song};
 }
 const {s,g,song}=prepared();const snapshot=copy(s);
@@ -69,12 +69,12 @@ const rehearsal=prepared(555,3),pair=rehearsal.s.people.slice(0,2),band2=createG
 rehearsal.g.development=.1;rehearsal.g.lastWorked=0;rehearsal.s.time=60*100;lifeMinute(rehearsal.s);assert(rehearsal.g.archivedAt!==null);assert(rehearsal.s.groups.includes(rehearsal.g));assert(command(rehearsal.s,{type:'revive',groupId:rehearsal.g.id}).ok);assert.equal(rehearsal.g.archivedAt,null);
 
 // Deck curses occupy slots and cannot be removed by equipment edits; recovery removes them.
-const musician=s.people[0];musician.decadence=90;assert.equal(activeDeck(musician).filter(id=>CARDS[id].tag==='curse').length,4);const count=activeDeck(musician).length;assert(!command(s,{type:'deck',cards:['absent']}).ok);assert.equal(activeDeck(musician).length,count);musician.decadence=25.01;musician.needs.energy=100;decide(s,musician,'sleep');musician.action.route=[];step(s,10);assert(musician.decadence<25);assert(!activeDeck(musician).some(id=>CARDS[id].tag==='curse'));
+const musician=s.people[0];musician.decadence=90;assert.equal(activeDeck(musician).filter(id=>CARDS[id].tag==='curse').length,4);const count=activeDeck(musician).length;assert(!command(s,{type:'deck',cards:['absent']}).ok);assert.equal(activeDeck(musician).length,count);musician.decadence=20.01;musician.needs.energy=100;decide(s,musician,'sleep');musician.action.route=[];step(s,10);assert(musician.decadence<20);assert(!activeDeck(musician).some(id=>CARDS[id].tag==='curse'));
 assert(learningGain(musician,musician.instrument,1)>0);musician.skills[musician.instrument]=90;const high=learningGain(musician,musician.instrument,1);musician.skills[musician.instrument]=20;assert(learningGain(musician,musician.instrument,1)>high);
 
 // A lone socializer gains relaxation, never free social fulfillment, and gets a session-level frustration.
 const alone=createWorld(314,2);for(const p of alone.people){p.priorities.social=0;p.priorities.jam=0;p.sleep.nextBedtime=1e12;decide(alone,p,'relax');p.action.remaining=100000;p.action.route=[];p.place='home1';p.needs.energy=100;}
-const loner=alone.people[0];loner.needs.social=20;decide(alone,loner,'social');loner.action.route=[];loner.place='park';const social=loner.needs.social;step(alone,50);assert(loner.needs.social<social);assert(alone.events.some(e=>e.text.includes('reporte son jeton social')));assert(!alone.events.some(e=>e.outcome==='refused'));
+const loner=alone.people[0];loner.needs.social=20;decide(alone,loner,'social');loner.action.route=[];loner.place='park';const social=loner.needs.social;step(alone,50);assert(loner.needs.social<social);assert(alone.events.some(e=>e.text.includes('termine sa recherche sociale')));assert(!alone.events.some(e=>e.outcome==='refused'));
 
 // Archives are reversible and never truncate the catalogue, including legacy music.
 const archive=restore(snapshot),historicalCount=archive.songs.length;assert(command(archive,{type:'archive',songId:archive.songs[0].id}).ok);assert(isArchivedSong(archive,archive.songs[0].id));assert.equal(archive.songs.length,historicalCount);assert(command(archive,{type:'archive',songId:archive.songs[0].id,restore:true}).ok);assert(!isArchivedSong(archive,archive.songs[0].id));
@@ -97,5 +97,5 @@ assert.deepEqual(restore(copy(fresh)),fresh);
 
 nextSlot(fresh);step(fresh,1440*10);assert(newSeason(fresh).ok);assert(fresh.season.opportunities.every(o=>o.time>fresh.time));assert.equal(fresh.showHistory.length,1);restore(fresh);
 assert.equal(snapSpeed(.9),1);assert.equal(snapSpeed(1.1),1);assert.equal(snapSpeed(.5),.5);assert.equal(snapSpeed(1.3),1.3);assert.equal(snapSpeed(0),0);
-fresh.decisionMode='bag';const bag=rapinHTML(fresh,fresh.people[0]);for(const action of Object.values((await import('../dist/engine.mjs')).ACTIONS).filter(a=>!a.internal))assert(bag.includes(action.label));assert(bag.includes('Sans remise')&&bag.includes('Prochain cycle'));
+fresh.decisionMode='bag';const bag=rapinHTML(fresh,fresh.people[0]);for(const action of Object.values((await import('../dist/engine.mjs')).ACTIONS).filter(a=>!a.internal))assert(bag.includes(action.label));assert(bag.includes('défausse')&&bag.includes('Quantité souhaitée'));
 console.log('V5 passed: V4 preservation, deterministic 2–24-member shows, physical bounded chains, actual preparation effects, replay, live save, no double reward, competing commitments, rehearsal ownership, group archives, curses/recovery, social presence and reversible catalogue.');

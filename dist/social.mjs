@@ -1,7 +1,7 @@
 // Legacy V6 migration only. Live V7 rules are in v7.mjs.
-import { ACTIONS } from "./engine.mjs?v=0.7.0";
-import { upgradeCalendar } from "./calendar.mjs?v=0.7.0";
-import { editTokens, coolRelationV7 } from "./v7.mjs?v=0.7.0";
+import { ACTIONS } from "./engine.mjs?v=0.7.1";
+import { upgradeCalendar } from "./calendar.mjs?v=0.7.1";
+import { editTokens, coolRelationV7 } from "./v7.mjs?v=0.7.1";
 export function initializeV6Person(p) {
   p.bag = null;
   p.memoryArchive = [];
@@ -35,7 +35,7 @@ export function upgradeV6(s) {
     r.grief ||= { strength: 0, time: s.time, cause: null };
   return s;
 }
-export const editBag = editTokens;
+export const editBag = (p,key,n)=>key!=="decadence"&&editTokens(p,key,n);
 export function coolRelation(s, r) {
   coolRelationV7(r);
 }
