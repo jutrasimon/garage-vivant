@@ -1,9 +1,9 @@
-import {drawShowStage} from './show-view.mjs?v=0.7.0';
-export {bandsHTML,rapinHTML,showSetupHTML,showStatusHTML,seasonHTML} from './v6-view.mjs?v=0.7.0';
-import {SKILLS,ACTIONS,EMOTIONS,stamp,round,clamp,groupsOf,compositionProject,scores} from './engine.mjs?v=0.7.0';
-import {CARDS,CURSES,INTENTIONS,activeDeck,availableCards,SHOW_TICKS,PHRASE_TICKS} from './stage.mjs?v=0.7.0';
-import {bandStage,nextCurse,eligibleSongs,availability,isArchivedSong,seasonSummary,acceptance} from './life.mjs?v=0.7.0';
-import {resolveShowPlan} from './show-planning.mjs?v=0.7.0';
+import {drawShowStage} from './show-view.mjs?v=0.7.1';
+export {bandsHTML,rapinHTML,showSetupHTML,showStatusHTML,seasonHTML} from './v6-view.mjs?v=0.7.1';
+import {SKILLS,ACTIONS,EMOTIONS,stamp,round,clamp,groupsOf,compositionProject,scores} from './engine.mjs?v=0.7.1';
+import {CARDS,CURSES,INTENTIONS,activeDeck,availableCards,SHOW_TICKS,PHRASE_TICKS} from './stage.mjs?v=0.7.1';
+import {bandStage,nextCurse,eligibleSongs,availability,isArchivedSong,seasonSummary,acceptance} from './life.mjs?v=0.7.1';
+import {resolveShowPlan} from './show-planning.mjs?v=0.7.1';
 export const escapeHTML = x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const esc=escapeHTML;
 const person=(s,id)=>s.people.find(p=>p.id===id);
@@ -13,17 +13,17 @@ export function skillHTML(p) {
 }
 export function quickHTML(s,p) {
   const next=nextCurse(p),booking=s.bookings.find(b=>['applied','booked','assembling','playing'].includes(b.status)&&b.members.includes(p.id));
-  return `<section class="quick-profile" data-stable="quick"><div class="player-row"><span class="pill ${s.playerId===p.id?'member':''}">${s.playerId===p.id?'Ton musicien':'Autonome'}</span>${s.playerId!==p.id?`<button class="text-button" data-avatar="${p.id}">Incarner ↗</button>`:''}</div><div class="quick-needs"><span>Énergie <b>${round(p.needs.energy)}</b></span><span>Déchéance <b>${round(p.decadence)}</b></span></div><div class="engagement-note">${booking?`Prochain engagement : ${esc([...s.season.opportunities,...(s.eventArchive||[])].find(o=>o.id===booking.opportunityId)?.name)} · ${stamp(booking.time)}`:'Aucun engagement. Choisis une occasion dans Shows.'}</div><div class="quick-actions">${['relax','practice','write','social'].map(key=>`<button data-force="${key}">${ACTIONS[key].icon} ${ACTIONS[key].label}</button>`).join('')}</div></section>`;
+  return `<section class="quick-profile" data-stable="quick"><div class="player-row"><span class="pill ${s.playerId===p.id?'member':''}">${s.playerId===p.id?'Ton musicien':'Autonome'}</span>${s.playerId!==p.id?`<button class="text-button" data-avatar="${p.id}">Incarner ↗</button>`:''}</div><div class="quick-needs"><span>Énergie <b>${round(p.needs.energy)}</b></span><span>Déchéance <b>${round(p.decadence)}</b></span></div><div class="engagement-note">${booking?`Prochain engagement : ${esc([...s.season.opportunities,...(s.eventArchive||[])].find(o=>o.id===booking.opportunityId)?.name)} · ${stamp(booking.time)}`:'Aucun engagement. Choisis une occasion dans Shows.'}</div><div class="quick-actions">${['relax','practice','write','social','jam','decadence'].map(key=>`<button data-force="${key}">${ACTIONS[key].icon} ${ACTIONS[key].label}</button>`).join('')}</div></section>`;
 }
-export function decadenceHTML(p) {
-  const next=nextCurse(p),curses=CURSES.filter(c=>p.decadence>=c.threshold);
-  return `<section data-stable="decadence"><div class="section-head">DÉCHÉANCE <span>${curses.length} carte${curses.length>1?'s':''} maudite${curses.length>1?'s':''}</span></div>${meter(p.decadence,'Excès et fatigue accumulés')}<p class="muted">${next?`Prochain seuil : ${next.threshold} → ${next.name}.`:'Tous les seuils sont actifs.'} Le repos et le soutien permettent de récupérer.</p>${curses.map(c=>`<div class="curse-note">${c.icon} <b>${c.name}</b> · ${c.description}</div>`).join('')}<details data-key="decadence-story"><summary>Évolution récente</summary>${p.decadenceHistory.length?p.decadenceHistory.map(e=>`<p class="muted">${stamp(e.time)} · ${e.amount>0?'+':''}${e.amount} · ${esc(e.reason)}</p>`).join(''):'<p class="muted">Les excès et les nuits sacrifiées augmentent cette jauge. Le succès seul ne la fait pas monter.</p>'}</details><button data-excess="${p.id}" class="text-button">Prolonger la fête · +18 déchéance</button></section>`;
+export function decadenceHTML(p,time=0) {
+  const next=nextCurse(p),curses=activeDeck(p).filter(id=>CARDS[id].tag==='curse').map(id=>CARDS[id]);
+  return `<section data-stable="decadence"><div class="section-head">DÉCHÉANCE <span>${curses.length} carte${curses.length>1?'s':''} maudite${curses.length>1?'s':''}</span></div>${meter(p.decadence,'Excès et fatigue accumulés')}<p class="muted">${next?`Prochain seuil : ${next.threshold} → ${next.name}.`:'Tous les seuils sont actifs.'} ${p.bag?.remaining.decadence||0} jetons dans le sac · ${p.bag?.consumed.decadence||0} en défausse · ${p.bag?.pendingRemoval.decadence||0} retraits en attente. Épisodes dans les 12 dernières heures : ${p.excessEpisodes.filter(t=>time-t<720).length}. Le repos et le soutien permettent de récupérer.</p>${curses.map(c=>`<div class="curse-note">${c.icon} <b>${c.name}</b> · ${c.description}</div>`).join('')}<details data-key="decadence-story"><summary>Évolution récente</summary>${p.decadenceHistory.length?p.decadenceHistory.map(e=>`<p class="muted">${stamp(e.time)} · ${e.amount>0?'+':''}${e.amount} · ${esc(e.reason)}</p>`).join(''):'<p class="muted">Les excès et les nuits sacrifiées augmentent cette jauge. Le succès seul ne la fait pas monter.</p>'}</details><button data-excess="${p.id}" class="text-button">Prolonger la fête · +18 déchéance</button></section>`;
 }
 export function cardsHTML(p) {
   return `<section data-stable="deck"><div class="section-head">SON DECK <button class="text-button" data-deck="${p.id}">Préparer ↗</button></div><p class="muted">${activeDeck(p).length} cartes actives · cinq pigées sans remise par show.</p><div class="deck-mini">${activeDeck(p).map(id=>{const c=CARDS[id];return `<span class="card-chip ${c.tag}" title="${esc(c.description)}">${c.icon} ${esc(c.name)}</span>`;}).join('')}</div></section>`;
 }
 export function deckEditorHTML(p) {
-  return `<h2>Le deck de ${esc(p.name)}</h2><p>Choisis 8 à 10 cartes. L’instrument, la maîtrise et la personnalité ouvrent des options. Les cartes maudites occupent ensuite les derniers emplacements.</p><div class="deck-choices">${availableCards(p).map(id=>{const c=CARDS[id];return `<label class="deck-choice ${c.tag}"><input name="deck-card" type="checkbox" value="${id}" ${p.deck.includes(id)?'checked':''}><span><b>${c.icon} ${esc(c.name)}</b><small>${esc(c.description)}</small></span></label>`;}).join('')}</div><p id="deck-count" class="muted"></p><button class="primary" data-save-deck="${p.id}">Enregistrer le deck</button>`;
+  return `<h2>Le deck de ${esc(p.name)}</h2><p>Choisis 8 à 10 cartes. L’instrument, la maîtrise et la personnalité ouvrent des options. La déchéance ajoute ses cartes maudites à ces cartes musicales.</p><div class="deck-choices">${availableCards(p).map(id=>{const c=CARDS[id];return `<label class="deck-choice ${c.tag}"><input name="deck-card" type="checkbox" value="${id}" ${p.deck.includes(id)?'checked':''}><span><b>${c.icon} ${esc(c.name)}</b><small>${esc(c.description)}</small></span></label>`;}).join('')}</div><p id="deck-count" class="muted"></p><button class="primary" data-save-deck="${p.id}">Enregistrer le deck</button>`;
 }
 function legacy_bandsHTML(s) {
   const player=person(s,s.playerId);

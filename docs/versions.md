@@ -1,5 +1,20 @@
 # Notes de version
 
+## V0.7.1 — Actions et identité musicale {#v071}
+
+Réalisation du 10 octobre 2026. Le [plan V7.1](./PLAN_V7_1.md) conserve les décisions de conception et détaille les arbitrages de la version livrée ; les quatorze DDD décrivent son fonctionnement actuel.
+
+- Six actions : Détente, Socialiser, Pratiquer, Jam, Composer et Déchéance ; fourchettes personnelles et contenu par cycles.
+- Jeton défaussé dès la pige, aucun remboursement après recherche ; acquisition dans le sac, retraits depuis la défausse et remplissage sans résurrection.
+- Admission sociale initiale unique, résultats directs, intensité, départs et rare proposition d’activité.
+- Instruments principal/secondaires, apprentissage par plateaux, maîtrise individuelle ; pratique collective de morceau entre membres du même groupe. Jam joue solo et reste ouvert sans avancer directement la carrière.
+- Projets multiples séparés, coauteurs, composition longue et irrégulière, élan émotionnel à deux axes, abandon des œuvres délaissées et classement faible relatif.
+- Catalogue unifié filtrable et triable, fiches auteurs/rattachement/maîtrise, archives accessibles et banques de noms distinctes à unicité persistante.
+- Chaînes de déchéance ; quantité liée de jetons et cartes nuisibles ajoutées au paquet musical. Versions de spectacle historiques conservées.
+- Migration V1–V7 et reprise déterministe V7.1 ; quatorze DDD, recherche VitePress et jeu actualisées. Dix raccords débranchés nommés dans l’interface et la documentation.
+
+Voir les [arbitrages de réalisation](./PLAN_V7_1.md), [DDD](./gdd/documentation.md) et [limites](./gdd/raccords-v7.md).
+
 ## V0.7.0 — Personnages et relations {#v070}
 
 - Cinq actions d’éveil dans un sac fini sans remise : jetons réservés puis consommés au démarrage, report sans réalisation quand aucun partenaire n’est disponible, édition au prochain cycle et huit sacs de test.

@@ -1,16 +1,22 @@
-# DDD — Séances, partenaires et interactions
+# DDD — Admission, échanges et activités communes
 
-Version 0.7.0. Les intentions viennent du sac; les séances donnent les occasions. Indisponibilité, refus et résultat défavorable sont trois situations différentes.
+Version 0.7.1. Demander à rejoindre une activité est une admission. Une fois admis, les échanges produisent directement un résultat. Les partenaires restent libres de quitter.
 
-## Séances sociales et musicales
+## Admission initiale
 
-Socialiser rejoint une personne ayant l’intention Socialiser ou Décrocher. Une approche ciblée tente d’abord cette personne si elle est toujours disponible sur place. Sinon, la séance choisit un partenaire selon les liens. Au moins une intention sociale et deux personnes sur place sont nécessaires. Deux personnages qui décrochent côte à côte ne déclenchent pas d’échange seuls. Aucun échange autonome ne naît d’un simple croisement de trajets.
+Socialiser approche une personne qui socialise ou se détend, selon les règles de partenaires. La demande utilise l’affinité et la tension du destinataire, ses émotions et ses traits : `0,55 + affinité ×0,003 − tension ×0,004 + exaltation ×0,001 − détresse ×0,002 + traits accept`, borné de 0,05 à 0,95. Le journal donne demandeur, destinataire, chance, tirage et acceptation. Un destinataire endormi ou engagé est indisponible.
 
-Une séance sociale par lieu possède un seul `nextExchange` : premier échange dès la rencontre, puis toutes les 15 minutes. L’arrivée d’un membre ne réinitialise pas cette horloge. Parmi les intentions sociales présentes, choisir un initiateur par poids; les personnes en pause peuvent recevoir l’échange tout en poursuivant leur action.
+Une personne socialisant tente chaque partenaire disponible une fois dans sa recherche. Un refus ne remet aucun jeton. Une admission acceptée à partir d’une détente termine celle-ci et passe en Socialiser hors sac ; aucun temps de détente résiduel n’est repris.
 
-Une jam ouvre une séance au garage sans interrompre les autres intentions. Un autre jeton Jammer peut la rejoindre tant que son temps joué est sous 60 minutes et son âge sous 180 minutes. Deux personnes présentes démarrent la musique; chaque trajet reste individuel. Une seule horloge commune mesure les 85 minutes, avec un échange toutes les 15 minutes jouées. Les arrivants jouent le temps restant de la séance. Une perte de partenaire suspend la musique et lance l’attente de 90 minutes. Les inscriptions manuelles de répétition conservent leurs règles de commande.
+Une séance possède lieu, membres, création, prochain échange et intensité. Une admission auprès d’un membre inscrit rejoint sa séance. Sinon, la première paire acceptée ouvre une séance. Une arrivée ne réinitialise pas l’horloge. Les personnes présentes à proximité n’entrent pas automatiquement. La séance se termine si moins de deux participants sociaux restent effectivement inscrits.
 
-La fiche de séance expose identifiant, membres, admission, prochaine cadence et poids. Les surlignages de carte correspondent aux séances actives. Les contreparties de recherche impossible sont dans le [DDD Actions](./actions.md).
+Jam peut être rejoint après demande au musicien déjà inscrit ; les commandes collectives explicites ont déjà leur propre confirmation et ne la redemandent pas. Pratiquer et Composer n’acceptent de collaboration qu’avec un groupe musical actif commun. En pratique, le morceau est commun au cycle. La pratique n’est pas interrompue par une conversation ordinaire.
+
+## Cadence et départs
+
+Premier échange à la constitution, puis un seul échange de paire toutes les 15 minutes par séance sociale. Choisir un initiateur parmi les admis, puis un destinataire selon les liens. Les effets directs concernent cette paire. L’intensité commune va de −100 à 100 : +4 favorable, −8 défavorable, −1 neutre. Elle contribue à la décision de quitter lorsque les échanges deviennent difficiles ; elle ne remplace pas les besoins personnels.
+
+Après l’échange, le destinataire décide de rester ou partir selon [Actions](./actions.md). Énergie sous 12 ou durée supérieure à sa borne peuvent aussi provoquer son départ. Un échange défavorable ou une intensité sous −40 permet une sortie immédiate si sa détresse dépasse 80. Le rôle d’initiateur est retiré à chaque échange ; aucun personnage n’a un rôle permanent.
 
 ## Initiative et sélection des partenaires
 
@@ -20,40 +26,30 @@ Poids d’un partenaire : `max(0,1; 1 + max(0, affinité)/20 − tension/30 + gr
 
 Pour choisir une jam ouverte, utiliser la moyenne des poids vers ses membres. La chimie ne pondère pas la sélection; elle reste musicale et peut renforcer les gains d’affinité d’un échange musical favorable. `development` est bien la Coordination affichée; aucune seconde jauge n’a été créée. L’attachement individuel aux groupes reste reporté.
 
-## Catalogue minimal
+## Interactions et propositions
 
-| Interaction | Poids autonome et conditions | Effet spécifique |
-|---|---|---|
-| Discuter `discuss` | poids 10 | Échange ordinaire, possible naissance rare du lien amoureux |
-| Soutenir `support` | destinataire avec détresse ≥15; poids `max(0; empathie/20 + traits support)` | Favorable : détresse du destinataire −12 × puissance de soutien; déchéance −2. Défavorable : détresse supplémentaire +2. Neutre : aucun apaisement spécifique. |
-| Faire une avance `advance` | adultes; lien de l’initiateur ≥5; délai de 12 h par direction; poids `max(0,1; 1 + traits flirt des deux) × Avances amoureuses` | Favorable : lien initiateur +6, destinataire +4 seulement si son lien atteint déjà 5. Défavorable : initiateur −2. |
+Discuter garde un poids 10. Soutenir est disponible avec détresse du destinataire ≥15 et utilise empathie/20 et les traits de soutien. Faire une avance exige deux adultes, un lien amoureux de l’initiateur ≥5 et un délai de 12 heures dans cette direction ; sa pondération utilise les traits de flirt et le paramètre Avances amoureuses. Le soutien favorable apaise la détresse et retire 2 de déchéance ; les effets amoureux existants sont conservés.
 
-Puissance de soutien : `max(0,1; 1 + modificateurs supportPower de l’initiateur)`. Le soutien peut être refusé. Les idées et critiques distinctes, ainsi que les excuses, restent reportées. Les six moments musicaux existants habillent la musique après un échange accepté favorable ou neutre; ils ne constituent pas six nouvelles interactions sociales.
+**Proposer une activité** devient une quatrième interaction : poids 0,4 après 30 minutes de séance et affinité de l’initiateur >20. Elle propose Détente, Jam ou Déchéance ; Pratiquer et Composer deviennent admissibles avec un groupe commun. Elle utilise le même résultat favorable/neutre/défavorable qu’un échange. Seul un favorable lance une activité commune hors sac. Les autres membres continuent leur conversation.
 
-## Acceptation puis résultat
+Une pratique proposée porte sur un morceau du groupe lorsque disponible. Une composition proposée partage un projet entre coauteurs du groupe. Aucune proposition de sommeil et aucun nouvel agenda fictif. Le journal garde `proposedActivity`, le résultat et les transitions.
 
-Un destinataire endormi ou engagé n’est pas disponible. L’acceptation utilise son affinité et sa tension envers l’initiateur. Les formules ci-dessous utilisent des jauges 0–100; les probabilités sont entre 0 et 1.
+## Résultat après admission
 
-| Chance | Base, apports et bornes |
-|---|---|
-| Acceptation | `0,55 + affinité ×0,003 − tension ×0,004 + exaltation destinataire ×0,001 − détresse destinataire ×0,002 + traits accept destinataire`; bornée 0,05–0,95 |
-| Favorable | `0,45 + affinité ×0,0025 − tension ×0,002 + somme exaltations ×0,0007 − somme détresses ×0,001 + traits positive des deux`; soutien ajoute empathie initiateur/500 et traits supportQuality. Bornée 0,08–0,80 |
-| Défavorable | `(0,15 + tension ×0,003 − affinité ×0,001 + somme détresses ×0,001 + traits negative des deux) × Risque d’accrochage`; bornée 0,03–0,70 |
+Pour un échange entre admis, `rolls.acceptance` est nul : aucune deuxième validation. Tirer favorable, neutre ou défavorable depuis les chances V7 : favorable = `0,45 + affinité ×0,0025 − tension ×0,002 + somme exaltations ×0,0007 − somme détresses ×0,001 + traits`, borné 0,08–0,80 ; défavorable = `(0,15 + tension ×0,003 − affinité ×0,001 + somme détresses ×0,001 + traits) × Risque d’accrochage`, borné 0,03–0,70. Le soutien ajoute empathie/500 et ses traits au favorable. Si les deux dépassent 0,95 au total, les ramener proportionnellement à 0,95 ; neutre prend le reste.
 
-Si favorable + défavorable dépasse 0,95, multiplier les deux par `0,95 / somme`. Neutre prend le reste. Cela laisse toujours une issue positive possible sous forte tension, ainsi qu’une part neutre. Le réglage Risque d’accrochage à zéro ne supprime pas le plancher de 3 %.
-
-Tirer l’acceptation en premier. Un refus donne une petite hausse de détresse à l’initiateur : base +1, modulée comme événement émotionnel. Aucun résultat d’échange n’est tiré après refus. Après acceptation, un autre tirage donne favorable, neutre ou défavorable.
+Les appels explicites d’interaction hors séance, comme les commandes de soutien/avance, gardent leur test de disponibilité et leur acceptation propre ; ils ne constituent pas une réadmission automatique à chaque échange collectif. Un refus hors séance ne tire pas de résultat et produit la réaction de détresse existante de l’initiateur.
 
 ## Conséquences communes
 
-Dans les deux directions, un échange accepté ajoute +6 social, incrémente les rencontres et actualise leur date. Favorable : affinité +0,4 × Évolution des liens, confiance +1, tension −3 × Évolution des liens, grief −2, exaltation base +3. Défavorable : affinité −0,5 × Évolution des liens, confiance −1, tension +8 × Évolution des liens, grief +6, détresse base +5. Neutre : pas de changement d’affinité/confiance/tension.
+Dans les deux directions, un échange résolu après admission ajoute +6 social, incrémente les rencontres et actualise leur date. Favorable : affinité +0,4 × Évolution des liens, confiance +1, tension −3 × Évolution des liens, grief −2, exaltation base +3. Défavorable : affinité −0,5 × Évolution des liens, confiance −1, tension +8 × Évolution des liens, grief +6, détresse base +5. Neutre : pas de changement d’affinité/confiance/tension.
 
 En musique, un favorable ajoute à la base d’affinité `max(0; chimie−50)/100`, avant Évolution des liens. Chaque échange musical accepté ajoute +2 complicité, ou −1 s’il est défavorable. Un moment musical technique peut ensuite avoir ses effets propres, y compris un accrochage; son événement est distinct et identifiable.
 
 Les liens sont orientés, les émotions passent par leurs réactions personnelles et les effets spécifiques du soutien et de l’avance sont asymétriques. Aucun seuil émotionnel ne déclenche une dispute directement.
 
-## Explication des tirages
+## Traces et raccords
 
-Le journal brut et les détails de séance affichent initiateur, destinataire, type, acceptation, résultat, jauges et traits utilisés, bases, modificateurs, chances finales, tirages numériques et état avant/après des besoins, émotions et liens. Une tentative refusée affiche explicitement « résultat non tiré ». Ouvrir ces détails n’applique aucun effet et ne consomme aucun hasard.
+Journal et inspecteur exposent admission, membres, prochaine cadence, intensité, probabilité, tirage et effets. La lecture ne consomme pas de hasard. Les interactions musicales favorables ou neutres peuvent encore déclencher un des six moments techniques, séparément identifiable.
 
-Liens : [traits](./traits.md), [relations](./relations.md), [musique](./musique.md), [personnages](./personnages.md).
+Un échange favorable admissible peut toujours créer un groupe ou permettre une adhésion. Lien amoureux et couples gardent leurs règles. Voir [Relations](./relations.md), [Musique](./musique.md), [Actions](./actions.md).

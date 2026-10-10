@@ -1,5 +1,5 @@
 // V7 rules shared by simulation, inspectors and documentation tests.
-export const BAG_ACTIONS = ["relax", "social", "practice", "jam", "write"];
+export const BAG_ACTIONS = ["relax", "social", "practice", "jam", "write", "decadence"];
 export const BAG_SAMPLES = [
   [2, 2, 2, 2, 2],
   [2, 7, 2, 3, 1],
@@ -17,9 +17,10 @@ export const NEED_DRAIN = {
   expression: 0.05,
 };
 export const ACTIVITY_EFFECTS = {
-  relax: { fun: 0.8, energy: 0.16 },
+  relax: { fun: 0.12, energy: 0.16 },
   social: { fun: 0.35 },
-  practice: { expression: 0.6, fun: 0.26, energy: -0.055 },
+  decadence: {fun:0.5,energy:-0.18},
+  practice: { fun: 0.26, energy: -0.055 },
   write: { expression: 0.65, fun: 0.2, energy: -0.03 },
   jam: { expression: 0.7, fun: 0.5, social: 0.6, energy: -0.05 },
 };
@@ -194,7 +195,7 @@ export function updateTraits(p) {
 }
 export function newBag(index = 0) {
   const composition = Object.fromEntries(
-    BAG_ACTIONS.map((k, i) => [k, BAG_SAMPLES[index % BAG_SAMPLES.length][i]]),
+    BAG_ACTIONS.map((k, i) => [k, BAG_SAMPLES[index % BAG_SAMPLES.length][i] || 0]),
   );
   return {
     composition,
@@ -202,55 +203,39 @@ export function newBag(index = 0) {
     remaining: { ...composition },
     consumed: Object.fromEntries(BAG_ACTIONS.map((k) => [k, 0])),
     reserved: null,
+    pendingRemoval: Object.fromEntries(BAG_ACTIONS.map(k=>[k,0])),
     cycle: 1,
   };
 }
-export function editTokens(p, key, value) {
-  if (!BAG_ACTIONS.includes(key)) return false;
-  const n = Number(value);
-  if (!Number.isInteger(n) || n < 0 || n > 100) return false;
-  const next = { ...p.bag.composition, [key]: n };
-  if (!Object.values(next).some((n) => n > 0)) return false;
-  p.bag.composition = next;
-  return true;
+export function editTokens(p,key,value){
+ if(!BAG_ACTIONS.includes(key))return false;
+ const n=Number(value),b=p.bag;
+ if(!Number.isInteger(n)||n<0||n>100||!BAG_ACTIONS.some(k=>k===key?n>0:b.composition[k]>0))return false;
+ b.composition[key]=n;
+ const held=b.remaining[key]+b.consumed[key];
+ if(n>held){b.remaining[key]+=n-held;b.cycleComposition[key]+=n-held;}
+ b.pendingRemoval[key]=Math.max(0,held-n);
+ const remove=Math.min(b.consumed[key],b.pendingRemoval[key]);
+ b.consumed[key]-=remove;b.cycleComposition[key]-=remove;b.pendingRemoval[key]-=remove;
+ return true;
 }
-export function bagRowsV7(p) {
-  const total = Object.values(p.bag.remaining).reduce((a, b) => a + b, 0);
-  return BAG_ACTIONS.map((key) => ({
-    key,
-    score: p.bag.remaining[key],
-    base: p.bag.cycleComposition[key],
-    remaining: p.bag.remaining[key],
-    consumed: p.bag.consumed[key],
-    chance: total ? (p.bag.remaining[key] / total) * 100 : 0,
-    why: `${p.bag.remaining[key]} jetons restants sur ${p.bag.cycleComposition[key]}`,
-    blocked: p.bag.remaining[key] === 0 ? "Épuisé pour ce cycle" : null,
-  }));
+export function bagRowsV7(p){
+ const total=Object.values(p.bag.remaining).reduce((a,b)=>a+b,0);
+ return BAG_ACTIONS.map(key=>({key,score:p.bag.remaining[key],base:p.bag.cycleComposition[key],remaining:p.bag.remaining[key],consumed:p.bag.consumed[key],chance:total?p.bag.remaining[key]/total*100:0,why:`${p.bag.remaining[key]} dans le sac · ${p.bag.consumed[key]} défaussés · ${p.bag.pendingRemoval[key]} retraits en attente`,blocked:p.bag.remaining[key]===0?'Épuisé pour ce cycle':null}));
 }
-export function reserveToken(p, random) {
-  const b = p.bag;
-  if (b.reserved) return b.reserved;
-  if (!Object.values(b.remaining).some((n) => n > 0)) {
-    b.cycle++;
-    b.cycleComposition = { ...b.composition };
-    b.remaining = { ...b.composition };
-    b.consumed = Object.fromEntries(BAG_ACTIONS.map((k) => [k, 0]));
-  }
-  let roll = random() * Object.values(b.remaining).reduce((a, b) => a + b, 0);
-  const key = BAG_ACTIONS.find((k) => (roll -= b.remaining[k]) < 0);
-  b.remaining[key]--;
-  b.reserved = key;
-  return key;
-}
-export function consumeToken(p) {
-  if (!p.bag.reserved) return;
-  p.bag.consumed[p.bag.reserved]++;
-  p.bag.reserved = null;
-}
-export function returnToken(p) {
-  if (!p.bag.reserved) return;
-  p.bag.remaining[p.bag.reserved]++;
-  p.bag.reserved = null;
+export function reserveToken(p,random){
+ const b=p.bag;
+ if(!Object.values(b.remaining).some(n=>n>0)){
+  b.cycle++;
+  b.remaining={...b.consumed};b.consumed=Object.fromEntries(BAG_ACTIONS.map(k=>[k,0]));b.cycleComposition={...b.remaining};
+ }
+ const total=Object.values(b.remaining).reduce((a,b)=>a+b,0);
+ if(!total)return null;
+ let roll=random()*total;
+ const key=BAG_ACTIONS.find(k=>(roll-=b.remaining[k])<0);
+ b.remaining[key]--;b.consumed[key]++;
+ if(b.pendingRemoval[key]){b.consumed[key]--;b.pendingRemoval[key]--;b.cycleComposition[key]--;}
+ return key;
 }
 export function initializeV7Person(p, time, random) {
   p.bag = newBag(Math.max(0, Number(p.id.slice(1)) - 1));
@@ -449,6 +434,12 @@ export function coolRelationV7(r) {
     r.affinity = clamp(r.affinity - 0.0005 * (r.tension - 20), -100, 100);
 }
 export const DISCONNECTED = [
+  {id:"social-search-pressure",label:"Surcroît de pression pendant la recherche sociale",reason:"La recherche conserve l’usure et les pressions normales ; aucun multiplicateur spécifique ni déprime supplémentaire automatique."},
+  {id:"inspiration-resourcing",label:"Inspiration et ressourcement",reason:"Aucune jauge d’inspiration. La détente agit sur énergie, plaisir et détresse."},
+  {id:"personal-agenda",label:"Agenda personnel général",reason:"Seuls les engagements de spectacle existent ; aucun rendez-vous général fictif."},
+  {id:"memory-learning",label:"Souvenirs et percées d’apprentissage",reason:"Souvenirs conservés comme sources musicales ; aucun effet direct sur les plateaux."},
+  {id:"chemistry-learning",label:"Chimie et plateaux en pratique",reason:"La chimie reste dans les échanges musicaux ; aucun bonus direct d’apprentissage en répétition."},
+  {id:"absolute-archive",label:"Ancien seuil absolu d’archivage",reason:"Champ historique conservé dans les sauvegardes ; classement automatique désormais relatif à l’auteur."},
   {
     id: "memory-mood",
     label: "Poids des souvenirs sur l’humeur",
@@ -500,17 +491,16 @@ export function validateV7(s) {
       !["composition", "cycleComposition", "remaining", "consumed"].every(
         (field) =>
           b[field] &&
-          Object.keys(b[field]).length === 5 &&
+          Object.keys(b[field]).length === 6 &&
           BAG_ACTIONS.every(
-            (k) => Number.isInteger(b[field][k]) && finite(b[field][k]),
+            (k) => Number.isInteger(b[field][k]) && finite(b[field][k],0,1000),
           ),
       )
     )
       throw Error("Sac V7 invalide.");
     if (
-      !Object.values(b.composition).some((n) => n > 0) ||
-      !Object.values(b.cycleComposition).some((n) => n > 0) ||
-      (b.reserved !== null && !BAG_ACTIONS.includes(b.reserved))
+      !b.pendingRemoval || BAG_ACTIONS.some(k=>!Number.isInteger(b.pendingRemoval[k])||b.pendingRemoval[k]<0||b.pendingRemoval[k]>b.remaining[k]) ||
+      b.reserved !== null
     )
       throw Error("Cycle V7 invalide.");
     for (const k of BAG_ACTIONS)

@@ -1,6 +1,6 @@
 # DDD — Catalogue des traits V7
 
-Version 0.7.0. Le même catalogue est utilisé par le moteur et Réglages. Les douze traits conditionnels sont un contenu de test; leurs nombres ne prétendent pas à un équilibrage définitif.
+Version 0.7.1. Le même catalogue est utilisé par le moteur et Réglages. Les douze traits conditionnels sont un contenu de test; leurs nombres ne prétendent pas à un équilibrage définitif.
 
 ## Sources et seuils
 

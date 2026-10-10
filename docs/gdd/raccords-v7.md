@@ -1,51 +1,50 @@
-# DDD — Raccords V7 et limites identifiées
+# DDD — Raccords et limites V7.1
 
-Version 0.7.0. Le mandat de réalisation autorise des raccords débranchés s’ils sont identifiés et ne cassent pas le jeu. Ce registre remplace l’exigence idéale du plan initial « aucun système débranché » par l’état concret livré. Aucun mécanisme nouveau ne comble silencieusement les trous.
+Version 0.7.1. Ce registre décrit les consommateurs réellement actifs et ceux qui restent débranchés. Le mandat autorise ces limites lorsqu’elles sont identifiées et ne cassent pas la partie ; aucune mécanique de remplacement ne les masque.
 
-## Carte des raccords
+## Carte des raccords actifs
 
-| Ancien consommateur | Destination V7 | Statut et preuve consultable |
+| Système | Consommateur actuel | Frontière |
 |---|---|---|
-| Scores et sac à remise | Composition finie, réserve, consommation, cycle | Actif; multiset de cycle testé et fiche du sac |
-| Priorités, attraits musical/social, variation de choix | Aucun poids dans la pige | Retirés de l’interface; champs hérités sans effet |
-| Confort | Aucune jauge de remplacement | Supprimé des besoins, effets et migration |
-| Six émotions du personnage | Exaltation et détresse indépendantes | Actif; deux courbes, pressions et seuils |
-| Humeur et son risque de conflit | Chances d’acceptation/résultat avec deux axes et traits | Humeur supprimée; trace de chaque échange |
-| Besoins → comportement | Pressions temporelles et seuils personnels | Actif; table personnelle des pressions |
-| Traits permanents | Catalogue et somme des sources effectives | Actif; modificateurs sociaux, musicaux et sommeil |
-| Formation comme jeton | Conséquence d’échanges favorables admissibles | Actif; groupe autonome et adhésion possibles |
-| Jams recrutant de force | Séances ouvertes et intentions indépendantes | Actif; test d’absence d’interruption du compositeur |
-| Échanges de croisement / détente automatique | Intentions sociales sur place et horloge de séance | Ancien déclencheur retiré; pas d’horloge concurrente |
-| Attirance et amour vécu | Lien amoureux dirigé et statut de couple | Attirance retirée; amour existant conservé |
-| Grief, tension et confiance | Refroidissement minute, érosion d’affinité, coopération | Actif; différences amis/inconnus testées |
-| Développement et Coordination | Même champ `development` | Actif; poids de groupe et répétition conservés |
-| Personnalité | Consommateurs utiles listés dans Personnages | Actif ailleurs que la pige; pas de nouvelles dimensions |
-| Souvenirs | Archives, texte et provenance musicale | Actif comme histoire; poids d’humeur débranché |
-| Projets et chansons | Travail persistant, qualités, deux axes nouveaux | Actif; anciennes chansons intactes, sources conservées |
-| Public et cartes émotionnelles | Bonus musical avec correspondance d’axe explicitée dans Shows | Actif; anciennes prestations gardent leurs règles |
-| Carrière, invitations, candidatures | Commandes existantes et probabilités de coopération | Actif; parcours distinct du trio d’interactions de quartier |
-| Spectacles, skip et replay | Moteur musical conservé avec trace de règles | Actif; migrations actives et résultats reproductibles |
-| Coucher et engagement | Sommeil hors sac, priorité engagement, jetons rendus | Actif; avance nocturne et départ sauvegardable |
+| Sac sans remise | Six actions, acquisition immédiate, défausse et retraits différés | Aucun remboursement après refus, recherche ou interruption |
+| Durées | Fourchettes persistantes et cycles personnels | Sommeil et engagements gardent leur priorité |
+| Socialisation | Admission initiale puis résultat direct, intensité et départ | Aucun second consentement à la forme d’un échange |
+| Proposition d’activité | Autres actions existantes ; liens et ancienneté | Pas de nouvelle activité inventée |
+| Pratique | Instruments, plateaux, maîtrise solo et répétition de groupe | Aucun gain d’expression par défaut |
+| Jam | Expression solo ou collective et moments musicaux | Aucun crédit direct de répertoire ou coordination |
+| Composition | Plusieurs projets, coauteurs, contributions, finalisation et abandon | Projet inachevé distinct d’une chanson faible |
+| Catalogue | Qualité relative, archives manuelles, maîtrise et filtres | Faibles restent utilisables ; pas d’effacement des œuvres |
+| Noms | Banques distinctes et registre commun persistant | Anciens noms préservés, pas de suffixe numérique de secours |
+| Déchéance | Chaînes, jauge existante, quantité liée de cartes/jetons | Cartes ajoutées ; retrait en défausse pour les jetons |
+| Groupes et romance | Conséquences sociales favorables et commandes existantes | Aucun jeton de formation ni nouvelle mécanique amoureuse |
+| Scène et carrière | Calendrier, répertoire, coordination, réputation, replay | Versions historiques et récompenses uniques conservées |
+| Besoins, émotions et traits | Quatre besoins et deux axes V7 | Aucun retour de l’humeur, du confort ou des scores de pige |
 
-## Quatre raccords débranchés visibles dans le jeu
+## Dix raccords débranchés visibles dans le jeu
 
-| Identifiant | Limite exacte | Ce qui reste utile |
+| Identifiant | Limite exacte | Ce qui reste branché |
 |---|---|---|
-| `memory-mood` | Le poids historique `effect` des souvenirs n’influence plus l’humeur, supprimée | Archives, dates, intensité descriptive, titres et sources de chansons |
-| `six-tones` | Deux axes ne reproduisent pas les six nuances précédentes des nouvelles chansons | Qualité, genre, provenance et anciennes chansons intégrales |
-| `personality-choice` | Personnalité et priorités ne modifient plus les chances des jetons | Leurs consommateurs musicaux, sociaux, émotionnels et de carrière restent décrits |
-| `lazy-choice` | L’ancien bonus de choix du trait Relax n’a plus de consommateur | Trait historique conservé, marqué débranché dans le catalogue |
+| `inspiration-resourcing` | Aucune jauge d’inspiration ou de ressourcement | Détente : énergie, plaisir et réduction de détresse |
+| `personal-agenda` | Aucun agenda général ni obligation quotidienne fictive | Engagements de spectacle, sommeil, besoins et départs |
+| `memory-learning` | Pas de bonus direct des souvenirs aux percées d’apprentissage | Souvenirs, archives et sources de composition |
+| `chemistry-learning` | Pas de multiplicateur de plateau lié à la chimie en répétition | Chimie des échanges de jam, confiance et maîtrise collective |
+| `social-search-pressure` | Pas de multiplicateur propre à la recherche sociale ni déprime automatique supplémentaire | Usure normale du lien social et pressions V7 pendant la recherche |
+| `absolute-archive` | L’ancien paramètre `archiveThreshold` est conservé sans consommateur | Classement relatif aux autres chansons des auteurs ; archives manuelles |
+| `memory-mood` | Le poids historique `effect` des souvenirs n’agit plus sur l’humeur supprimée | Dates, descriptions et provenance musicale |
+| `six-tones` | Deux axes ne reconstituent pas les six nuances des nouvelles chansons | Exaltation/détresse nouvelles et chansons historiques intactes |
+| `personality-choice` | Personnalité et priorités ne pondèrent plus les jetons | Consommateurs sociaux, musicaux et de carrière existants |
+| `lazy-choice` | Bonus de choix du trait Relax sans consommateur | Trait historique marqué débranché dans son catalogue |
 
-Ces quatre états reprennent le registre utilisé par le panneau Réglages; leur présence dans la documentation est vérifiée automatiquement. Aucune ne se présente comme un effet actif. Aucun ancien calcul d’humeur ou de choix n’est relancé en secours.
+Le panneau Réglages reprend ces identifiants depuis le moteur. Le test documentaire exige leur présence ici. Les paramètres numériques choisis pour 7.1 sont des valeurs d’équilibrage documentées, pas des décisions de conception rétroactivement attribuées au joueur.
 
-## Frontières conservées
+## Limites conservées et refus explicites
 
-Une confirmation de répétition, invitation ou engagement n’est pas une discussion de quartier : ses disponibilités et son calcul de carrière sont conservés. Un résultat musical technique n’est pas le résultat d’acceptation sociale : il possède son événement et ses effets. Le public garde des sensibilités musicales; elles ne constituent pas six jauges émotionnelles du personnage.
+Une pratique collective sans morceau du répertoire est refusée. Jam reste une action distincte à choisir. Aucun nom libre après parcours de la banque : création refusée et journalisée ; pas de doublon, de titre inventé hors banque ou de boucle infinie. Les noms historiques similaires ne sont pas renommés.
 
-L’équilibrage est provisoire : huit sacs contrastés, douze traits conditionnels de test et probabilités centralisées. La compréhension et la fréquence des romances/groupes nécessitent un essai avec joueurs. Les tests attestent les invariants et la continuité, pas un équilibre définitif.
+Un groupe sans coordination s’archive selon les règles existantes. Un projet abandonné reste consultable mais ne reprend pas automatiquement. Les répétitions ne donnent pas de nouvelles exceptions de traits à l’expression. L’extension du quartier et les personnalités spécialiste/généraliste restent reportées.
 
-## Pistes reportées
+Les acquisitions peuvent modifier le sac pendant son cycle ; les retraits attendent les jetons défaussés. Une récupération de déchéance peut donc laisser des jetons encore à rencontrer. L’inspecteur expose ce délai ; il ne retire pas secrètement les jetons du sac.
 
-Refonte complète des actions, de la personnalité, de la déchéance ou de la composition; attachement individuel aux groupes; éditeur de seuils/traits; conflits particuliers entre Alphas; excuses, critiques et propositions d’idées comme interactions distinctes; journée représentant des mois. Aucun de ces chantiers n’est dissimulé dans la V7.
+L’équilibrage doit encore être éprouvé par des parties jouées. Les tests attestent déterminisme, sauvegardes, contraintes, recherches et affichage, pas un équilibre définitif. Le viewport tactile ne remplace pas un appareil réel.
 
-Liens : [architecture](./technique.md), [catalogue](./traits.md), [plan de conception V7](../PLAN_V7.md), [versions](../versions.md).
+Liens : [Actions](./actions.md), [Musique](./musique.md), [Compositions](./compositions.md), [Déchéance](./decheance.md), [Technique](./technique.md).

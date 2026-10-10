@@ -1,44 +1,53 @@
-# DDD — Cinq actions et sac Rapin sans remise
+# DDD — Six actions, sac et défausse
 
-Version 0.7.0. Le sac est le seul choix autonome d’activité d’éveil. Dormir est hors sac; Former un groupe devient une conséquence de rencontres favorables.
+Version 0.7.1. Six intentions d’éveil : Détente, Socialiser, Pratiquer, Jam, Composer et Déchéance. Dormir est hors sac. Former un groupe reste une conséquence d’échanges favorables admissibles.
 
-## Activités, durées et besoins
+## Pige et inventaire
 
-Effets bruts par minute réellement sur place, avant usure des besoins :
+Chaque personnage pige quand une action se termine. Aucune cadence périodique, aucun tirage pendant le trajet ou pour changer de contenu dans une séance. La fin normale choisit immédiatement la suite ; après annulation d’une recherche ou réveil, la boucle minute reprend le choix suivant. Sommeil, commandes manuelles et laboratoire peuvent interrompre une action ; leurs actions imposées restent hors sac.
 
-| Action | Durée | Énergie | Social | Plaisir | Expression |
-|---|---|---|---|---|---|
-| Décrocher `relax` | 45 min | +0,16 | — | +0,8 | — |
-| Socialiser `social` | 50 min | — | via échanges acceptés | +0,35 | — |
-| Pratiquer `practice` | 65 min | −0,055 | — | +0,26 | +0,6 |
-| Jammer `jam` | 85 min de séance commune | −0,05 | +0,6 | +0,5 | +0,7 |
-| Composer `write` | 75 min | −0,03 | — | +0,2 | +0,65 |
+Le jeton pigé va immédiatement en défausse, y compris si l’activité échoue ou est interrompue. Aucun remboursement. Une acquisition entre directement dans le sac courant. Un retrait n’est possible qu’en défausse. Si la quantité à retirer dépasse la défausse disponible, le reste est enregistré dans `pendingRemoval`. Le prochain jeton concerné est d’abord pigé, défaussé puis retiré : son action se réalise quand même.
 
-Décrocher réduit aussi la détresse de 0,07/min et la déchéance de 0,006/min. Perfectionniste multiplie l’expression par 0,8 pendant pratique/composition. Les besoins restent bornés. Ces activités gardent leurs effets existants adaptés; leur refonte complète est reportée.
+Au prochain choix nécessaire, un sac vide reprend les jetons conservés de la défausse. Aucun stock ancien ne recrée les retraits. Invariant : `cycleComposition = remaining + consumed` ; `reserved` est toujours nul. Les noms historiques des champs sont conservés : `remaining` est le sac, `consumed` la défausse, `composition` la quantité souhaitée. L’activité courante ne détient aucun deuxième exemplaire du jeton.
 
-Le trajet se déplace à 12 unités par minute et ne compte pas comme temps d’activité. Les garages accueillent la musique; les maisons le sommeil; le parc Décrocher. Socialiser vise un voisin qui socialise ou décroche; à défaut, un lieu social : café, parc ou disquaire.
+Une édition accepte une quantité entière de 0 à 100. Une hausse acquiert immédiatement la différence ; une baisse retire la défausse puis attend les piges restantes. Une demande d’inventaire entièrement vide est refusée. Si un import valide arrive néanmoins sans inventaire, le personnage attend explicitement ; aucun jeton de secours n’est créé. Une probabilité est la quantité restant dans le sac divisée par son total. Les besoins ne repondèrent pas la pige. La déchéance agit par de vrais jetons.
 
-## Cycle fini et réservation
+## Fourchettes et cycles
 
-Le sac contient cinq quantités entières. Chacune peut aller de 0 à 100; au moins un jeton doit rester dans la composition future. Un jeton individuel restant a autant de chance de sortir que tout autre. Pour une action : `chance = quantité restante / total restant`.
+À la création, chaque action reçoit une fourchette personnelle persistante : base × facteur individuel tiré dans [0,8 ; 1,2], puis minimum ×0,65 et maximum ×1,4, arrondis. Bases d’équilibrage : Détente 45, Socialiser 90, Pratiquer 65, Jam 85, Composer 75 et Déchéance 50 minutes. Ces bases ne sont pas des durées fixes.
 
-La pige retire un jeton des restants et le réserve. Il devient consommé à la première minute réelle d’activité. Pour Socialiser, il devient consommé au premier contact, accepté ou refusé. Pour Jammer, il devient consommé à la première minute réellement jouée à deux. Une intervention ou un coucher rend un jeton réservé non commencé; un jeton déjà consommé ne revient pas.
+Chaque séance tire une durée indicative entre ses bornes. Détente se termine à cette durée. Les autres activités musicales et les excès évaluent leur poursuite par cycles de 15 minutes. Avant la borne minimale, elles continuent sauf énergie sous 12 ; à la borne maximale elles terminent au prochain cycle. Entre les bornes, la probabilité de départ est `0,1 + pression + satisfaction + dépassement`, plafonnée à 0,85. Pression = `max(0 ; (35 − min(énergie, plaisir, social))/100)` ; satisfaction +0,35 si social >85 en discussion ou expression >90 en Jam/composition ; dépassement +0,25 après la durée indicative.
 
-Invariant par action : `composition du cycle = restants + consommés + réservation éventuelle`. Quand aucun jeton ne reste et qu’aucun n’est réservé, la prochaine pige ouvre le cycle suivant et remplit depuis la composition future. Le numéro de cycle est visible. Un cycle garantit des occurrences, pas une durée équivalente pour chaque action.
+Après chaque échange social, le destinataire évalue son départ. La fatigue ou sa borne personnelle supérieure peuvent aussi terminer sa participation pendant la boucle minute. Socialiser n’est pas limité à 50 minutes. Le sommeil et les engagements conservent leurs priorités. Une interruption termine la séance ; ses effets et son travail déjà produits sont acquis.
 
-Besoins, émotions, traits et personnalité ne repondèrent pas la pige. L’ancien mode Meilleur score est retiré; les anciens champs de priorités sont conservés uniquement pour compatibilité de données, sans consommateur de décision.
+## Effets sur place
 
-## Modifier le sac
+Effets bruts par minute, avant usure des besoins :
 
-L’édition change exclusivement la composition du prochain remplissage. Les restants, consommés et réservés du cycle courant demeurent identiques. Les verrous, redistribution à 100 % et profil automatique V6 sont retirés. Une valeur invalide ou une composition entièrement vide est refusée et signalée.
+| Action | Énergie | Social | Plaisir | Expression |
+|---|---|---|---|---|
+| Détente | +0,16 | — | +0,12 | — |
+| Socialiser | — | +6 par échange résolu | +0,35 | — |
+| Pratiquer | −0,055 | — | +0,26 | — |
+| Jam | −0,05 | +0,6 seulement avec partenaire | +0,5 | +0,7 |
+| Composer | −0,03 | — | +0,2 | +0,65 |
+| Déchéance | −0,18 | — | +0,5 | — |
 
-La fiche et Actions donnent composition courante, restants, consommés, réservation, cycle et composition future. Une probabilité à zéro peut simplement signifier que tous les jetons de cette action sont épuisés dans ce cycle. Si aucun ne reste, l’inspecteur montre explicitement les chances après le prochain remplissage; la trace de décision garde les quantités réellement utilisées au tirage.
+Détente diminue aussi la détresse de 0,07/min et la déchéance de 0,006/min. Perfectionniste réduit l’expression de composition par ×0,8 ; il ne crée pas de gain d’expression en pratique. Toutes les jauges restent bornées. Inspiration et ressourcement n’ont aucune jauge active.
+
+Les trajets avancent à 12 unités/min et ne comptent pas comme travail. Le monde actuel conserve ses garages, maisons, lieux sociaux et parc ; les demandes de participation et contraintes musicales ne dépendent pas de leurs noms. Agrandir le quartier reste un chantier distinct.
+
+## Recherche et transitions
+
+Une recherche sociale sans admission se termine après 30 minutes sur place. Aucun jeton rendu, aucun délai supplémentaire de 15 minutes. La recherche infructueuse n’applique pas un nouveau multiplicateur de perte sociale ou de détresse : ce raccord évoqué reste à concevoir. Jam commence seul et n’a plus d’attente de 90 minutes pour partenaire.
+
+L’entrée sociale acceptée termine la détente. Les propositions d’activité favorables lancent l’activité commune hors sac et terminent les actions précédentes, sans deuxième pige ni restitution. Les participants ayant déjà pigé une activité musicale conservent ce jeton pour rejoindre une séance admissible. Voir [Interactions](./interactions.md).
 
 ## Huit échantillons de départ
 
 Les huit premiers identifiants reçoivent les sacs ci-dessous; les identifiants suivants reprennent la série modulo huit. Ce sont des profils de test, pas un équilibrage définitif.
 
-| Profil | Décrocher | Socialiser | Pratiquer | Jammer | Composer | Total |
+| Profil | Détente | Socialiser | Pratiquer | Jammer | Composer | Total |
 |---|---|---|---|---|---|---|
 | A équilibré court | 2 | 2 | 2 | 2 | 2 | 10 |
 | B social | 2 | 7 | 2 | 3 | 1 | 15 |
@@ -49,16 +58,6 @@ Les huit premiers identifiants reçoivent les sacs ci-dessous; les identifiants 
 | G créatif solitaire | 10 | 4 | 24 | 8 | 34 | 80 |
 | H équilibré long | 20 | 20 | 20 | 20 | 20 | 100 |
 
-## Recherche impossible et attente
+Ces profils V7 sont conservés ; la sixième quantité Déchéance commence à zéro et augmente selon ses règles. Les cycles mesurent des occurrences, pas des parts égales de temps.
 
-Socialiser cherche au maximum 30 minutes sur place sans contact. Jammer attend au maximum 90 minutes seul sur place. Dans ces cas : rendre le jeton non commencé, clore l’activité comme annulée, attendre 15 minutes, puis reprendre une pige. Aucun refus fictif, aucune action accomplie, aucune transformation automatique en pratique solo. La recherche peut être retentée si la même action ressort; un sac uniquement social ou jam peut donc attendre plusieurs fois, tout en laissant avancer les autres systèmes et le sommeil.
-
-## Interventions
-
-Lancer hors sac est une commande manuelle, journalisée. Le musicien incarné suit l’intervention; un autre peut refuser la proposition selon le calcul de coopération conservé. Elle rend une réservation non commencée et ne consomme pas un nouveau jeton. L’autonomie reprend à sa fin. Le sommeil en cours et le trajet vers un engagement bloquent l’intervention ordinaire. Une répétition demandée utilise l’admissibilité et l’acceptation existantes des partenaires; ce parcours manuel est distinct de la jam issue d’un jeton et ne recrute pas automatiquement les musiciens occupés.
-
-L’inspecteur montre les probabilités réellement utilisées pour une pige. Pendant une intervention, un sommeil, un engagement ou une activité héritée, il affiche la cause hors sac plutôt que des probabilités qui n’ont pas déterminé cette activité. La progression du sommeil utilise sa durée personnelle habituelle.
-
-Les compteurs distinguent démarrages, terminaisons et interruptions. Une recherche annulée n’est pas une terminaison. Les compteurs hérités de récupération sont conservés comme Décrocher; leurs catégories exactes avant migration restent dans `legacyActionCounts`.
-
-Liens : [sommeil](./sommeil.md), [séances et échanges](./interactions.md), [musique et groupes](./musique.md), [migration](./technique.md).
+Liens : [Interactions](./interactions.md), [Musique](./musique.md), [Compositions et catalogue](./compositions.md), [Déchéance](./decheance.md), [Sommeil](./sommeil.md), [Technique](./technique.md).

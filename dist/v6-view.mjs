@@ -1,4 +1,4 @@
-import { showTitleHTML } from "./show-view.mjs?v=0.7.0";
+import { showTitleHTML } from "./show-view.mjs?v=0.7.1";
 import {
   ACTIONS,
   SKILLS,
@@ -6,21 +6,21 @@ import {
   stamp,
   round,
   scores,
-} from "./engine.mjs?v=0.7.0";
+} from "./engine.mjs?v=0.7.1";
 import {
   bandStage,
   eligibleSongs,
   availability,
   acceptance,
-} from "./life.mjs?v=0.7.0";
+} from "./life.mjs?v=0.7.1";
 import {
   pendingBooking,
   eventById,
   morale,
   assess,
-} from "./calendar.mjs?v=0.7.0";
-import { CARDS, INTENTIONS } from "./stage.mjs?v=0.7.0";
-import { resolveShowPlan } from "./show-planning.mjs?v=0.7.0";
+} from "./calendar.mjs?v=0.7.1";
+import { CARDS, INTENTIONS } from "./stage.mjs?v=0.7.1";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.7.1";
 const esc = (x) =>
   String(x ?? "").replace(
     /[&<>"']/g,
@@ -44,12 +44,12 @@ export function bandsHTML(s, chosen = null, query = "", archives = false) {
     groups
       .map((x) => {
         const b = pendingBooking(s, x.id);
-        return `<button class="band-row ${x.id === g?.id ? "selected" : ""}" data-group-select="${x.id}" data-key="band-row-${x.id}"><strong>${esc(x.name)}</strong><small>${esc(x.genre)} · ${x.members.length} membres · ${bandStage(x)}</small><small>Réputation ${round(x.reputation)} · moral ${round(morale(x, s.time))}${b ? ` · ${b.status === "applied" ? "Candidature" : "Show"} ${stamp(b.time)}` : ""}</small></button>`;
+        return `<button class="band-row ${x.id === g?.id ? "selected" : ""}" data-group-select="${x.id}" data-key="band-row-${x.id}"><strong>Groupe · ${esc(x.name)}</strong><small>${esc(x.genre)} · ${x.members.length} membres · ${bandStage(x)}</small><small>Réputation ${round(x.reputation)} · moral ${round(morale(x, s.time))}${b ? ` · ${b.status === "applied" ? "Candidature" : "Show"} ${stamp(b.time)}` : ""}</small></button>`;
       })
       .join("") || "<p>Aucun band dans cette liste.</p>"
   }</aside>${
     g
-      ? `<article class="panel band-detail" data-key="band-detail-${g.id}"><div class="section-head">${esc(g.genre)} · ${bandStage(g)}</div><h2>${esc(g.name)}</h2><div class="result-stats"><span><b>${round(g.development)}</b>Coordination</span><span><b>${round(g.reputation)}</b>Réputation</span><span><b>${round(morale(g, s.time))}</b>Moral</span></div>${(
+      ? `<article class="panel band-detail" data-key="band-detail-${g.id}"><div class="section-head">${esc(g.genre)} · ${bandStage(g)}</div><h2>Groupe · « ${esc(g.name)} »</h2><div class="result-stats"><span><b>${round(g.development)}</b>Coordination</span><span><b>${round(g.reputation)}</b>Réputation</span><span><b>${round(morale(g, s.time))}</b>Moral</span></div>${(
           g.moraleEffects || []
         )
           .filter((e) => e.until > s.time)
@@ -59,12 +59,12 @@ export function bandsHTML(s, chosen = null, query = "", archives = false) {
           )
           .join(
             "",
-          )}<div class="inline-actions">${g.archivedAt === null ? `<button data-open-shows="${g.id}" class="primary">Préparer / réserver</button><button data-rehearse="${g.id}">Répéter</button>` : `<button data-revive="${g.id}">Relancer</button>`}${g.members.includes(s.playerId) ? `<button data-invite-group="${g.id}">Inviter</button>` : ""}</div><details open data-key="members-${g.id}"><summary>Membres</summary><div class="inline-actions">${g.members.map((id) => `<button data-person="${id}">${esc(person(s, id)?.name)} · ${SKILLS[person(s, id)?.instrument] || ""}</button>`).join("")}</div></details><details open data-key="repertoire-${g.id}"><summary>Répertoire du band · ${g.repertoire.length} morceaux</summary><p class="muted">Les morceaux adoptés et leur maîtrise collective. La setlist est l’ordre choisi pour un show.</p>${g.repertoire.map((r) => `<div class="repertoire-row"><b>${esc(s.songs.find((x) => x.id === r.songId)?.title)}</b><small>${round(r.mastery)}/100 · ${r.rehearsals} répétitions</small><button data-v6-remove-song="${g.id}:${r.songId}">Retirer</button></div>`).join("") || "<p>Jam libre disponible même sans chanson.</p>"}<details data-key="catalogue-${g.id}"><summary>Catalogue des membres : ajouter au répertoire</summary>${
+          )}<div class="inline-actions">${g.archivedAt === null ? `<button data-open-shows="${g.id}" class="primary">Préparer / réserver</button><button data-rehearse="${g.id}">Répéter</button>` : `<button data-revive="${g.id}">Relancer</button>`}${g.members.includes(s.playerId) ? `<button data-invite-group="${g.id}">Inviter</button>` : ""}</div><details open data-key="members-${g.id}"><summary>Membres</summary><div class="inline-actions">${g.members.map((id) => `<button data-person="${id}">${esc(person(s, id)?.name)} · ${SKILLS[person(s, id)?.instrument] || ""}</button>`).join("")}</div></details><details open data-key="repertoire-${g.id}"><summary>Répertoire du band · ${g.repertoire.length} morceaux</summary><p class="muted">Les morceaux adoptés et leur maîtrise collective. La setlist est l’ordre choisi pour un show.</p>${g.repertoire.map((r) => `<div class="repertoire-row"><b>Chanson · « ${esc(s.songs.find((x) => x.id === r.songId)?.title)} »</b><small>${round(r.mastery)}/100 · ${r.rehearsals} répétitions</small><button data-v6-remove-song="${g.id}:${r.songId}">Retirer</button></div>`).join("") || "<p>Jam libre disponible même sans chanson.</p>"}<details data-key="catalogue-${g.id}"><summary>Catalogue des membres : ajouter au répertoire</summary>${
           eligibleSongs(s, g)
             .filter((song) => !g.repertoire.some((r) => r.songId === song.id))
             .map(
               (song) =>
-                `<div class="repertoire-row">${esc(song.title)} · ${song.quality}/100 <button data-v6-add-song="${g.id}:${song.id}">Adopter</button></div>`,
+                `<div class="repertoire-row">Chanson « ${esc(song.title)} » · ${song.quality}/100 <button data-v6-add-song="${g.id}:${song.id}">Adopter</button></div>`,
             )
             .join("") || "<p>Aucune nouvelle composition.</p>"
         }</details></details><details open data-key="shows-${g.id}"><summary>Shows passés · ${g.shows.length}</summary>${
@@ -81,7 +81,7 @@ export function bandsHTML(s, chosen = null, query = "", archives = false) {
       : ""
   }</div>`;
 }
-export { rapinHTML } from "./v7-view.mjs?v=0.7.0";
+export { rapinHTML } from "./v7-view.mjs?v=0.7.1";
 export function showSetupHTML(s, plan) {
   const prep = resolveShowPlan(s, plan),
     {
@@ -117,14 +117,14 @@ export function showSetupHTML(s, plan) {
           )
           .join(
             "",
-          )}</select></label></div><p>${o?.final ? `L’organisateur affecte les créneaux. Sélection ${o.selected ? "terminée" : stamp(o.selectionAt)} · découverte ${o.organizer.discovery ? "favorisée" : "possible"}` : "Premier arrivé, premier servi"} · un engagement futur par band.</p>${a ? `<p class="risk-label">${a.risk} · ${a.reasons.map(esc).join(" · ")}</p>` : ""}<div class="section-head">SETLIST · ${plan.setlist.length * 4}/${slot?.duration || 0} MINUTES MUSICALES</div>${plan.setlist.map((id, i) => `<div class="setlist-line" data-key="set-${i}"><b>${i + 1}.</b><select data-set-song="${i}"><option value="free" ${id === null ? "selected" : ""}>Jam libre · 4 min</option>${songs.map((x) => `<option value="${x.id}" ${x.id === id ? "selected" : ""}>${esc(x.title)} · ${x.quality}/100</option>`).join("")}</select><button data-set-up="${i}" ${i ? "" : "disabled"}>↑</button><button data-set-remove="${i}">Retirer</button></div>`).join("")}<button id="set-add" ${plan.setlist.length * 4 + 4 > (slot?.duration || 0) ? "disabled" : ""}>Ajouter un morceau</button><div class="section-head">FORMATION · ${members.length} CHOISIS</div><div class="formation-choices">${group.members
+          )}</select></label></div><p>${o?.final ? `L’organisateur affecte les créneaux. Sélection ${o.selected ? "terminée" : stamp(o.selectionAt)} · découverte ${o.organizer.discovery ? "favorisée" : "possible"}` : "Premier arrivé, premier servi"} · un engagement futur par band.</p>${a ? `<p class="risk-label">${a.risk} · ${a.reasons.map(esc).join(" · ")}</p>` : ""}<div class="section-head">SETLIST · ${plan.setlist.length * 4}/${slot?.duration || 0} MINUTES MUSICALES</div>${plan.setlist.map((id, i) => `<div class="setlist-line" data-key="set-${i}"><b>${i + 1}.</b><select data-set-song="${i}"><option value="free" ${id === null ? "selected" : ""}>Jam libre · 4 min</option>${songs.map((x) => `<option value="${x.id}" ${x.id === id ? "selected" : ""}>Chanson « ${esc(x.title)} » · ${x.quality}/100</option>`).join("")}</select><button data-set-up="${i}" ${i ? "" : "disabled"}>↑</button><button data-set-remove="${i}">Retirer</button></div>`).join("")}<button id="set-add" ${plan.setlist.length * 4 + 4 > (slot?.duration || 0) ? "disabled" : ""}>Ajouter un morceau</button><div class="section-head">FORMATION · ${members.length} CHOISIS</div><div class="formation-choices">${group.members
           .map((id) => {
             const p = person(s, id);
             return `<label data-key="member-${id}"><input data-show-member="${id}" type="checkbox" ${plan.members.includes(id) ? "checked" : ""} ${id === host?.id ? "disabled" : ""}><span><b>${esc(p.name)}</b><small>${SKILLS[p.instrument]} · énergie ${round(p.needs.energy)}</small></span><button data-deck="${id}" type="button">Deck</button></label>`;
           })
           .join(
             "",
-          )}</div><p class="show-blocker">${esc(reason)}</p><div class="inline-actions"><button id="book-show" class="primary" ${ready && slot && plan.setlist.length * 4 <= slot.duration ? "" : "disabled"}>${plan.editBookingId ? "Modifier et reconfirmer" : o?.final ? "Poser la candidature" : "Réserver le créneau"}</button><button id="preview-show" ${members.length < 2 ? "disabled" : ""}>Essayer maintenant</button><button id="planned-rehearsal">Répéter</button><button data-close-preparation>Retour au quartier</button></div></div>`
+          )}</div><p class="show-blocker">${esc(reason)}</p><div class="inline-actions"><button id="book-show" class="primary" ${ready && slot && plan.setlist.length * 4 <= slot.duration ? "" : "disabled"}>${plan.editBookingId ? "Modifier et reconfirmer" : o?.final ? "Poser la candidature" : "Réserver le créneau"}</button><button id="preview-show" ${members.length < 2 ? "disabled" : ""}>Essayer maintenant</button><button id="planned-rehearsal" ${plan.songId===null?'disabled':''}>${plan.songId===null?'Choisir un morceau pour répéter':'Pratiquer ce morceau'}</button><button data-close-preparation>Retour au quartier</button></div></div>`
       : '<div class="panel"><p>Crée un band pour prendre la scène.</p><button data-start-band>Monter un band</button></div>'
   }`;
 }
