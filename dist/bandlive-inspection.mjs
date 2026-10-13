@@ -1,4 +1,4 @@
-import {cardFace} from './card-view.mjs?v=0.8.3';
+import {cardFace} from './card-view.mjs?v=0.8.4';
 export function createBandLiveInspection({root,lookup,blocked}){
   const panel=document.createElement('aside');panel.id='bl-card-preview';panel.className='bl-inspection';panel.setAttribute('aria-label','Détails de la carte');panel.setAttribute('aria-live','polite');panel.hidden=true;
   panel.innerHTML='<div class="preview-caption">DÉTAIL DE LA CARTE</div><div class="preview-face"><div class="preview-head"><span class="preview-cost"></span><strong class="preview-title"></strong></div><div class="preview-art"></div><div class="preview-owner"></div><p class="preview-description"></p><div class="preview-target"></div></div><div class="preview-outcome" hidden><strong class="outcome-name"></strong><div class="outcome-main"></div><div class="outcome-meta"></div><div class="outcome-reaction"></div><div class="outcome-conquest"></div><div class="outcome-trigger"></div></div><div class="preview-targets"></div>';

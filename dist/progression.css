@@ -1,0 +1,45 @@
+/* Levels belong to every musician, including the neighbourhood roster. */
+.roster-entry{position:relative;margin-bottom:7px;border-radius:10px}
+#people .roster-entry .person{margin-bottom:0;min-height:80px;padding-block:10px}
+.roster-progression{display:flex;align-items:center;gap:7px;margin:5px 0}
+.roster-level{display:inline-block;padding:3px 7px;border:1px solid #b7caae;border-radius:6px;background:#e4eddb;color:#33583e;font-size:11px;font-weight:850;line-height:1;white-space:nowrap}
+.roster-xp{width:40px;height:5px;display:block;overflow:hidden;background:#c2cbb766;border-radius:8px}
+.roster-xp i{display:block;height:100%;border-radius:8px;background:#74a982}
+.roster-entry .person-action{height:auto;min-height:13px;margin-top:3px}
+.roster-entry.has-level-reward{background:#f6edcf;box-shadow:inset 3px 0 #d3aa4a}
+.roster-entry.has-level-reward .roster-level{background:#f4df9c;border-color:#b99741;color:#624711}
+.roster-level-up{display:block;width:calc(100% - 16px);margin:0 8px 7px;padding:6px 4px;border:1px solid #c19e45;border-radius:7px;background:#f5df9d;color:#5b441c;font-size:11px;font-weight:800;text-align:center}
+.roster-level-up:hover{background:#edd185;border-color:#aa842d}
+
+/* A persistent celebration: the player decides when to open or postpone it. */
+#level-notification{position:fixed;top:calc(var(--header-height,83px) + 18px);left:50%;transform:translateX(-50%);width:min(570px,calc(100vw - 24px));z-index:230;pointer-events:none}
+.level-notice-card{position:relative;display:flex;align-items:center;gap:24px;padding:26px 30px 25px 26px;border:2px solid #e1bb5f;border-radius:22px;background:linear-gradient(125deg,#fff9df,#f8f4e7 70%);color:#29483b;box-shadow:0 14px 44px #18392d3d,0 0 0 5px #e1bb5f24;pointer-events:auto;animation:level-notice-enter .4s ease-out both}
+.level-notice-portrait{position:relative;flex:none;display:grid;place-items:center;width:112px;height:112px;border-radius:50%;border:2px solid #dfc66e;background:radial-gradient(circle,#fff6b8,#dfeccf);box-shadow:0 0 0 9px #d8bd5c1a}
+.level-notice-portrait .character-portrait{object-fit:contain}
+.level-notice-portrait>span{position:absolute;right:-6px;top:-10px;color:#c5942e;font-size:32px;text-shadow:0 2px #fff;animation:level-notice-spark 1.2s ease-out}
+.level-notice-content{min-width:0;flex:1}
+.level-notice-eyebrow{display:block;color:#8c671d;font-size:11px;font-weight:900;letter-spacing:1.2px}
+.level-notice-content h2{margin:5px 0;font-size:26px;line-height:1.1;overflow-wrap:anywhere}
+.level-notice-number{display:block;font-size:29px;line-height:1.2;color:#406b45}
+.level-notice-content p{margin:8px 0 14px;font-size:13px;line-height:1.4;color:#5e7055}
+.level-notice-actions{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+.level-notice-actions>.primary{padding:11px 15px;font-size:14px;font-weight:800;box-shadow:0 3px 0 #244c34}
+.level-notice-actions>.text-button{font-size:12px}
+.level-notice-close{position:absolute;right:9px;top:7px;padding:3px 9px;border:0;background:transparent;color:#7b765c;font-size:23px;line-height:1}
+.level-notice-queue{display:block;margin-top:12px;color:#836b34;font-size:11px;font-weight:650}
+@keyframes level-notice-enter{from{opacity:0;transform:translateY(-16px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes level-notice-spark{0%{transform:scale(.2) rotate(-40deg)}55%{transform:scale(1.35) rotate(8deg)}100%{transform:none}}
+#level-notification.no-motion .level-notice-card,#level-notification.no-motion .level-notice-portrait>span{animation:none}
+@media(prefers-reduced-motion:reduce){.level-notice-card,.level-notice-portrait>span{animation:none}}
+@media(max-width:620px){
+ .workspace:not(.bandlive-layout){grid-template-rows:minmax(0,1fr) 116px}
+ #people .roster-entry{width:148px;flex:none;margin:0}
+ #people .roster-entry .person{width:148px;min-height:64px;padding:5px;gap:5px}
+ #people .roster-entry .character-portrait{width:27px;height:27px}
+ .roster-progression{margin:3px 0;gap:5px}.roster-level{font-size:10px;padding:2px 5px}.roster-xp{width:27px}
+ .roster-entry .person-action{font-size:8px;min-height:10px}.roster-level-up{font-size:10px;padding:3px;margin-bottom:0}
+ #level-notification{top:calc(var(--header-height,148px) + 10px)}
+ .level-notice-card{gap:14px;padding:22px 17px;border-radius:18px;align-items:flex-start}
+ .level-notice-portrait{width:66px;height:66px;margin-top:12px}.level-notice-portrait .character-portrait{width:56px;height:56px}.level-notice-portrait>span{font-size:25px;right:-8px}
+ .level-notice-eyebrow{font-size:9px;letter-spacing:.5px}.level-notice-content h2{font-size:21px}.level-notice-number{font-size:25px}.level-notice-actions{gap:12px}.level-notice-actions>.primary{font-size:12px;padding:10px}
+}

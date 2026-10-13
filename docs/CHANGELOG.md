@@ -1,3 +1,7 @@
+# V0.8.4 — 13 octobre 2026
+
+Des niveaux visibles et une vraie célébration. [Notes complètes](./versions.md#v084).
+
 # V0.8.3 — 13 octobre 2026
 
 La prévision sur le côté, la salle dégagée. [Notes complètes](./versions.md#v083).

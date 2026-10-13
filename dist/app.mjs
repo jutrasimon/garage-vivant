@@ -1,19 +1,20 @@
-import {PATCH_NOTES} from './release.mjs?v=0.8.3';
+import {PATCH_NOTES} from './release.mjs?v=0.8.4';
 const freshSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
-import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.8.3';
-import {cardFace} from './card-view.mjs?v=0.8.3';
-import {xpHTML,personCard,levelRewardButton} from './person-card.mjs?v=0.8.3';
-import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.3';
-import {songQualityHTML} from './song-rules.mjs?v=0.8.3';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.3';
-import {mountDesignDashboard} from './design-dashboard.mjs?v=0.8.3';
-import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.8.3';
-import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.8.3';
+import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.8.4';
+import {cardFace} from './card-view.mjs?v=0.8.4';
+import {xpHTML,personCard,levelRewardButton,rosterProgressHTML} from './person-card.mjs?v=0.8.4';
+import {createLevelNotifications} from './level-notifications.mjs?v=0.8.4';
+import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.4';
+import {songQualityHTML} from './song-rules.mjs?v=0.8.4';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.4';
+import {mountDesignDashboard} from './design-dashboard.mjs?v=0.8.4';
+import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.8.4';
+import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.8.4';
 const mapOptions=readMapOptions(localStorage);
-import { placeActivityLabels } from './map-labels.mjs?v=0.8.3';
-import { createBandLiveModule } from './bandlive-view.mjs?v=0.8.3';
-import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.8.3';
-import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.8.3";
+import { placeActivityLabels } from './map-labels.mjs?v=0.8.4';
+import { createBandLiveModule } from './bandlive-view.mjs?v=0.8.4';
+import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.8.4';
+import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.8.4";
 let catalogueFilters={...DEFAULT_FILTERS};
 import {
   thresholdsHTML,
@@ -22,13 +23,13 @@ import {
   exchangeTrace,
   sessionHTML,
   rapinHTML,
-} from "./v7-view.mjs?v=0.8.3";
+} from "./v7-view.mjs?v=0.8.4";
 import {
   effectiveTraits,
   updateTraits,
   TRAIT_CATALOG,
   BAG_ACTIONS,
-} from "./v7.mjs?v=0.8.3";
+} from "./v7.mjs?v=0.8.4";
 import {
   createShowClock,
   advanceShowClock,
@@ -38,22 +39,22 @@ import {
   songKey,
   stageGeometry,
   showBeat,
-} from "./show-playback.mjs?v=0.8.3";
+} from "./show-playback.mjs?v=0.8.4";
 import {
   showOverlayHTML,
   showResourcesHTML,
   deckInspectionHTML,
   cardInspectionHTML,
-} from "./show-view.mjs?v=0.8.3";
-import { setupDocSearch } from "./doc-search.mjs?v=0.8.3";
-import { calendarHTML } from "./v6-view.mjs?v=0.8.3";
-import { pendingBooking, eventById } from "./calendar.mjs?v=0.8.3";
-import { editBag } from "./social.mjs?v=0.8.3";
+} from "./show-view.mjs?v=0.8.4";
+import { setupDocSearch } from "./doc-search.mjs?v=0.8.4";
+import { calendarHTML } from "./v6-view.mjs?v=0.8.4";
+import { pendingBooking, eventById } from "./calendar.mjs?v=0.8.4";
+import { editBag } from "./social.mjs?v=0.8.4";
 import {
   profileMarkup,
   changeModule,
   resetLayout,
-} from "./profile-layout.mjs?v=0.8.3";
+} from "./profile-layout.mjs?v=0.8.4";
 import {
   VERSION,
   NEEDS,
@@ -92,7 +93,7 @@ import {
   compositionProject,
   journalEntries,
   chemistryKnowledge,
-} from "./engine.mjs?v=0.8.3";
+} from "./engine.mjs?v=0.8.4";
 import {
   command,
   bandStage,
@@ -108,20 +109,20 @@ import {
   nextBandLiveSlot,
   skipShow,
   completePerformance,
-} from "./life.mjs?v=0.8.3";
+} from "./life.mjs?v=0.8.4";
 import {
   CARDS,
   CURSES,
   INTENTIONS,
   SHOW_TICKS,
   createPerformance,
-} from "./stage.mjs?v=0.8.3";
-import { resolveShowPlan } from "./show-planning.mjs?v=0.8.3";
+} from "./stage.mjs?v=0.8.4";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.8.4";
 import {
   reconcile,
   createViewPositions,
   withReadingAnchor,
-} from "./ui-state.mjs?v=0.8.3";
+} from "./ui-state.mjs?v=0.8.4";
 import {
   quickHTML,
   skillHTML,
@@ -136,14 +137,14 @@ import {
   drawStage,
   enableAudio,
   playSound,
-} from "./v5-view.mjs?v=0.8.3";
+} from "./v5-view.mjs?v=0.8.4";
 import {
   createPlayback,
   snapSpeed,
   setPlaybackSpeed,
   advancePlayback,
   updatePositions,
-} from "./runtime.mjs?v=0.8.3";
+} from "./runtime.mjs?v=0.8.4";
 const playback = createPlayback();
 const $ = (q) => document.querySelector(q),
   $$ = (q) => [...document.querySelectorAll(q)],
@@ -242,6 +243,7 @@ try {
       journalTypes = new Set(settings.journalTypes);
   }
 } catch {}
+const levelNotices=createLevelNotifications({getWorld:()=>world,getReducedEffects:()=>reducedEffects});
 const bandLive = createBandLiveModule({
   getWorld: () => world,
   getPlan: () => showPlan,
@@ -385,10 +387,7 @@ function renderPeople() {
   replacePreserving(
     "#people",
     world.people
-      .map(
-        (p) =>
-          `<button class="person ${p.id === selected ? "active" : ""}" data-person="${p.id}">${characterPortrait(p)}<span><span class="person-name">${esc(characterName(p))} ${isMember(world, p) ? '<span class="role-dot" title="Membre d’un groupe">♫</span>' : ""}</span><span class="person-instrument">${esc(SKILLS[p.instrument])}</span><span class="person-action">${esc(actionLabel(p))}</span></span></button>`,
-      )
+      .map(p=>{const pending=(p.levelRewards||[]).filter(r=>r.status==='pending').length;return `<div class="roster-entry ${pending?'has-level-reward':''}" data-stable="roster-${p.id}"><button class="person ${p.id === selected ? "active" : ""}" data-person="${p.id}">${characterPortrait(p)}<span><span class="person-name">${esc(characterName(p))} ${isMember(world, p) ? '<span class="role-dot" title="Membre d’un groupe">♫</span>' : ""}</span>${rosterProgressHTML(p)}<span class="person-instrument">${esc(SKILLS[p.instrument])}</span><span class="person-action">${esc(actionLabel(p))}</span></span></button>${pending?`<button class="roster-level-up" data-open-level-rewards="${esc(p.id)}" aria-label="Améliorer le deck de ${esc(p.name)}">✦ Améliorer · ${pending}</button>`:''}</div>`;})
       .join(""),
   );
   $("#add").disabled = world.people.length >= 24;
@@ -443,7 +442,7 @@ function renderProfile(force = false) {
   replacePreserving(
     "#profile",
     profileMarkup(
-      `<div class="profile-head">${characterPortrait(p,64)}<div><h2>${esc(characterName(p))}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p>${xpHTML(p)}</div></div>${levelRewardButton(p)}<div class="profile-commands"><button data-edit-character>Nom et apparence</button><button data-delete-character class="danger" ${world.people.length<=1||world.performance?.status==='playing'||world.showEventId?'disabled':''}>Supprimer</button></div><div class="pills">${groupsOf(
+      `<div class="profile-head">${characterPortrait(p,64)}<div><h2>${esc(characterName(p))}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p><span id="profile-xp" data-retain>${xpHTML(p)}</span></div></div><div id="profile-level-action" data-retain>${levelRewardButton(p)}</div><div class="profile-commands"><button data-edit-character>Nom et apparence</button><button data-delete-character class="danger" ${world.people.length<=1||world.performance?.status==='playing'||world.showEventId?'disabled':''}>Supprimer</button></div><div class="pills">${groupsOf(
         world,
         p,
       )
@@ -604,6 +603,8 @@ function updateProfile() {
 function updateProfileContents() {
   const p = current();
   if (!p || !$("[data-action]")) return;
+  replacePreserving('#profile-xp',xpHTML(p));
+  replacePreserving('#profile-level-action',levelRewardButton(p));
   updateModule('#profile [data-stable="quick"]', quickHTML(world, p));
   updateModule('#profile [data-stable="skills"]', skillHTML(p));
   updateModule('#profile [data-stable="deck"]', cardsHTML(p));
@@ -1013,6 +1014,7 @@ function renderTransport() {
 function render() {
   bandLive.sync();
   renderTransport();
+  levelNotices.update();
   if(view==='bandlive')return;
   renderPeople();
   renderProfile();
@@ -1305,6 +1307,7 @@ $("#import-file").onchange = async (e) => {
     if (f.size > 50000000) throw Error("Fichier trop volumineux.");
     let candidate = restore(JSON.parse(await f.text()));
     world = candidate;
+    levelNotices.reset();
     previewReturn = world.livePreviewReturn || null;
     liveEvent = !!world.showEventId;
     showingPerformance = world.performance?.status === "playing" || liveEvent;
@@ -1354,6 +1357,7 @@ document.addEventListener("click", (e) => {
       clamp(round(Number($("#count").value)), 2, 24),
       {setup:$("#band-setup").value},
     );
+    levelNotices.reset();
     displayPos.clear();
     selected = world.people[0].id;
     pair = null;
@@ -2844,9 +2848,11 @@ document.addEventListener('click',event=>{
  const open=event.target.closest('[data-open-level-rewards]');if(!open)return;
  if(world.performance?.status==='playing'){notify('Termine le show avant d’améliorer le deck.');return;}
  const person=world.people.find(p=>p.id===open.dataset.openLevelRewards);if(!person||(person.levelRewards||[]).every(r=>r.status!=='pending'))return;
+ select(person.id);
  levelRewardOwner=person.id;
  modal(`<div data-level-modal><h2>Améliorer le deck de ${esc(person.name)}</h2><p>Chaque niveau te donne un changement de carte. Choisis lequel : il sera conservé pour les prochains shows. Le quartier attend pendant ton choix.</p>${levelRewardsHTML(person,{limit:1})}</div>`);
  $('#dialog').classList.add('level-reward-dialog');
+ levelNotices.acknowledge(person.id);
 });
 
 document.addEventListener('click',event=>{
@@ -2856,7 +2862,7 @@ document.addEventListener('click',event=>{
  const result=claimLevelReward(world,{actorId:button.dataset.levelClaim,level:Number(button.dataset.levelNumber),slot:Number(slot.value),kind:kind.value});
  if(!result.ok){box.querySelector('.level-reward-status').textContent=result.message;return;}
  const inModal=!!button.closest('[data-level-modal]'),person=world.people.find(p=>p.id===button.dataset.levelClaim);
- notify(result.message);save();renderProfile(true);if(view==='groups')renderGroups();if(view==='bandlive')bandLive.refresh();
+ notify(result.message);save();renderPeople();renderProfile(true);levelNotices.update();if(view==='groups')renderGroups();if(view==='bandlive')bandLive.refresh();
  if(inModal){$('#dialog-content').innerHTML=`<div data-level-modal><h2>✦ Deck amélioré !</h2><p role="status">${esc(result.message)}</p><div class="level-reward-comparison"><div><h3>Remplacée</h3>${cardFace({card:definitionFor(result.instrument,result.before),owner:person.name,instrument:result.instrument})}</div><b aria-hidden="true">→</b><div><h3>Dans le deck</h3>${cardFace({card:definitionFor(result.instrument,result.after),owner:person.name,instrument:result.instrument})}</div></div>${levelRewardButton(person)}</div>`;}
 });
 

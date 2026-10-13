@@ -1,5 +1,20 @@
 # Notes de version
 
+## V0.8.4 — Des niveaux visibles et une vraie célébration {#v084}
+
+13 octobre 2026.
+
+Le niveau des musiciens est désormais visible directement dans la liste du quartier, avec une petite barre d’XP. Une **grande notification de montée de niveau** affiche leur portrait, leur nom et leur nouveau niveau.
+
+- La notification reste affichée jusqu’à ce que tu choisisses l’amélioration ou que tu la reportes. Elle ne disparaît pas comme un message temporaire.
+- Le bouton **Choisir l’amélioration** ouvre directement le menu du musicien. Le quartier attend pendant ton choix.
+- Les musiciens ayant une amélioration disponible sont mis en évidence dans la liste, avec un bouton d’accès direct. Fermer la notification conserve leurs choix.
+- Plusieurs niveaux du même musicien sont regroupés. Quand plusieurs musiciens progressent, leurs notifications passent à la suite.
+- Les notifications reportées restent fermées après un rechargement. Elles ne couvrent pas un show en cours; les niveaux gagnés au spectacle sont annoncés au bilan.
+- Le niveau, l’XP et l’accès aux améliorations de la fiche se mettent maintenant à jour pendant la pratique, sans devoir rouvrir le personnage.
+
+Présentation vérifiée sur ordinateur et mobile, avec une vraie montée de niveau en pratique et une montée de niveau en show. Les gains d’XP, les seuils et les récompenses restent inchangés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.4**.
+
 ## V0.8.3 — La prévision sur le côté, la salle dégagée {#v083}
 
 13 octobre 2026.

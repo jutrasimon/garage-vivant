@@ -1,5 +1,5 @@
-import { decadenceCount } from "./v71.mjs?v=0.8.3";
-import {restoreBandLive} from './bandlive.mjs?v=0.8.3';
+import { decadenceCount } from "./v71.mjs?v=0.8.4";
+import {restoreBandLive} from './bandlive.mjs?v=0.8.4';
 // New songs match the two broad V7 axes; legacy performances keep exact matching.
 export function emotionCompatible(song,fan,version=7){return song===fan||version>=7&&(song==='exaltation'&&['joy','excitement','affection'].includes(fan)||song==='distress'&&['sadness','anger','fear'].includes(fan));}
 // The stage is a deterministic simulation. Rendering and audio never change it.

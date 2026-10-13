@@ -1,9 +1,10 @@
-import {xpProgress} from './progression.mjs?v=0.8.3';
-import {characterPortrait,characterName} from './character-view.mjs?v=0.8.3';
-import {INSTRUMENTS} from './bandlive-cards.mjs?v=0.8.3';
+import {xpProgress} from './progression.mjs?v=0.8.4';
+import {characterPortrait,characterName} from './character-view.mjs?v=0.8.4';
+import {INSTRUMENTS} from './bandlive-cards.mjs?v=0.8.4';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function xpHTML(p){const x=xpProgress(p);return `<span class="person-xp"><b>Niv. ${x.level}</b><span role="progressbar" aria-label="XP de ${esc(p.name)}" aria-valuemin="0" aria-valuemax="${x.needed}" aria-valuenow="${x.earned}"><i style="width:${x.percent}%"></i></span><small>${x.earned}/${x.needed} XP</small>${(p.levelRewards||[]).some(r=>r.status==='pending')?'<em>✦ Amélioration disponible</em>':''}</span>`;}
 export function levelRewardButton(p){const count=(p.levelRewards||[]).filter(r=>r.status==='pending').length;return count?`<button class="level-reward-open" data-open-level-rewards="${esc(p.id)}" aria-label="Améliorer le deck de ${esc(p.name)}">✦ Améliorer le deck · ${count} choix</button>`:'';}
+export function rosterProgressHTML(p){const x=xpProgress(p);return `<span class="roster-progression"><b class="roster-level">Niv. ${x.level}</b><span class="roster-xp" role="progressbar" aria-label="XP de ${esc(p.name)}" aria-valuemin="0" aria-valuemax="${x.needed}" aria-valuenow="${x.earned}" title="${x.earned}/${x.needed} XP"><i style="width:${x.percent}%"></i></span></span>`;}
 export function personCard(p,{interactive=true}={}){
  if(!p)return '';
  const portrait=typeof document==='undefined'?`<span class="character-portrait" style="background:${esc(p.color)}" aria-label="${esc(p.name)}"></span>`:characterPortrait({...p,identity:p.identity||{}},48);

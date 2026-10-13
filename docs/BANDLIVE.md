@@ -1,6 +1,10 @@
-# BandLive · moteur de spectacle — 0.8.3
+# BandLive · moteur de spectacle — 0.8.4
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
+
+## Niveaux visibles et notification
+
+La liste des voisins affiche le niveau et une barre d’XP pour chaque musicien. Une amélioration disponible ajoute une mise en évidence dorée et un bouton d’accès direct. À une montée de niveau, une grande notification montre le portrait, le nom et le nouveau niveau. Elle reste jusqu’au choix d’amélioration ou à « Plus tard ». Reporter une notification ne dépense pas la récompense; le bouton reste dans la liste et sur la fiche, et le report est conservé au rechargement. Plusieurs niveaux du même musicien sont regroupés, puis les autres musiciens sont présentés à la suite. La notification est masquée pendant un show actif et pendant les menus. Au bilan du show, les nouvelles améliorations sont annoncées. Le bouton ouvre le menu du personnage et suspend le quartier pendant son choix. Niveau, XP et récompenses de la fiche sont actualisés pendant la pratique. Validation : `npm run test:levels`, inclus dans le smoke obligatoire.
 
 ## Fluidité du rendu
 
