@@ -107,9 +107,9 @@ test('every collective power card reaches the extra rows, and victory waits for 
   const g=game(['guitar','drums'],12),before=g.fans.map(f=>f.hp);play(g,0,'f11','note');assert(g.fans[11].hp<before[11]);assert.deepEqual(g.fans.slice(0,11).map(f=>f.hp),before.slice(0,11));
 });
 
-test('new formations have two to six musicians, while an actual V1 rehearsal remains resumable',()=>{
+test('new formations accept the full neighbourhood, while an actual V1 rehearsal remains resumable',()=>{
   const world=createWorld(205,8);
-  for(const size of [1,7,8])assert.throws(()=>createBandLive({persistentReactions:false,people:world.people.slice(0,size),songs}),/six/);
+  assert.throws(()=>createBandLive({persistentReactions:false,people:world.people.slice(0,1),songs}),/musiciens/);assert.equal(createBandLive({people:world.people,songs}).actors.length,8);
   assert.equal(createBandLive({persistentReactions:false,people:world.people.slice(0,6),songs}).cards.length,30);
   const legacy=JSON.parse(readFileSync(new URL('bandlive-v1.json',import.meta.url))),resumed=restoreBandLive(legacy);
   assert.deepEqual(resumed,legacy);assert.equal(resumed.actors.length,8);endTurn(resumed);assert.equal(resumed.turn,2);
@@ -134,22 +134,22 @@ test('the world adapter uses actual members, instruments, canonical songs, autho
   assert.deepEqual(g.songs[0].authors,world.songs[0].authors);assert.equal(g.songs[0].mastery,group.repertoire[0].mastery);assert.deepEqual(g.actors.map(a=>a.instrument),plan.members.map(p=>p.instrument));
   g.songs[0].authors.push('other');g.actors[0].needs.energy=0;assert.deepEqual(world,before);
 });
-test('groups without songs, sidelined songs, missing groups and nonmembers cannot create a substitute show',()=>{
+test('groups without active songs can rehearse a jam; missing groups and nonmembers remain excluded',()=>{
   const world=connectedWorld(),group=world.groups[0],draft={groupId:group.id,memberIds:['p1','p2','p3'],seed:12};
   resolveBandLivePlan(world,draft);assert.deepEqual(draft.memberIds,['p1','p2']);
-  group.repertoire[0].active=false;assert(!resolveBandLivePlan(world,draft).ready);assert.throws(()=>createBandLiveFromWorld(world,draft),/composition/);
-  group.repertoire[0].active=true;world.songs[0].ownerGroupId=world.groups[1].id;assert(!resolveBandLivePlan(world,draft).ready);
+  group.repertoire[0].active=false;assert(resolveBandLivePlan(world,draft).ready);assert.equal(createBandLiveFromWorld(world,draft).songs[0].title,'Jam libre');
+  group.repertoire[0].active=true;world.songs[0].ownerGroupId=world.groups[1].id;assert(resolveBandLivePlan(world,draft).ready);
   world.groups=[];assert(!resolveBandLivePlan(world,draft).ready);assert.throws(()=>createBandLiveFromWorld(world,draft),/groupe/);
 });
-test('an existing large neighbourhood band keeps all members and only six are selected for BandLive',()=>{
+test('an existing large neighbourhood band keeps all members in its BandLive selection',()=>{
   const world=createWorld(205,8),group=createGroup(world,world.people.map(p=>p.id),{manual:true}),before=structuredClone(world),draft={groupId:group.id,memberIds:null};
-  const plan=resolveBandLivePlan(world,draft);assert.equal(plan.members.length,6);assert.equal(plan.people.length,8);assert.deepEqual(world,before);
-  draft.memberIds=[...group.members];assert(!resolveBandLivePlan(world,draft).ready);assert.throws(()=>createBandLiveFromWorld(world,draft),/six/);assert.deepEqual(world,before);
+  const plan=resolveBandLivePlan(world,draft);assert.equal(plan.members.length,8);assert.equal(plan.people.length,8);assert.deepEqual(world,before);
+  draft.memberIds=[...group.members];assert(resolveBandLivePlan(world,draft).ready);assert.equal(createBandLiveFromWorld(world,draft).actors.length,8);assert.deepEqual(world,before);
 });
 test('drafts refresh after departures, dissolution and song adoption, preserving an intentional small selection',()=>{
   const world=connectedWorld(),group=world.groups[0],draft={groupId:group.id,memberIds:['p1'],seed:12};
   assert(!resolveBandLivePlan(world,draft).ready);assert.deepEqual(draft.memberIds,['p1']);
   draft.memberIds=['p1','p2'];group.members=['p1'];resolveBandLivePlan(world,draft);assert.deepEqual(draft.memberIds,['p1']);
-  group.archivedAt=world.time;group.state='dissolved';const plan=resolveBandLivePlan(world,draft);assert.equal(plan.group.id,world.groups[1].id);assert(!plan.songs.length);
+  group.archivedAt=world.time;group.state='dissolved';const plan=resolveBandLivePlan(world,draft);assert.equal(plan.group.id,world.groups[1].id);assert.equal(plan.songs[0].title,'Jam libre');
   world.songs[0].ownerGroupId=plan.group.id;plan.group.repertoire.push({songId:world.songs[0].id,active:true,mastery:10});assert(resolveBandLivePlan(world,draft).ready);
 });

@@ -1,4 +1,55 @@
-# BandLive · module optionnel de spectacle
+# BandLive · moteur de spectacle — 0.8.0
+
+Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
+
+## Interface et lecture du public
+
+L’en-tête est compact, la scène centrée et les spectateurs disposés dans une grille stable à quatre colonnes maximum. Sur ordinateur, la scène est ajustée à la hauteur disponible pour montrer le public entier. Sur petit écran, la scène conserve un défilement horizontal. Le gros bouton **Fin du tour** et ses trois points d’énergie restent en bas à gauche. Une carte gratuite reste jouable à zéro énergie.
+
+Le choix des tounes se fait dans un overlay avec les styles favoris, leurs effectifs, les réactions du public et le nombre de fans correspondant à chaque chanson. Les cartes utilisent partout le même composant au ratio 5:7 : main, preview, pioche, fiche et récompenses.
+
+La fiche d’un fan montre son portrait, sa barre de conquête, son style, sa réaction et son pouvoir. Pendant le ciblage, le preview explique aussi sa condition, son effet de conquête et les déclenchements prévus. Il utilise une copie du vrai moteur, sans dépenser de ressources.
+
+## Trois pouvoirs à la conquête
+
+Chaque nouveau spectateur reçoit un pouvoir et sa valeur, déterminés par la graine :
+
+| Pouvoir | Effet |
+|---|---|
+| Onde de choc 2–5 | Transmet cette puissance à chaque voisin immédiat. |
+| Projecteur 1–3 | Les voisins immédiats reçoivent ce bonus par carte jusqu’à la fin du tour. La plus forte valeur reste, sans addition. |
+| Chœur du public 1–2 | Ce nombre de voisins non conquis adopte le style de la chanson jusqu’à sa fin. Priorité aux styles différents; sélection stable dans l’ordre de la grille. |
+
+Les voisins sont gauche, droite, devant et derrière, sans diagonales. Vague d’enthousiasme et Percée restent uniquement dans les anciens snapshots.
+
+## Réactions immédiates
+
+Six réactions sont conservées. **Ennui 3** perd trois conquête en fin de tour. **Attentif +3** et **Distrait −3** modifient la prochaine carte de puissance. **Attend du rythme** reçoit immédiatement trois conquête dès que trois tempo réels sont gagnés ce tour. **Veut de la variété** ajoute trois puissance à la carte du deuxième musicien différent. **Se laisse entraîner** reçoit immédiatement trois conquête lorsqu’un voisin est conquis.
+
+Une réaction consommée disparaît, ne se redéclenche plus pendant ce tour et se renouvelle au suivant. Une réaction non déclenchée reste. Le rythme compte le gain réel, limité par le plafond de dix; le tempo peut ensuite être consommé. Les chaînes de conquête marquent chaque réaction avant propagation pour éviter les doubles activations.
+
+Tous les gains, pertes, conquêtes, réactions, pouvoirs, finales et soutiens ont une rétroaction. La propagation est présentée successivement. Le tempo affiche gain et consommation, pulse dans le compteur et éclaire la salle; les mouvements sont atténués en mode effets réduits.
+
+## XP, niveaux et récompenses
+
+Un seul compteur individuel est conservé. Pratique solo et collective : **1 XP par minute réellement jouée**; trajet et attente ne donnent rien. Une pratique collective ajoute également **1 coordination par cycle de 15 minutes**, une fois pour le groupe, avec au moins deux membres présents.
+
+Les grands moments donnent : formation d’un nouveau band **10 XP par fondateur**, chanson ou recomposition terminée **20 XP par auteur**, show terminé **10 + accueil/5 arrondi par participant**, avec **20 XP au premier show du band** et **15 XP supplémentaires si tout le public est conquis**. Les groupes et chansons de départ n’accordent pas rétroactivement ces bonus.
+
+Les seuils cumulés sont **40, 120, 240, 400, 600…** (`20 × (niveau−1) × niveau`). Les premiers niveaux arrivent plus vite; leur rythme reste à éprouver entre joueurs. Niveau, barre et améliorations disponibles sont visibles dans les fiches.
+
+**Une montée de niveau donne un échange de carte à ce musicien**, lié à son instrument au moment du niveau : remplacer une des cinq cartes par une spéciale. Ce système remplace l’échange automatique après chaque show. Les récompenses gagnées en pratique restent disponibles dans la fiche; celles gagnées en show apparaissent au bilan. Les choix sont conservés à l’export et au rechargement. Répétitions BandLive, replays et interruptions ne donnent pas d’XP de show. Les anciens shows qui possédaient déjà un échange gardent leur récompense historique.
+
+## Début de partie et essai entre amis
+
+Une nouvelle partie propose une graine différente par défaut; la même graine reproduit exactement les musiciens et leur ordre. Un band commence avec deux chansons. Plusieurs bands partagent trois à quatre chansons, avec au moins une par groupe. L’option sans band commence sans répertoire de groupe.
+
+`npm run bandlive:test-file` produit un HTML autonome à partager, avec sa sauvegarde de test séparée du site principal. Les vérifications ciblées sont `npm run test:refonte` et `node --test tests/bandlive-refonte.test.mjs`.
+
+## Historique des règles jusqu’à 0.7.21
+
+Les sections suivantes décrivent les versions précédentes; les règles courantes sont celles exposées ci-dessus.
+
 
 BandLive relie les musiciens du quartier au spectacle jouable d’ENCORE. Activer **BandLive** dans **Réglages** fait apparaître son onglet et **Essayer BandLive** dans la préparation des Shows. L’option est désactivée par défaut et peut être retirée à tout moment.
 

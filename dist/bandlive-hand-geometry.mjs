@@ -6,7 +6,7 @@ export function handSettings(value = {}) {
     fan: Math.max(0, Math.min(60, number(value.fan, 26))),
   };
 }
-export function fanGeometry(settings, baseWidth = 96, baseHeight = 155) {
+export function fanGeometry(settings, baseWidth = 100, baseHeight = 140) {
   const { count, scale, fan } = handSettings(settings);
   const cardW = baseWidth * scale, cardH = baseHeight * scale, padding = 7;
   if (!count) return { width: Math.max(128, cardW), height: 48 * scale, cardW, cardH, cards: [] };

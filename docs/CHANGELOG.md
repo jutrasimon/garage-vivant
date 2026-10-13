@@ -1,3 +1,7 @@
+# V0.8.0 — 12 octobre 2026
+
+BandLive, conquêtes et progression individuelle. [Notes complètes](./versions.md#v080).
+
 # V0.7.21 — 12 octobre 2026
 
 Réglages après un spectacle terminé. [Notes complètes](./versions.md#v0721).

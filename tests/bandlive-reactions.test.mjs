@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createWorld} from '../dist/engine.mjs';
 import {createBandLive,chooseSong,playCard,endTurn,previewCard,restoreBandLive} from '../dist/bandlive.mjs';
 import {clearReactionProgress,REACTIONS} from '../dist/bandlive-reactions.mjs';
-function fixture(){const people=createWorld(55,4).people;people[0].instrument='drums';people[1].instrument='guitar';const g=createBandLive({people,songs:[{id:'a',title:'A',style:'Jazz'}],seed:57,audienceSize:8});chooseSong(g,'a');for(const f of g.fans){f.hp=f.max=100;f.favorite='Jazz';f.effect='spotlight';f.intent='rhythm';clearReactionProgress(f);}return g;}
+function fixture(){const people=createWorld(55,4).people;people[0].instrument='drums';people[1].instrument='guitar';const g=createBandLive({rulesVersion:1,people,songs:[{id:'a',title:'A',style:'Jazz'}],seed:57,audienceSize:8});chooseSong(g,'a');for(const f of g.fans){f.hp=f.max=100;f.favorite='Jazz';f.effect='spotlight';f.intent='rhythm';clearReactionProgress(f);}return g;}
 function give(g,c){for(const p of ['hand','deck','discard'])g[p]=g[p].filter(id=>id!==c.id);while(g.hand.length>=5)g.deck.push(g.hand.pop());g.hand.push(c.id);g.energy=3;}
 function play(g,c,target='f0'){give(g,c);const copy=structuredClone(g),preview=previewCard(g,c.id,target);assert.deepEqual(g,copy);const r=playCard(g,c.id,target);assert(r.ok);assert.deepEqual(g,preview.game);assert.deepEqual(restoreBandLive(g),g);return r;}
 const note=(g,actor=0)=>g.cards.find(c=>c.actorId===g.actors[actor].id&&c.kind==='note');

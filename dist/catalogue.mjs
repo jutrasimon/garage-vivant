@@ -1,10 +1,11 @@
-import {songTurns,songQualityHTML} from './song-rules.mjs?v=0.7.21';
-import {groupLinkHTML} from './group-link.mjs?v=0.7.21';
-import {stamp,SKILLS} from './engine.mjs?v=0.7.21';
+import {personCard} from './person-card.mjs?v=0.8.0';
+import {songTurns,songQualityHTML} from './song-rules.mjs?v=0.8.0';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.0';
+import {stamp,SKILLS} from './engine.mjs?v=0.8.0';
 export const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const authorName=(s,x,id)=>s.people.find(p=>p.id===id)?.name||x.authorNames?.[id]||'Ancien voisin';
 export function compositionCreditHTML(s,x){
- const ids=x.authors||[x.author];return `<p class="composition-credit"><strong>Composition :</strong> ${ids.map(id=>{const p=s.people.find(p=>p.id===id),name=authorName(s,x,id);return p?`<button data-person="${id}" class="text-button">${esc(name)}${p.nickname?' « '+esc(p.nickname)+' »':''}</button>`:`<span>${esc(name)}</span>`;}).join(', ')}</p>`;
+ const ids=x.authors||[x.author];return `<div class="composition-credit"><strong>Composition :</strong> ${ids.map(id=>{const p=s.people.find(p=>p.id===id),name=authorName(s,x,id);return p?personCard(p):`<span>${esc(name)}</span>`;}).join(' ')}</div>`;
 }
 const archived=(s,x)=>s.songArchive.some(r=>r.id===x.id);
 export const DEFAULT_FILTERS={query:'',author:'',group:'',status:'active',type:'all',min:0,max:100,sort:'quality-desc',genre:'',ownership:''};

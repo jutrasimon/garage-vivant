@@ -1,7 +1,7 @@
-import {shortlistShowSongs} from './bandlive-auto.mjs?v=0.7.21';
-import {musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.7.21';
-import {RULES,STYLES,createBandLive,restoreBandLive,currentSong} from './bandlive.mjs?v=0.7.21';
-import {performanceResult} from './stage.mjs?v=0.7.21';
+import {shortlistShowSongs} from './bandlive-auto.mjs?v=0.8.0';
+import {musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.0';
+import {RULES,STYLES,createBandLive,restoreBandLive,currentSong} from './bandlive.mjs?v=0.8.0';
+import {performanceResult} from './stage.mjs?v=0.8.0';
 
 // Interactive audiences are compact. Calendar capacity and the full audience
 // passed to the next band remain unchanged.
@@ -46,29 +46,31 @@ export function resolveBandLiveConcert(world) {
   if(!show||show.preview||show.status!=='playing'||show.applied)return denied('Choisis un vrai spectacle prêt à commencer.');
   if(show.bandLive)return denied('Ce spectacle se joue déjà avec BandLive.');
   if(show.tick!==0||show.presentationStarted||show.songIndex>0)return denied('Choisis BandLive avant de lancer la première chanson.');
-  if(show.actors.length<RULES.minMembers||show.actors.length>RULES.maxMembers)return denied('BandLive demande une formation de deux à six musiciens.');
+  if(show.actors.length<RULES.minMembers||show.actors.length>RULES.maxMembers)return denied('BandLive demande au moins deux musiciens.');
   const booking=world.bookings.find(b=>b.performanceId===show.id&&b.status==='playing');
   const group=world.groups.find(g=>g.id===show.groupId&&g.archivedAt===null);
   if(!booking||!group||world.showEventId!==show.opportunityId)return denied('Ce spectacle ne correspond plus à un engagement actif.');
   const setlist=booking.setlist||[booking.songId];
   if(show.groupId!==booking.groupId||show.opportunityId!==booking.opportunityId||JSON.stringify(show.setlist||[show.song.id])!==JSON.stringify(setlist)||show.song.id!==setlist[0])return denied('La prestation ne correspond plus à la setlist réservée.');
-  if(!setlist.length||setlist.length>2||setlist.includes(null))return denied('Prévois une ou deux compositions pour BandLive. Les jams et les setlists plus longues se jouent en spectacle classique.');
+
   const profile=concertAudienceProfile(show.sourceOpportunity);
   const styles=Array.from({length:profile.audienceSize},(_,i)=>profile.audienceRules.styles[i%profile.audienceRules.styles.length]);
-  const songs=shortlistShowSongs(bandLiveRepertoire(world,group),styles);
+  const repertoire=bandLiveRepertoire(world,group);
+  if(!repertoire.length)repertoire.push({id:'jam-'+show.id,sourceSongId:null,title:'Jam libre',style:group.genre,quality:40,mastery:0,turns:3,authors:[...group.members],authorNames:group.members.map(id=>world.people.find(p=>p.id===id)?.name||id)});
+  const songs=shortlistShowSongs(repertoire,styles);
   if(!songs.length||show.actors.some(a=>!world.people.some(p=>p.id===a.id)))return denied('Le répertoire ou les musiciens de cette réservation ne sont plus disponibles.');
   const people=show.actors.map(a=>({...structuredClone(world.people.find(p=>p.id===a.id)),...structuredClone(a),genre:world.people.find(p=>p.id===a.id).genre,skills:{[a.instrument]:a.skill},needs:{...world.people.find(p=>p.id===a.id).needs,energy:a.energy}}));
   return {ready:true,reason:'',show,booking,group,songs,people,profile,songOrder:null};
 }
 
-export function beginBandLiveConcert(world) {
+export function beginBandLiveConcert(world,{rulesVersion=2}={}) {
   const plan=resolveBandLiveConcert(world);
   if(!plan.ready)return {ok:false,message:plan.reason};
-  const game=createBandLive({people:plan.people,groupId:plan.group.id,groupName:plan.show.groupName,songs:plan.songs,seed:plan.show.seed,songOrder:null,freeSetlist:true,...plan.profile});
+  const game=createBandLive({people:plan.people,groupId:plan.group.id,groupName:plan.show.groupName,songs:plan.songs,rulesVersion,seed:plan.show.seed,songOrder:null,freeSetlist:true,...plan.profile});
   // Preserve the welcome carried from the preceding band in this evening.
   for(const [i,fan] of game.fans.entries()){const prior=plan.show.fans[Math.floor(i*plan.show.fans.length/game.fans.length)];fan.hp=Math.max(1,Math.round(fan.max*(1-prior.meter/100)));}
   game.initialFanHp=game.fans.map(fan=>fan.hp);
-  plan.show.bandLive={version:1,reward:{status:'pending'},performanceId:plan.show.id,bookingId:plan.booking.id,profile:plan.profile,game,songResults:[],originalFans:structuredClone(plan.show.fans)};
+  plan.show.bandLive={version:1,...(rulesVersion===1?{reward:{status:'pending'}}:{progressionVersion:1}),performanceId:plan.show.id,bookingId:plan.booking.id,profile:plan.profile,game,songResults:[],originalFans:structuredClone(plan.show.fans)};
   plan.show.presentationStarted=true;
   return {ok:true,game};
 }
@@ -115,7 +117,7 @@ export function followingConcertPerformance(show) {
 
 export function createConcertReplay(snapshot) {
   const game=restoreBandLive(snapshot);
-  const replay=createBandLive({people:game.actors,groupId:game.groupId,groupName:game.groupName,songs:game.songs,seed:game.seed,audienceSize:game.fans.length,audienceRules:game.audienceRules,songOrder:game.songOrder,freeSetlist:game.freeSetlist===true,persistentReactions:game.reactionVersion===1,conquestEffects:game.conquestVersion===1});
+  const replay=createBandLive({people:game.actors,groupId:game.groupId,groupName:game.groupName,songs:game.songs,seed:game.seed,audienceSize:game.fans.length,audienceRules:game.audienceRules,songOrder:game.songOrder,freeSetlist:game.freeSetlist===true,persistentReactions:!!game.reactionVersion,conquestEffects:!!game.conquestVersion,rulesVersion:Math.max(game.reactionVersion||1,game.conquestVersion||1)});
   if(game.initialFanHp){replay.initialFanHp=[...game.initialFanHp];replay.fans.forEach((fan,i)=>fan.hp=game.initialFanHp[i]);}
   return replay;
 }

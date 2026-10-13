@@ -1,6 +1,6 @@
 # DDD — Shows, calendrier et public
 
-Version 0.7.10.
+Version 0.8.0. Tous les nouveaux shows sont joués avec [BandLive](../BANDLIVE.md), automatiquement, y compris jams et grandes formations. Les anciens shows déjà commencés conservent leurs règles. L’XP individuelle de show et les récompenses de niveau sont décrites dans ce guide.
 
 ## Quatre occasions continues
 

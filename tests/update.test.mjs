@@ -22,13 +22,13 @@ test('new worlds start with three people and reproducible directional acquaintan
  assert.deepEqual(s,createWorld());s.rels['p1>p2'].affinity=0;assert.deepEqual(restore(s),s);
  for(const seed of [1,2,3,2040]){const varied=createWorld(seed,8,{setup:'varied'});assert(varied.groups.some(g=>g.members.length>=3));assert.equal(createWorld(seed,8,{setup:'large'}).groups[0].members.length,6);assert(createWorld(seed,8,{setup:'medium'}).groups.every(g=>g.members.length>=3&&g.members.length<=4));}
 });
-test('practice sessions appear only for arrived participants and train people, never song or group levels',()=>{
+test('practice sessions appear only for arrived participants and train people and collective cycles increase coordination',()=>{
  const {s,g,song}=fixture(),[a,b]=s.people,before=g.development;
  for(const p of [a,b]){decide(s,p,'practice',{groupId:g.id,songId:song.id});p.action.route=[];p.place=p.action.dest='g1';p.actionRanges.practice={min:100,max:100};}
  assert.equal(liveSessions(s)[0].label,'Pratique de '+g.name);
  b.action.route=[{x:1,y:1}];assert.equal(liveSessions(s).length,0);b.action.route=[];
  const skill=a.skills[a.action.instrument];step(s,5);assert(a.skills[a.action.instrument]>skill);assert.equal(g.development,before);assert.equal(g.repertoire[0].mastery,37);assert.equal(a.songMastery[1],undefined);assert.equal(song.turns,4);
- groupRehearsal(s,{groupId:g.id,songId:1,elapsed:15},[a,b]);assert.equal(g.repertoire[0].rehearsals,1);assert.equal(g.development,before);assert.deepEqual(restore(s),s);
+ groupRehearsal(s,{groupId:g.id,songId:1,elapsed:15},[a,b]);assert.equal(g.repertoire[0].rehearsals,1);assert.equal(g.development,before+1);assert.deepEqual(restore(s),s);
 });
 test('composition length is fixed and better quality raises the probability of five turns',()=>{
  assert.equal(songTurns({}),3);assert.equal(songTurns({turns:4}),4);
@@ -85,7 +85,7 @@ test('a following band can choose BandLive; a jam is blocked for its setlist, no
  const {world}=preparedConcert({following:true}),booking=world.bookings.find(b=>b.groupId!==world.performance.groupId),group=world.groups.find(g=>g.id===booking.groupId);
  const song={...structuredClone(world.songs[0]),id:world.nextSongId++,ownerGroupId:group.id,groupId:group.id,authors:[group.members[0]],turns:4};world.songs.push(song);group.repertoire=[{songId:song.id,mastery:0,rehearsals:0,active:true}];booking.setlist=[song.id];booking.songId=song.id;
  skipShow(world);assert(nextSlot(world));assert.equal(world.performance.groupId,group.id);assert(resolveBandLiveConcert(world).ready);
- const jam=preparedConcert({following:true}).world;skipShow(jam);assert(nextSlot(jam));const plan=resolveBandLiveConcert(jam);assert(!plan.ready);assert(plan.reason.includes('jams'));assert.deepEqual(restore(jam),jam);
+ const jam=preparedConcert({following:true}).world;skipShow(jam);assert(nextSlot(jam));const plan=resolveBandLiveConcert(jam);assert(plan.ready);assert.equal(plan.songs[0].title,'Jam libre');assert.deepEqual(restore(jam),jam);
 });
 
 test('song quality categories derive from score without changing songs or fixed durations',async()=>{

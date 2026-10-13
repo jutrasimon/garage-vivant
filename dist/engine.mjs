@@ -1,8 +1,9 @@
-import {validatePersonDecks} from './bandlive-cards.mjs?v=0.7.21';
-import {rule,validateDesign} from './design-rules.mjs?v=0.7.21';
-import { musicalChemistry, pairEligible, membershipReason, considerMembership, initializeGroupData, resolveInvitation, rehearsalReady, upgradeGroups, validateGroups, leaveGroup } from './groups.mjs?v=0.7.21';
-import {compositionTurns,songTurns} from './song-rules.mjs?v=0.7.21';
-import { V71_RULES, initializeV71, setupAction, chooseInstrument, shouldLeave, musicName, reserveMusicName, classifySongs, upgradeV71, validateV71, decadenceCount } from "./v71.mjs?v=0.7.21";
+import {grantXp} from './progression.mjs?v=0.8.0';
+import {validatePersonDecks} from './bandlive-cards.mjs?v=0.8.0';
+import {rule,validateDesign} from './design-rules.mjs?v=0.8.0';
+import { musicalChemistry, pairEligible, membershipReason, considerMembership, initializeGroupData, resolveInvitation, rehearsalReady, upgradeGroups, validateGroups, leaveGroup } from './groups.mjs?v=0.8.0';
+import {compositionTurns,songTurns} from './song-rules.mjs?v=0.8.0';
+import { V71_RULES, initializeV71, setupAction, chooseInstrument, shouldLeave, musicName, reserveMusicName, classifySongs, upgradeV71, validateV71, decadenceCount } from "./v71.mjs?v=0.8.0";
 import {
   NEED_DRAIN,
   ACTIVITY_EFFECTS,
@@ -21,13 +22,13 @@ import {
   interactionProbabilities,
   coolRelationV7,
   validateV7,
-} from "./v7.mjs?v=0.7.21";
+} from "./v7.mjs?v=0.8.0";
 import {
   initializeV6Person,
   upgradeV6,
   markGrief,
   repairGrief,
-} from "./social.mjs?v=0.7.21";
+} from "./social.mjs?v=0.8.0";
 import {
   initializePerson,
   initializeGroup,
@@ -43,7 +44,7 @@ import {
   departForShow,
   refreshOpportunity,
   validateLife,
-} from "./life.mjs?v=0.7.21";
+} from "./life.mjs?v=0.8.0";
 export const VERSION = "0.7.3";
 export const NEEDS = {
   energy: "Énergie",
@@ -704,6 +705,11 @@ function defaultDraft() {
     jamSamples: 0,
   };
 }
+function awardExperience(s,p,amount,reason){
+ const gain=grantXp(p,amount);
+ if(gain.levelAfter>gain.levelBefore)log(s,'music',`${p.name} atteint le niveau ${gain.levelAfter} ! ${reason} · +${amount} XP.`,[p.id],{xp:gain});
+ return gain;
+}
 export function addPerson(s) {
   if (s.people.length >= 24) return null;
   let n = s.nextId++,
@@ -728,7 +734,7 @@ export function addPerson(s) {
     door = start.door;
   let p = {
     id: `p${n}`,
-    name: names[(n - 1) % names.length] + (n > 24 ? " " + n : ""),
+    name: names.map((name,i)=>{let k=(s.seed^Math.imul(i+1,0x9e3779b9))>>>0;k=Math.imul(k^(k>>>16),0x85ebca6b);return {name,key:(k^(k>>>13))>>>0};}).sort((a,b)=>a.key-b.key).find(x=>!s.people.some(p=>p.name===x.name)).name,
     color: colors[(n - 1) % colors.length],
     age: round(range(s, 19, 47)),
     instrument,
@@ -850,6 +856,7 @@ export function createWorld(seed = 2040, count = 3, {setup="none"} = {}) {
   initializeLife(s);
   seedStartingRelations(s);
   seedStartingGroups(s,setup);
+  seedStartingSongs(s);
   for (const p of s.people) {
     refreshReputation(s, p);
     decide(s, p);
@@ -893,6 +900,18 @@ export function seedStartingGroups(s,setup){
   const g=createGroup(s,members.map(p=>p.id),{manual:true,origin:'départ'});
   g.development=35+Math.floor(rand(s)*16);
  }
+}
+// A starting catalogue belongs to the actual initial bands, without fake shows.
+export function seedStartingSongs(s){
+ const groups=s.groups.filter(g=>g.archivedAt===null);if(!groups.length)return;
+ const count=groups.length===1?2:Math.max(groups.length,3+Math.floor(rand(s)*2));
+ for(let i=0;i<count;i++){
+  const g=groups[i%groups.length],members=g.members.map(id=>s.people.find(p=>p.id===id)),author=members[i%members.length];
+  const title=musicName(s,'song',()=>rand(s)),quality=40+Math.floor(rand(s)*26);
+  const song={id:s.nextSongId++,projectId:null,title,time:s.time,emotion:'joy',intensity:45,tone:'lumineuse',quality,resonance:quality,turns:compositionTurns(quality,()=>rand(s)),genre:author.genre,authors:members.map(p=>p.id),authorNames:Object.fromEntries(members.map(p=>[p.id,p.name])),groupId:g.id,ownerGroupId:g.id,adoptedAt:s.time,sources:[],hit:false,breakdown:{craft:quality,expression:0,ensemble:0,affinity:0,perfection:0,overwhelm:0,variance:0}};
+  s.songs.push(song);g.repertoire.push({songId:song.id,mastery:0,rehearsals:0,active:true});
+ }
+ classifySongs(s);
 }
 export function groupsOf(s, p) {
   return s.groups.filter((g) => g.members.includes(p.id));
@@ -983,6 +1002,7 @@ export function createGroup(s, ids, { name = null, manual = false, origin = manu
   );
   for (const id of members) {
     const p = s.people.find((x) => x.id === id);
+    if(origin!=='départ')awardExperience(s,p,10,'Formation du band');
     p.lastFormation = s.time;
     feel(s, p, { exaltation: 23 }, ev);
   }
@@ -1563,6 +1583,7 @@ function releaseSong(s, p) {
   }else s.songs.unshift(song);
   classifySongs(s);
 
+  for(const id of project.authors){const author=s.people.find(x=>x.id===id);if(author)awardExperience(s,author,20,original?'Recomposition terminée':'Chanson terminée');}
   project.status = "finished";
   project.songId = song.id;
   project.updated = s.time;
@@ -1925,6 +1946,7 @@ function practiceMinute(s,p){
   const host=weightedChoice(hosts,q=>partnerWeight(s,p,q,relationship(s,p,q)),()=>rand(s));
   if(host&&admission(s,p,host,'practice')){const group=s.groups.find(g=>g.archivedAt===null&&g.members.includes(p.id)&&g.members.includes(host.id)&&(!host.action.groupId||g.id===host.action.groupId)&&g.repertoire.some(r=>r.songId===host.action.songId));host.action.groupId=a.groupId=group.id;a.songId=host.action.songId;a.content='song';if(host.action.rehearsalId){a.rehearsalId=host.action.rehearsalId;const req=s.groupState.requests.find(r=>r.id===a.rehearsalId);if(req&&!req.invited.includes(p.id))req.invited.push(p.id);}routeTo(s,p,a,PLACES.find(x=>x.id===host.action.dest));}
  }
+ if(!a.route.length){awardExperience(s,p,1,'Pratique');}
  const members=s.people.filter(q=>q.action?.key==='practice'&&!q.action.route.length&&q.place===p.place&&a.groupId&&q.action.groupId===a.groupId&&q.action.songId===a.songId);
  if(members.length>=2&&members[0]===p&&(!a.rehearsalId||s.groupState.requests.find(r=>r.id===a.rehearsalId)?.status==='playing')){groupRehearsal(s,{groupId:a.groupId,songId:a.songId,elapsed:a.elapsed},members);if(a.elapsed%15===0)interact(s,p,pick(s,members.slice(1)),true,true);}
  if(--a.cycleRemaining>0)return;
@@ -2544,6 +2566,8 @@ export function restore(input) {
   const ids = new Set();
   for (const p of raw.people) {
     validatePersonDecks(p);
+    if(p.levelRewards!==undefined&&(!Array.isArray(p.levelRewards)||p.levelRewards.some(r=>!Number.isInteger(r.level)||r.level<2||r.level>Math.floor((Math.sqrt(1+(p.xp||0)/5)-1)/2)+1||!['pending','claimed'].includes(r.status)||!Object.hasOwn(SKILLS,r.instrument)||r.instrument==='writing'||r.status==='claimed'&&(!Number.isInteger(r.slot)||r.slot<0||r.slot>4||!['note','special','new1','new2'].includes(r.before)||!['special','new1','new2'].includes(r.after)||r.before===r.after))||new Set(p.levelRewards.map(r=>r.level)).size!==p.levelRewards.length))throw Error('Récompenses de niveau invalides.');
+    if(p.xp!==undefined&&(!Number.isSafeInteger(p.xp)||p.xp<0))throw Error('XP individuelle invalide.');
     if (
       !/^p\d+$/.test(p.id) ||
       ids.has(p.id) ||

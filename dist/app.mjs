@@ -1,14 +1,18 @@
-import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.7.21';
-import {songQualityHTML} from './song-rules.mjs?v=0.7.21';
-import {groupLinkHTML} from './group-link.mjs?v=0.7.21';
-import {mountDesignDashboard} from './design-dashboard.mjs?v=0.7.21';
-import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.7.21';
-import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.7.21';
+const freshSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
+import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.8.0';
+import {cardFace} from './card-view.mjs?v=0.8.0';
+import {xpHTML,personCard} from './person-card.mjs?v=0.8.0';
+import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.0';
+import {songQualityHTML} from './song-rules.mjs?v=0.8.0';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.0';
+import {mountDesignDashboard} from './design-dashboard.mjs?v=0.8.0';
+import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.8.0';
+import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.8.0';
 const mapOptions=readMapOptions(localStorage);
-import { placeActivityLabels } from './map-labels.mjs?v=0.7.21';
-import { createBandLiveModule } from './bandlive-view.mjs?v=0.7.21';
-import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.7.21';
-import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.7.21";
+import { placeActivityLabels } from './map-labels.mjs?v=0.8.0';
+import { createBandLiveModule } from './bandlive-view.mjs?v=0.8.0';
+import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.8.0';
+import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.8.0";
 let catalogueFilters={...DEFAULT_FILTERS};
 import {
   thresholdsHTML,
@@ -17,13 +21,13 @@ import {
   exchangeTrace,
   sessionHTML,
   rapinHTML,
-} from "./v7-view.mjs?v=0.7.21";
+} from "./v7-view.mjs?v=0.8.0";
 import {
   effectiveTraits,
   updateTraits,
   TRAIT_CATALOG,
   BAG_ACTIONS,
-} from "./v7.mjs?v=0.7.21";
+} from "./v7.mjs?v=0.8.0";
 import {
   createShowClock,
   advanceShowClock,
@@ -33,22 +37,22 @@ import {
   songKey,
   stageGeometry,
   showBeat,
-} from "./show-playback.mjs?v=0.7.21";
+} from "./show-playback.mjs?v=0.8.0";
 import {
   showOverlayHTML,
   showResourcesHTML,
   deckInspectionHTML,
   cardInspectionHTML,
-} from "./show-view.mjs?v=0.7.21";
-import { setupDocSearch } from "./doc-search.mjs?v=0.7.21";
-import { calendarHTML } from "./v6-view.mjs?v=0.7.21";
-import { pendingBooking, eventById } from "./calendar.mjs?v=0.7.21";
-import { editBag } from "./social.mjs?v=0.7.21";
+} from "./show-view.mjs?v=0.8.0";
+import { setupDocSearch } from "./doc-search.mjs?v=0.8.0";
+import { calendarHTML } from "./v6-view.mjs?v=0.8.0";
+import { pendingBooking, eventById } from "./calendar.mjs?v=0.8.0";
+import { editBag } from "./social.mjs?v=0.8.0";
 import {
   profileMarkup,
   changeModule,
   resetLayout,
-} from "./profile-layout.mjs?v=0.7.21";
+} from "./profile-layout.mjs?v=0.8.0";
 import {
   VERSION,
   NEEDS,
@@ -87,7 +91,7 @@ import {
   compositionProject,
   journalEntries,
   chemistryKnowledge,
-} from "./engine.mjs?v=0.7.21";
+} from "./engine.mjs?v=0.8.0";
 import {
   command,
   bandStage,
@@ -103,20 +107,20 @@ import {
   nextBandLiveSlot,
   skipShow,
   completePerformance,
-} from "./life.mjs?v=0.7.21";
+} from "./life.mjs?v=0.8.0";
 import {
   CARDS,
   CURSES,
   INTENTIONS,
   SHOW_TICKS,
   createPerformance,
-} from "./stage.mjs?v=0.7.21";
-import { resolveShowPlan } from "./show-planning.mjs?v=0.7.21";
+} from "./stage.mjs?v=0.8.0";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.8.0";
 import {
   reconcile,
   createViewPositions,
   withReadingAnchor,
-} from "./ui-state.mjs?v=0.7.21";
+} from "./ui-state.mjs?v=0.8.0";
 import {
   quickHTML,
   skillHTML,
@@ -131,14 +135,14 @@ import {
   drawStage,
   enableAudio,
   playSound,
-} from "./v5-view.mjs?v=0.7.21";
+} from "./v5-view.mjs?v=0.8.0";
 import {
   createPlayback,
   snapSpeed,
   setPlaybackSpeed,
   advancePlayback,
   updatePositions,
-} from "./runtime.mjs?v=0.7.21";
+} from "./runtime.mjs?v=0.8.0";
 const playback = createPlayback();
 const $ = (q) => document.querySelector(q),
   $$ = (q) => [...document.querySelectorAll(q)],
@@ -168,9 +172,9 @@ try {
       } catch {}
     }
     world = restore(input);
-  } else world = createWorld(2040,3,{setup:"varied"});
+  } else world = createWorld(freshSeed(),3,{setup:"varied"});
 } catch {
-  world = createWorld(2040,3,{setup:"varied"});
+  world = createWorld(freshSeed(),3,{setup:"varied"});
   saveProblem = true;
   loadFailed = true;
 }
@@ -438,7 +442,7 @@ function renderProfile(force = false) {
   replacePreserving(
     "#profile",
     profileMarkup(
-      `<div class="profile-head">${characterPortrait(p,64)}<div><h2>${esc(characterName(p))}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p></div></div><div class="profile-commands"><button data-edit-character>Nom et apparence</button><button data-delete-character class="danger" ${world.people.length<=1||world.performance?.status==='playing'||world.showEventId?'disabled':''}>Supprimer</button></div><div class="pills">${groupsOf(
+      `<div class="profile-head">${characterPortrait(p,64)}<div><h2>${esc(characterName(p))}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p>${xpHTML(p)}</div></div>${levelRewardsHTML(p)}<div class="profile-commands"><button data-edit-character>Nom et apparence</button><button data-delete-character class="danger" ${world.people.length<=1||world.performance?.status==='playing'||world.showEventId?'disabled':''}>Supprimer</button></div><div class="pills">${groupsOf(
         world,
         p,
       )
@@ -448,7 +452,7 @@ function renderProfile(force = false) {
         )
         .join(
           "",
-        )}<span id="profile-traits" data-retain>${traitPills(p)}</span></div>${quickHTML(world, p)}<div id="reputation">${reputationHTML(p)}</div><div class="action-card"><strong data-action>${esc(actionLabel(p))}</strong><p data-reason>${esc(profileReason(p))}</p><div class="bar"><i data-progress style="width:${a ? clamp((a.elapsed / (a.key === "sleep" ? p.sleep.habitual : a.duration)) * 100) : 0}%"></i></div></div>${skillHTML(p)}<section><div class="section-head">SES COMPOSITIONS <span id="profile-song-count" data-retain></span><button class="text-button" data-toggle-archives>${showArchives ? "Masquer archives" : "Archives ↗"}</button></div><div id="profile-songs" data-retain></div></section>${cardsHTML(p)}${decadenceHTML(p,world.time)}<section class="emotion-section"><div class="section-head">CE QUI L’HABITE <span id="emotion-label" data-retain></span></div><div id="emotion-bars">${emotionHTML(p)}</div><div id="emotion-source" data-retain class="emotion-source"></div></section><section><div class="section-head">BESOINS <span style="color:#8e9888;font-weight:400;letter-spacing:0">100 = comblé</span></div><div id="needs">${Object.entries(
+        )}<span id="profile-traits" data-retain>${traitPills(p)}</span></div>${quickHTML(world, p)}<div id="reputation">${reputationHTML(p)}</div><div class="action-card"><strong data-action>${esc(actionLabel(p))}</strong><p data-reason>${esc(profileReason(p))}</p><div class="bar"><i data-progress style="width:${a ? clamp((a.elapsed / (a.key === "sleep" ? p.sleep.habitual : a.duration)) * 100) : 0}%"></i></div></div>${skillHTML(p)}<section><div class="section-head">SES COMPOSITIONS <span id="profile-song-count" data-retain></span><button class="text-button" data-toggle-archives>${showArchives ? "Masquer archives" : "Archives ↗"}</button></div><div id="profile-songs" data-retain></div></section>${personBandLiveDecks(p)}${decadenceHTML(p,world.time)}<section class="emotion-section"><div class="section-head">CE QUI L’HABITE <span id="emotion-label" data-retain></span></div><div id="emotion-bars">${emotionHTML(p)}</div><div id="emotion-source" data-retain class="emotion-source"></div></section><section><div class="section-head">BESOINS <span style="color:#8e9888;font-weight:400;letter-spacing:0">100 = comblé</span></div><div id="needs">${Object.entries(
         NEEDS,
       )
         .map(([k, l]) => bar(l, p.needs[k], k))
@@ -468,7 +472,7 @@ function renderProfile(force = false) {
         .map(([k, v]) => rangeEditor("emotions", k, v.label, p.emotions[k]))
         .join(
           "",
-        )}</details>${bandLive.enabled()?personBandLiveDecks(p):''}<details id="identity-edit"><summary>IDENTITÉ & TRAITS · MODIFIER</summary><div class="editor"><label class="edit-row">Nom<input data-identity="name" maxlength="24" value="${esc(p.name)}"></label><label class="edit-row">Surnom<input data-identity="nickname" maxlength="24" value="${esc(p.nickname||'')}"></label>${Object.entries({accessory:ACCESSORIES,movement:MOVEMENTS,accent:{'':'Sans foulard',scarf:'Foulard'}}).map(([key,values])=>`<label class="edit-row">${{accessory:'Accessoire',movement:'Allure',accent:'Accent'}[key]}<select data-appearance="${key}">${Object.entries(values).map(([value,label])=>`<option value="${value}" ${value===(p.identity[key]||'')?'selected':''}>${label}</option>`).join('')}</select></label>`).join('')}<label class="edit-row">Âge<input data-identity="age" type="number" min="18" max="90" value="${p.age}"></label><label class="edit-row">Couleur<input data-identity="color" type="color" value="${esc(p.color)}"></label><label class="edit-row">Instrument<select data-identity="instrument">${Object.entries(
+        )}</details><details id="identity-edit"><summary>IDENTITÉ & TRAITS · MODIFIER</summary><div class="editor"><label class="edit-row">Nom<input data-identity="name" maxlength="24" value="${esc(p.name)}"></label><label class="edit-row">Surnom<input data-identity="nickname" maxlength="24" value="${esc(p.nickname||'')}"></label>${Object.entries({accessory:ACCESSORIES,movement:MOVEMENTS,accent:{'':'Sans foulard',scarf:'Foulard'}}).map(([key,values])=>`<label class="edit-row">${{accessory:'Accessoire',movement:'Allure',accent:'Accent'}[key]}<select data-appearance="${key}">${Object.entries(values).map(([value,label])=>`<option value="${value}" ${value===(p.identity[key]||'')?'selected':''}>${label}</option>`).join('')}</select></label>`).join('')}<label class="edit-row">Âge<input data-identity="age" type="number" min="18" max="90" value="${p.age}"></label><label class="edit-row">Couleur<input data-identity="color" type="color" value="${esc(p.color)}"></label><label class="edit-row">Instrument<select data-identity="instrument">${Object.entries(
         SKILLS,
       )
         .filter(([k]) => k !== "writing")
@@ -1320,7 +1324,7 @@ $("#import-file").onchange = async (e) => {
 };
 $("#reset").onclick = () =>
   modal(
-    '<h2>Un nouveau quartier</h2><p>Remplace le monde actuel. Exporte le JSON si tu veux le conserver. La même graine reproduit le même départ.</p><label>Graine<input id="seed" type="number" value="2040" min="0" max="4294967295"></label><label>Voisins<input id="count" type="number" value="3" min="2" max="24"></label><label>Groupes au départ<select id="band-setup"><option value="varied">Variable · 1 à 4 groupes selon la population</option><option value="large">Un grand groupe</option><option value="medium">Deux groupes moyens</option><option value="small">Deux petits groupes</option><option value="none">Aucun · rencontres naturelles</option></select></label><button id="confirm-reset" class="primary">Créer le quartier</button>',
+    '<h2>Un nouveau quartier</h2><p>Remplace le monde actuel. Exporte le JSON si tu veux le conserver. La même graine reproduit le même départ.</p><label>Graine<input id="seed" type="number" value="'+freshSeed()+'" min="0" max="4294967295"></label><label>Voisins<input id="count" type="number" value="3" min="2" max="24"></label><label>Groupes au départ<select id="band-setup"><option value="varied">Variable · 1 à 4 groupes selon la population</option><option value="large">Un grand groupe</option><option value="medium">Deux groupes moyens</option><option value="small">Deux petits groupes</option><option value="none">Aucun · rencontres naturelles</option></select></label><button id="confirm-reset" class="primary">Créer le quartier</button>',
   );
 document.addEventListener("click", (e) => {
   if (e.target.id === "confirm-reset") {
@@ -1913,6 +1917,7 @@ function plannedCommand(type) {
   });
 }
 function launchPreview(replay = false) {
+  if(!replay){bandLive.openRehearsal({groupId:showPlan.groupId,memberIds:showPlan.members});return;}
   if(replay&&world.performance?.bandLive){bandLive.replayConcert(world.performance.bandLive.game);return;}
   if (replay && liveEvent && !world.performance?.preview)
     previewReturn = world.livePreviewReturn = structuredClone(
@@ -2254,7 +2259,7 @@ document.addEventListener("click", (e) => {
   }
   if (el.dataset.deck) {
     const p = world.people.find((p) => p.id === el.dataset.deck);
-    if (p) modal(deckEditorHTML(p));
+    if (p) modal(personCard(p)+personBandLiveDecks(p));
   }
   if (el.dataset.saveDeck) {
     const r = submit({
@@ -2536,6 +2541,7 @@ function frame(now) {
     },
   );
   if (world.performance?.status === "playing") {
+    if(!world.performance.preview&&!world.performance.bandLive&&world.performance.tick===0&&!world.performance.presentationStarted){const started=beginBandLiveConcert(world);if(started.ok){bandLive.sync();changeView('bandlive');save();}}
     if (!world.performance.preview && !liveEvent) {
       savedWorldSpeed = playback.speed;
       liveEvent = true;
@@ -2682,7 +2688,7 @@ function finishLive() {
   save();
 }
 function nextEveningSlot(previous=world.performance){
-  const result=nextBandLiveSlot(world,previous,bandLive.enabled());
+  const result=nextBandLiveSlot(world,previous,true);
   if(result.reason)notify(`Le groupe suivant joue en spectacle classique. ${result.reason}`);
   return result.advanced;
 }
@@ -2826,5 +2832,19 @@ $('#map-controls').innerHTML=mapOptionsHTML(mapOptions);
 
 function personBandLiveDecks(p){
   const instruments=[p.instrument,...Object.keys(p.bandLiveDecks||{}).filter(i=>i!==p.instrument)];
-  return `<details id="bandlive-person-decks"><summary>DECKS BANDLIVE · ${instruments.length} instrument(s)</summary><p>5 cartes par instrument. Un échange possible après chaque spectacle BandLive terminé.</p>${instruments.map(i=>`<h4>${SKILLS[i]}${i===p.instrument?' · instrument actuel':''}</h4><ul>${musicianDeck(p,i).map(kind=>{const c=definitionFor(i,kind);return `<li><b>${esc(c.name)}</b> · ${c.cost} énergie<br><small>${esc(c.description)}</small></li>`;}).join('')}</ul>`).join('')}</details>`;
+  return `<details id="bandlive-person-decks"><summary>DECKS BANDLIVE · ${instruments.length} instrument(s)</summary><p>5 cartes par instrument. Une amélioration de deck à chaque montée de niveau.</p>${instruments.map(i=>`<h4>${SKILLS[i]}${i===p.instrument?' · instrument actuel':''}</h4><ul class="person-deck-cards">${musicianDeck(p,i).map(kind=>{const c=definitionFor(i,kind);return `<li>${cardFace({card:c,owner:p.name,instrument:i})}</li>`;}).join('')}</ul>`).join('')}</details>`;
 }
+
+document.addEventListener('click',event=>{
+ const button=event.target.closest('[data-level-claim]');if(!button)return;
+ const box=button.closest('[data-level-reward]'),slot=box.querySelector('input[name^="level-slot-"]:checked'),kind=box.querySelector('input[name^="level-kind-"]:checked');
+ if(!slot||!kind){box.querySelector('.level-reward-status').textContent='Choisis la carte à remplacer et la spéciale à obtenir.';return;}
+ const result=claimLevelReward(world,{actorId:button.dataset.levelClaim,level:Number(button.dataset.levelNumber),slot:Number(slot.value),kind:kind.value});
+ if(!result.ok){box.querySelector('.level-reward-status').textContent=result.message;return;}
+ notify(result.message);save();renderProfile(true);if(view==='bandlive')bandLive.refresh();
+});
+
+document.addEventListener('change',event=>{
+ const input=event.target,box=input.closest('[data-level-reward]');if(!box||input.type!=='radio')return;
+ rememberLevelChoice(box.dataset.levelOwner,Number(box.dataset.levelNumber),input.name.startsWith('level-slot-')?'slot':'kind',input.value);
+});

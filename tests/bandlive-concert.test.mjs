@@ -29,10 +29,10 @@ test('opening acts continue into an interactive headliner with its own deck, son
     const fullIndex=Math.floor(i*first.bandLive.originalFans.length/game.fans.length),before=oldGame.fans[Math.floor(fullIndex*oldGame.fans.length/first.bandLive.originalFans.length)];
     assert.equal(fan.hp,Math.max(1,Math.round(fan.max*(1-Math.min(30,(1-before.hp/before.max)*100*.2)/100))));
   }
-  assert.equal(first.bandLive.reward.status,'skipped');assert.equal(world.showHistory.length,1);assert.equal(world.showHistory[0].score,oldHistory[0].score);assert.equal(second.bandLive.reward.status,'pending');
+  assert.equal(first.bandLive.reward,undefined);assert.equal(world.showHistory.length,1);assert.equal(world.showHistory[0].score,oldHistory[0].score);assert.equal(second.bandLive.reward,undefined);
   assert.deepEqual(restore(world),world);assert.deepEqual(createConcertReplay(game).fans.map(f=>f.hp),game.initialFanHp);
   finishWithoutCards(world);assert.equal(world.showHistory.length,2);
-  assert(exchangeBandLiveCard(world,{actorId:game.actors[0].id,slot:1,kind:'new1'}).ok);
+  assert(!exchangeBandLiveCard(world,{actorId:game.actors[0].id,slot:1,kind:'new1'}).ok);
   assert.deepEqual(nextBandLiveSlot(world),{advanced:false,interactive:false});assert.equal(world.showEventId,null);assert.deepEqual(restore(world),world);
 });
 test('evening continuation respects disabled mode, incompatible jams and interruption without duplicate rewards',()=>{
@@ -40,8 +40,8 @@ test('evening continuation respects disabled mode, incompatible jams and interru
     const {world}=preparedConcert({following:true,followingComposed:mode!=='jam'});beginBandLiveConcert(world);
     const previous=world.performance;
     if(mode==='interrupted'){chooseSong(previous.bandLive.game,'song-1');assert(command(world,{type:'cancelPerformance',actorId:previous.actors[0].id}).ok);}else finishWithoutCards(world);
-    const result=nextBandLiveSlot(world,previous,mode!=='disabled');assert(result.advanced);assert.equal(result.interactive,mode==='interrupted');
-    if(mode==='jam')assert(result.reason.includes('jams'));
+    const result=nextBandLiveSlot(world,previous,mode!=='disabled');assert(result.advanced);assert.equal(result.interactive,mode!=='disabled');
+    if(mode==='jam')assert.equal(world.performance.bandLive.game.songs[0].title,'Jam libre');
     assert.equal(world.showHistory.length,mode==='interrupted'?0:1);assert.deepEqual(restore(world),world);
   }
 });
@@ -142,7 +142,7 @@ test('interruption reuses cancellation, grants no result and releases the perfor
 });
 test('ineligible bookings remain intact, and invalid linked concert saves are rejected',()=>{
   for(const mutate of [s=>s.performance.preview=true,s=>s.performance.presentationStarted=true,s=>s.performance.setlist=[null],s=>s.bookings.find(b=>b.performanceId===s.performance.id).setlist=[null]]){const {world}=preparedConcert();mutate(world);const before=structuredClone(world);assert(!beginBandLiveConcert(world).ok);assert.deepEqual(world,before);}
-  const oversized=preparedConcert({instruments:['guitar','bass','drums','voice','keys','sax','trumpet']}).world;assert(!beginBandLiveConcert(oversized).ok);assert.equal(oversized.performance.actors.length,7);
+  const oversized=preparedConcert({instruments:['guitar','bass','drums','voice','keys','sax','trumpet']}).world;assert(beginBandLiveConcert(oversized).ok);assert.equal(oversized.performance.actors.length,7);
   const {world}=preparedConcert();beginBandLiveConcert(world);for(const mutate of [s=>s.performance.bandLive.performanceId='another-show',s=>s.performance.bandLive.game.groupId='other',s=>s.performance.bandLive.game.hand.push(s.performance.bandLive.game.deck[0]),s=>s.performance.bandLive.game.audienceRules.styles=['invalid']]){const bad=structuredClone(world);mutate(bad);assert.throws(()=>restore(bad));}
 });
 

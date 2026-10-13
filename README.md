@@ -1,6 +1,6 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.7.21
+# Garage vivant · v0.8.0
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
@@ -30,16 +30,17 @@ Les dates se renouvellent continuellement. Un gros événement revient toutes le
 
 **Essayer maintenant** est une répétition générale sans récompense. Un replay reproduit le tirage et n’ajoute aucune conséquence; les douze dernières prestations gardent la trace de leur dernière chanson. **Interrompre** un vrai show ne donne pas de récompense et coûte de l’énergie.
 
-## BandLive · module optionnel
+## BandLive · moteur de tous les nouveaux shows
 
-Les nouveaux shows BandLive donnent à chaque spectateur un bonus de conquête visible : Onde de choc, Vague d’enthousiasme, Percée dans la foule, Sous les projecteurs ou Chœur du public. Le public garde quatre colonnes maximum sur tous les écrans ; le preview inclut les réactions en chaîne. [Effets et durées](docs/BANDLIVE.md#bonus-de-conquête-0715).
+Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde un gros bouton de fin de tour en bas à gauche. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
 
+Trois pouvoirs de conquête : Onde de choc 2–5, Projecteur 1–3 et Chœur du public 1–2. Rythme et voisinage déclenchent immédiatement leurs gains; les réactions consommées disparaissent jusqu’au prochain tour. Animations et rétroaction couvrent chaque effet, le tempo, les soutiens et la finale.
 
-Activer **BandLive** dans **Réglages**. Dans **Shows**, réserver un créneau avec deux à six musiciens et une ou deux compositions, puis **Avancer jusqu’au show** et **Jouer avec BandLive** avant la première chanson. Choisir deux passages dans le répertoire actif du groupe, de 3 à 5 tours selon les compositions (3 pour les anciens morceaux) ; une chanson unique est reprise. Le lieu fixe huit, dix ou douze spectateurs et leurs styles. Le bilan applique les conséquences classiques et s’enregistre une seule fois. **Continuer la soirée** conserve le groupe suivant ; **Retour au quartier · continuer** reprend la même partie après le dernier show.
+La pratique solo et collective donne de l’XP individuelle; la pratique collective augmente aussi la coordination. Les shows et les grands moments du groupe donnent de l’XP. Les premiers niveaux arrivent plus rapidement et **les récompenses de niveau remplacent l’échange systématique de fin de show**. Les récompenses en attente sont conservées dans les fiches.
 
-**Jouer avec BandLive** depuis Groupes et **Essayer BandLive** restent des répétitions sans récompense, avec trois à douze spectateurs au choix. Cartes sous leur musicien, glisser-déposer souris/toucher, cinq cartes et trois points d’énergie par tour, infobulles et tempo consommé par la guitare et le saxophone.
+Nouvelles parties : musiciens et ordre variés, deux chansons avec un seul band, trois à quatre réparties entre plusieurs bands. Les parties existantes sont conservées. [Règles et progression](docs/BANDLIVE.md).
 
-Le module est désactivé par défaut. Une désactivation conserve le show interactif en cours jusqu’à sa fin ou son interruption. La répétition reste sauvegardée séparément ; les vrais shows voyagent avec l’export du quartier. Le replay d’un show historique ne redonne aucun gain. Les anciennes sauvegardes et les spectacles classiques restent utilisables. [Règles, cartes et sauvegardes](docs/BANDLIVE.md) · [4 200 simulations d’équilibrage](docs/BANDLIVE_BALANCE.md).
+Pour les essais entre amis : `npm run bandlive:test-file` crée un HTML autonome dans `BandLive-test/`, avec ses sauvegardes séparées. `npm run test:refonte` vérifie la nouvelle interface.
 
 ## Quartier V7.2
 
