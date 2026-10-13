@@ -13,6 +13,7 @@ test('the actual local server serves browser modules as JavaScript on Windows an
  const entry=await fetch(url);assert.equal(entry.status,200);assert.match(entry.headers.get('content-type'),/^text\/html/);
  for(const asset of ['app.mjs?v=0.8.0','engine.mjs','bandlive-view.mjs','garage-vivant/app.mjs']){const response=await fetch(url+asset);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/^text\/javascript/);assert.equal(response.headers.get('cache-control'),'no-store');}
  const head=await fetch(url+'app.mjs',{method:'HEAD'});assert.equal(await head.text(),'');
+ const notes=await fetch(url+'docs/versions.html',{redirect:'manual'});assert.equal(notes.status,302);assert.equal(notes.headers.get('location'),'/garage-vivant/docs/versions.html');
  assert.equal((await fetch(url+'__absent__.mjs')).status,404);assert.equal((await fetch(url,{method:'POST'})).status,405);
  assert([403,404].includes((await fetch(url+'%2e%2e%5cpackage.json')).status));
 });

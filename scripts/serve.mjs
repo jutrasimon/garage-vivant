@@ -10,7 +10,10 @@ const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript'
 const server=createServer(async(req,res)=>{
  try{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
-  let pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+  const url=new URL(req.url,'http://localhost');
+  let pathname=decodeURIComponent(url.pathname);
+  // VitePress' client router also needs its configured Pages base path.
+  if(/^\/docs(?:\/|$)/.test(pathname)){res.writeHead(302,{Location:'/garage-vivant'+url.pathname+url.search});res.end();return;}
   pathname=pathname.replace(/^\/garage-vivant(?=\/)/,'');
   if(pathname.endsWith('/'))pathname+='index.html';
   const path=resolve(root,'.'+pathname);
