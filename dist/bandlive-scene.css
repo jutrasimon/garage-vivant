@@ -30,12 +30,19 @@ body.bandlive-mode .workspace.bandlive-layout>main{padding:0;scrollbar-gutter:au
 .bl-aim-line.bl-aim-tempo{stroke:#ffdc72}.bl-aim-halo.bl-aim-tempo{stroke:#ffd05b;opacity:.2}.bl-aim-ring.bl-aim-tempo{stroke:#ffe9a1;fill:#ffd56a20;stroke-dasharray:3 4}.bl-aim:not(.visible) .bl-aim-line{animation:none}
 .drag-card-feedback.is-tempo .drag-feedback-surface{border-color:#ffe09b}.drag-card-feedback.is-tempo .drag-mini{background:radial-gradient(circle at 30% 20%,#fff1ba,#e4b758);color:#654821;border-color:#fff1b8;box-shadow:0 2px 0 #b0883c,0 0 12px #ffd56544}.drag-card-feedback.is-tempo .drag-head-spark{color:#fff0a8}.drag-card-feedback.is-tempo-only:not(.invalid) .drag-outcome-main{color:#ffe18d}
 .bl-juice-label.bl-juice-tempo{color:#ffe18d;text-shadow:0 2px 0 #263443,0 0 12px #f6c95e66}.bl-world.bl-tempo-flash{box-shadow:inset 0 0 100px #ffd56a33}
-/* A soft musical ripple replaces the box around a collective target. */
+/* Collective conquest keeps its ripple; tempo floats as the meter's music notes. */
 .bl-minuit .bl-audience.bl-drop-valid,.bl-minuit .bl-audience.bl-drop-active{outline:none!important;border:0!important;box-shadow:none!important;background:transparent!important}
 .bl-minuit .bl-audience.bl-drop-active{--bl-zone-color:244 181 204;isolation:isolate}.bl-minuit .bl-audience.bl-tempo-target{--bl-zone-color:255 214 100}
 .bl-minuit .bl-audience.bl-drop-active:before,.bl-minuit .bl-audience.bl-drop-active:after{content:'';position:absolute;pointer-events:none;z-index:0;border-radius:50%;transform-origin:center;will-change:transform,opacity}
 .bl-minuit .bl-audience.bl-drop-active:before{inset:8% 13%;border:2px solid rgb(var(--bl-zone-color)/.48);background:radial-gradient(ellipse,rgb(var(--bl-zone-color)/.12),transparent 70%);box-shadow:0 0 26px rgb(var(--bl-zone-color)/.15),inset 0 0 30px rgb(var(--bl-zone-color)/.08);animation:bl-zone-breathe 1.6s ease-in-out infinite}
 .bl-minuit .bl-audience.bl-drop-active:after{inset:1% 6%;border:1px dashed rgb(var(--bl-zone-color)/.3);animation:bl-zone-ripple 1.8s ease-out infinite}
+.bl-minuit .bl-audience.bl-tempo-target:before,.bl-minuit .bl-audience.bl-tempo-target:after{content:none;animation:none;will-change:auto}
+.bl-tempo-notes{display:none;position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bl-tempo-target.bl-drop-active>.bl-tempo-notes{display:block}
+.bl-tempo-notes svg{position:absolute;width:var(--bl-note-size);height:var(--bl-note-size);fill:none;stroke:#ffdc72;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.65;animation:bl-tempo-float var(--bl-note-duration) ease-in-out var(--bl-note-delay) infinite}
+@keyframes bl-tempo-float{0%,100%{opacity:0;transform:translate(0,18px) rotate(-12deg)}25%{opacity:.7}75%{opacity:.5}95%{opacity:0;transform:translate(var(--bl-note-drift),-25px) rotate(12deg)}}
+@media(prefers-reduced-motion:reduce){.bl-tempo-notes svg{animation:none;opacity:.45}}
+.reduce-effects .bl-tempo-notes svg{animation:none;opacity:.45}
 .bl-minuit .bl-audience.bl-drop-active .bl-fans{z-index:1}
 .bl-minuit .bl-fan.bl-drop-valid,.bl-minuit .bl-fan.bl-drop-active,.bl-minuit .bl-fan.bl-conquest-area{outline:none!important;box-shadow:none!important;background:transparent!important}
 .bl-minuit .bl-fan.bl-drop-active,.bl-minuit .bl-fan.bl-conquest-area{isolation:isolate}

@@ -1,5 +1,15 @@
 # Notes de version
 
+## V0.8.13 — Des mains séparées et du tempo en musique {#v0813}
+
+13 octobre 2026.
+
+- Les mains des musiciens s’espacent selon la largeur réelle de leurs éventails. Dans les grandes formations, les cartes de deux voisins ne se recouvrent plus; leur taille, leur texte et leur ratio sont conservés.
+- Le placement automatique reste stable au rechargement. Les instruments et la première rangée du public gardent leur espace; les réglages manuels de disposition restent conservés.
+- Pendant la visée d’une carte collective de tempo, le grand halo ovale disparaît. De petites notes dorées flottent dans la salle, avec exactement la même icône que la jauge de tempo.
+- L’arc jaune continue de suivre le curseur ou le doigt. Les notes disparaissent en quittant la cible, en annulant ou en jouant; elles restent statiques avec les effets réduits et n’interceptent aucune commande.
+- Aucun changement aux règles, à l’XP ou aux sauvegardes. Vérification des mains inégales à six musiciens, des bords de scène, du 1280 × 720, de la reprise d’un concert, de la souris, du tactile et de la fluidité.
+
 ## V0.8.12 — Des fans conquis reconnaissables au premier regard {#v0812}
 
 13 octobre 2026.

@@ -25,3 +25,27 @@ export function fanGeometry(settings, baseWidth = 132, baseHeight = baseWidth * 
     cards: cards.map(p => ({ ...p, left: p.cx - minX + padding - cardW / 2, top: p.cy - minY + padding - cardH / 2 })),
   };
 }
+
+// Keep each musician's whole fan separate, as close to its owner as possible.
+// Pool colliding neighbours rather than shrinking their readable card faces.
+export function spaceHandPacks(packs, left, right, gap = 16) {
+  let offset = 0;
+  const blocks = [], starts = packs.map(({x, w}, i) => {
+    const start = offset;
+    offset += w + gap;
+    blocks.push({first:i, last:i, sum:x-w/2-start, count:1});
+    while (blocks.length > 1) {
+      const a = blocks.at(-2), b = blocks.at(-1);
+      if (a.sum/a.count <= b.sum/b.count) break;
+      a.last = b.last; a.sum += b.sum; a.count += b.count; blocks.pop();
+    }
+    return start;
+  });
+  const limit = Math.max(left, right - (offset - gap));
+  const positions = [];
+  for (const block of blocks) {
+    const start = Math.max(left, Math.min(limit, block.sum/block.count));
+    for (let i = block.first; i <= block.last; i++) positions[i] = start + starts[i] + packs[i].w/2;
+  }
+  return positions;
+}

@@ -1,4 +1,4 @@
-import {GROUP_RULES,NEED_DRAIN,ACTIVITY_EFFECTS,V7_RULES} from './design-defaults.mjs?v=0.8.12';
+import {GROUP_RULES,NEED_DRAIN,ACTIVITY_EFFECTS,V7_RULES} from './design-defaults.mjs?v=0.8.13';
 export const DESIGN_FORMAT='garage-vivant-design-1';
 export const DESIGN_CATEGORIES={formation:'Groupes · formation',practice:'Groupes · répétitions',departure:'Groupes · départs',attachment:'Groupes · attachement',relations:'Relations',needs:'Besoins',effects:'Actions · effets',shows:'Spectacles · présence'};
 const rows=[];

@@ -1,3 +1,7 @@
+# V0.8.13 — 13 octobre 2026
+
+Des mains séparées et du tempo en musique. [Notes complètes](./versions.md#v0813).
+
 # V0.8.12 — 13 octobre 2026
 
 Des fans conquis reconnaissables au premier regard. [Notes complètes](./versions.md#v0812).

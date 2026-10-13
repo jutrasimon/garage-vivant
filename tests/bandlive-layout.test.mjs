@@ -3,6 +3,24 @@ import assert from 'node:assert/strict';
 import {stageLayout,clampSlot,FAN_BODY,defaultFanPosition,settlePlacement} from '../dist/bandlive-layout.mjs';
 import {overlaps} from '../dist/bandlive-physics.mjs';
 import {placeDragFeedback} from '../dist/bandlive-drag-feedback.mjs';
+import {fanGeometry,spaceHandPacks} from '../dist/bandlive-hand-geometry.mjs';
+
+test('uneven hands stay separate, ordered and inside the stage without shrinking cards',()=>{
+  const actors=stageLayout(1120,6,12,6).actors;
+  function check(counts){
+    const packs=counts.flatMap((count,i)=>count?[{x:actors[i].x,w:fanGeometry({count,scale:1.25,fan:26}).width}]:[]);
+    const positions=spaceHandPacks(packs,16,1104);
+    for(const [i,p] of packs.entries()){
+      assert(positions[i]-p.w/2>=16-1e-8&&positions[i]+p.w/2<=1104+1e-8,'Every complete fan fits inside the stage');
+      if(i)assert(positions[i]-p.w/2>=positions[i-1]+packs[i-1].w/2+16-1e-8,'Adjacent musicians leave a gap between their fans');
+    }
+    assert(spaceHandPacks(packs.map((p,i)=>({...p,x:positions[i]})),16,1104).every((x,i)=>Math.abs(x-positions[i])<1e-8),'A settled layout does not drift');
+  }
+  function distribute(counts,remaining){if(counts.length===6){check(counts);return;}for(let n=0;n<=remaining;n++)distribute([...counts,n],remaining-n);}
+  distribute([],5);
+  const separated=[{x:240,w:160},{x:560,w:250},{x:880,w:160}];
+  assert.deepEqual(spaceHandPacks(separated,16,1104),separated.map(p=>p.x),'Hands already clear of their neighbours stay under their owners');
+});
 
 test('cursor feedback stays inside the viewport and protects its target near each edge',()=>{
   for(const [screenWidth,screenHeight] of [[1920,1080],[1024,768],[390,844]])for(const [px,py] of [[.1,.2],[.5,.5],[.9,.8]]){

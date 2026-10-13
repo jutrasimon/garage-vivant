@@ -10,12 +10,19 @@ const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PO
 try{
  const url=await new Promise((resolve,reject)=>{let output='';const timer=setTimeout(()=>reject(Error('Serveur indisponible')),5000);child.on('error',reject);child.stdout.on('data',chunk=>{output+=chunk;const m=output.match(/http:\/\/127\.0\.0\.1:\d+\//);if(m){clearTimeout(timer);resolve(m[0]);}});});
  browser=await chromium.launch();await mkdir('test-results',{recursive:true});
- for(const scenario of [{name:'reference',width:1898,height:816,large:true,instruments:['keys','guitar','bass','drums']},{name:'trois-musiciens',width:1886,height:862,large:false,instruments:['keys','keys','voice']},{name:'instruments-degagés',width:1440,height:900,large:false,fullHand:true,instruments:['percussion','percussion','sax']},{name:'ancien-show',width:1886,height:862,large:true,legacy:true,instruments:['drums','trumpet','trumpet']},{name:'petit-ecran',width:1280,height:720,large:true,fullHand:true,instruments:['guitar','drums','bass','sax','voice','keys']}]){
+ for(const scenario of [{name:'reference',width:1898,height:816,large:true,instruments:['keys','guitar','bass','drums']},{name:'trois-musiciens',width:1886,height:862,large:false,instruments:['keys','keys','voice']},{name:'instruments-degagés',width:1440,height:900,large:false,fullHand:true,instruments:['percussion','percussion','sax']},{name:'ancien-show',width:1886,height:862,large:true,legacy:true,instruments:['drums','trumpet','trumpet']},{name:'petit-ecran',width:1280,height:720,large:true,fullHand:true,instruments:['guitar','drums','bass','sax','voice','keys']},
+  {name:'six-musiciens',width:1440,height:900,large:true,distribution:[0,1,2,1,1,0],instruments:['drums','drums','percussion','guitar','sax','voice']},
+  {name:'six-musiciens-petit',width:1280,height:720,large:true,distribution:[0,1,2,0,1,1],instruments:['drums','drums','percussion','guitar','sax','voice']},
+  {name:'six-musiciens-bord',width:1440,height:900,large:false,distribution:[2,1,1,1,0,0],instruments:['drums','drums','percussion','guitar','sax','voice']},
+ ]){
   const page=await browser.newPage({viewport:{width:scenario.width,height:scenario.height}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   const world=preparedConcert(scenario).world;
-  if(scenario.legacy||scenario.fullHand){beginBandLiveConcert(world);const game=world.performance.bandLive.game;if(scenario.legacy)delete game.gridColumns;if(scenario.fullHand){const ids=game.cards.filter(c=>c.actorId===game.actors[1].id).map(c=>c.id);game.deck=[...game.deck.filter(id=>!ids.includes(id)),...ids];}}
-  await page.addInitScript(w=>localStorage.setItem('garage-vivant-v1',JSON.stringify(w)),world);await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();
+  if(scenario.legacy||scenario.fullHand||scenario.distribution){beginBandLiveConcert(world);const game=world.performance.bandLive.game;if(scenario.legacy)delete game.gridColumns;if(scenario.fullHand||scenario.distribution){const ids=scenario.distribution?game.actors.flatMap((actor,i)=>game.cards.filter(c=>c.actorId===actor.id).slice(0,scenario.distribution[i]).map(c=>c.id)):game.cards.filter(c=>c.actorId===game.actors[1].id).map(c=>c.id);game.deck=[...game.deck.filter(id=>!ids.includes(id)),...ids];}}
+  await page.addInitScript(w=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(w));},world);await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   if(scenario.fullHand)assert((await page.locator('.bl-hand').evaluateAll(els=>els.map(el=>el.querySelectorAll('[data-bl-card]').length))).includes(5),'The musician actually holds five cards in the restored game');
+  if(scenario.distribution)assert.deepEqual(await page.locator('.bl-hand').evaluateAll(els=>els.map(el=>el.querySelectorAll('[data-bl-card]').length)),scenario.distribution,'Restore the same uneven hand distribution as the large-band screenshots');
+  const packs=await page.locator('.bl-hand:has([data-bl-card])').evaluateAll(els=>els.map(el=>({name:el.getAttribute('aria-label'),...el.getBoundingClientRect().toJSON()})));
+  for(const [i,p] of packs.entries())for(const q of packs.slice(i+1))assert(p.right+2<=q.left||q.right+2<=p.left||p.bottom+2<=q.top||q.bottom+2<=p.top,`Different musicians keep separate card packs (${scenario.name}: ${p.name}, ${q.name})`);
   const g=await page.evaluate(()=>{const box=s=>document.querySelector(s).getBoundingClientRect().toJSON();return {world:box('.bl-world'),screen:box('.bl-show-screen'),hud:box('.bl-hud'),details:box('.bl-show-details'),end:box('#bl-end'),dock:box('.bl-turn-dock'),fans:[...document.querySelectorAll('[data-bl-fan]')].map(el=>el.getBoundingClientRect().toJSON()),hands:[...document.querySelectorAll('.bl-hand')].map(el=>el.getBoundingClientRect().toJSON()),performers:[...document.querySelectorAll('.bl-musician-info .bl-performer')].map(el=>el.getBoundingClientRect().toJSON())};});
   const playWidth=await page.locator('.bl-world').evaluate(el=>Number(el.dataset.playWidth));assert(Math.abs(g.world.x+g.world.width/2-playWidth/2)<2,'The stage stays centered in the available playing area');assert(g.world.width<=1121&&g.world.width>=scenario.width*(scenario.legacy?.41:.45),`The scene retains its proportions while fitting the instruments and every crowd row (${scenario.name}: ${g.world.width}px)`);assert(g.hud.height<=100,'The show header stays compact');assert(g.details.top>=scenario.height-1,'Evening information stays below the first screen');
   assert(g.end.left>scenario.width*.75&&g.end.bottom<=scenario.height-10&&g.end.width>=190,'The large turn button sits at the lower right');
@@ -25,6 +32,15 @@ try{
   assert(cards.every(c=>c.font>=10&&c.width>=103),'Hand rules stay readable at the displayed size');assert(cards.every(c=>Math.abs(c.ratio-5/7)<.01&&!c.clipped),'Hand cards keep their ratio and show their complete rules');
   const meters=await page.locator('.bl-fan .bl-resistance').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect(),world=el.closest('.bl-world').getBoundingClientRect();return {bottom:r.bottom,limit:world.bottom};}));assert(meters.every(m=>m.bottom<=m.limit+1),'Crowd health bars remain entirely visible');
   await page.screenshot({path:`test-results/bandlive-composition-${scenario.name}.png`});
+  if(scenario.distribution){
+   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game);
+   await page.reload();await page.locator('.bl-render-ready').waitFor();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
+   assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game),saved,'The new arrangement leaves the restored concert untouched');
+   const restored=await page.locator('.bl-hand:has([data-bl-card])').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().toJSON()));
+   assert(Math.abs(await page.locator('.bl-show-screen').evaluate(el=>el.getBoundingClientRect().height)-g.screen.height)<1,'Restoring a show waits for the compact navigation before fitting the stage');
+   await page.screenshot({path:`test-results/bandlive-composition-${scenario.name}-reload.png`});
+   assert(restored.every((r,i)=>Math.abs(r.x-packs[i].x)<1&&Math.abs(r.y-packs[i].y)<1),'Automatic hand spacing remains stable after reloading: '+JSON.stringify({scenario:scenario.name,before:packs.map(r=>({x:r.x,y:r.y})),after:restored.map(r=>({x:r.x,y:r.y}))}));
+  }
   await page.locator('#bl-layout').click();const scrolledHeight=await page.locator('.bl-show-screen').evaluate(el=>el.getBoundingClientRect().height);assert(Math.abs(scrolledHeight-g.screen.height)<1,'Opening tools below the screen never stretches the scene');assert(await page.locator('#bandlive-view .bl-evening summary').isVisible());
   if(scenario.name==='reference'){
    const definitions=Object.keys(INSTRUMENTS).flatMap(instrument=>CARD_KINDS.map(kind=>({card:definitionFor(instrument,kind),owner:'Charlie',instrument})));
@@ -35,5 +51,5 @@ try{
   }
   assert.deepEqual(errors,[]);await page.close();
  }
- console.log('Composition and card readability passed: all eight instruments clear of five-card hands, reference sizes, legacy three-row shows, 1280×720, complete starter/upgraded rules, fixed ratio, audience meters and bottom-right turn control.');
+ console.log('Composition and card readability passed: separate readable hand packs for six musicians with uneven/edge distributions, stable saved concerts after reload, all eight instruments clear of five-card hands, reference sizes, legacy shows, 1280×720, complete rules, audience meters and bottom-right turn control.');
 }finally{await browser?.close();child.kill();}
