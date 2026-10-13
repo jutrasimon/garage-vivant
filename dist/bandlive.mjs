@@ -1,10 +1,10 @@
-import {REACTIONS,initializeReactions,clearReactionProgress,rerollReaction,reactionPower,hitReaction} from './bandlive-reactions.mjs?v=0.7.20';
-import {songTurns} from './song-rules.mjs?v=0.7.20';
+import {REACTIONS,initializeReactions,clearReactionProgress,rerollReaction,reactionPower,hitReaction} from './bandlive-reactions.mjs?v=0.7.21';
+import {songTurns} from './song-rules.mjs?v=0.7.21';
 // BandLive keeps its own RNG and decks. Concert outcomes are connected separately.
 export const RULES = Object.freeze({minMembers:2,maxMembers:6,minAudience:3,maxAudience:12,energy:3,hand:5,turns:6,songTurns:3,tempoMax:10,finale:3,boredom:3,styleBonus:2,soloBonus:3});
 export const STYLES = Object.freeze(['Indie','Punk','Folk','Métal','Jazz','Électro','Ska','Pop']);
-import {INSTRUMENTS,SPECIALS,NOTE,definitionFor,musicianDeck,validateDeck} from './bandlive-cards.mjs?v=0.7.20';
-export {INSTRUMENTS,SPECIALS,NOTE} from './bandlive-cards.mjs?v=0.7.20';
+import {INSTRUMENTS,SPECIALS,NOTE,definitionFor,musicianDeck,validateDeck} from './bandlive-cards.mjs?v=0.7.21';
+export {INSTRUMENTS,SPECIALS,NOTE} from './bandlive-cards.mjs?v=0.7.21';
 
 export const CONQUEST_EFFECTS = Object.freeze({
   shock:{name:'Onde de choc',icon:'✺',description:'3 puissance aux voisins immédiats (gauche, droite, devant et derrière).'},

@@ -1,5 +1,11 @@
 # Notes de version
 
+## V0.7.21 — Réglages après un spectacle terminé {#v0721}
+
+12 octobre 2026.
+
+Les réglages peuvent à nouveau être appliqués après le retour au quartier : une prestation terminée conservée pour consultation ne bloque plus les changements. Les spectacles et soirées encore en cours restent protégés. Les sauvegardes existantes sont conservées.
+
 ## V0.7.20 — BandLive : tempo, réactions persistantes et simulation {#v0720}
 
 12 octobre 2026.
