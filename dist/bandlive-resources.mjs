@@ -1,8 +1,10 @@
-import {RULES} from './bandlive.mjs?v=0.8.12';
+import {RULES} from './bandlive.mjs?v=0.8.13';
+
+export const TEMPO_ICON_PATH='M9 18V5l11-2v12M9 18c0 4-6 4-6 0s6-4 6 0M20 15c0 4-6 4-6 0s6-4 6 0';
 
 const meters={
   energy:{name:'Énergie',max:RULES.energy,path:'m13 2-9 12h7l-1 8 10-13h-7z'},
-  tempo:{name:'Tempo',max:RULES.tempoMax,path:'M9 18V5l11-2v12M9 18c0 4-6 4-6 0s6-4 6 0M20 15c0 4-6 4-6 0s6-4 6 0'},
+  tempo:{name:'Tempo',max:RULES.tempoMax,path:TEMPO_ICON_PATH},
 };
 
 export function resourceDockHTML(game) {

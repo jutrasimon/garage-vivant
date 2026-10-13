@@ -1,4 +1,4 @@
-import {editTokens} from './v7.mjs?v=0.8.12';
+import {editTokens} from './v7.mjs?v=0.8.13';
 // Rules chosen for V7.1, using the existing needs, emotions and musical records.
 export const ACTION_KEYS = ['relax','social','practice','jam','write','decadence'];
 export const V71_RULES = Object.freeze({cycleMinutes:15,searchMinutes:30,abandonMinutes:14*1440,chainMinutes:12*60,weakGap:12,referenceSongs:5,secondaryChance:.15,learningPlateau:2});

@@ -1,9 +1,9 @@
-import {audienceColumns} from './bandlive.mjs?v=0.8.12';
-import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.12';
-import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.12';
+import {audienceColumns} from './bandlive.mjs?v=0.8.13';
+import {fanGeometry,spaceHandPacks} from './bandlive-hand-geometry.mjs?v=0.8.13';
+import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.13';
 
 export function createBandLiveStage({root,getReducedEffects}){
-  let host=null,game=null,renderer=null,loading=null,editing=false,held=null,history=[],prefs={},bodies=[],geometry=null;
+  let host=null,game=null,renderer=null,loading=null,layoutFrame=null,editing=false,held=null,history=[],prefs={},bodies=[],geometry=null;
   const key='garage-vivant-bandlive-disposition-v1';
   try{const value=JSON.parse(localStorage.getItem(key)||'{}');if(value&&typeof value==='object')prefs=value;}catch{}
   const valid=(n,f)=>Number.isFinite(n)?n:f;
@@ -19,6 +19,7 @@ export function createBandLiveStage({root,getReducedEffects}){
     }
     renderer?.attach(host,game);
   }
+  function scheduleLayout(){if(layoutFrame===null)layoutFrame=requestAnimationFrame(()=>{layoutFrame=null;layout();});}
   function fit(){
     if(!host)return;const viewport=host.parentElement,screen=host.closest('.bl-show-screen'),rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=480+Math.floor((game.actors.length-1)/6)*300,height=stageHeight+rows*136;
     const main=screen?.closest('main'),screenHeight=Math.max(470,innerHeight-Math.max(0,main?.getBoundingClientRect().top||0));
@@ -48,7 +49,15 @@ export function createBandLiveStage({root,getReducedEffects}){
         cards.forEach((el,j)=>{const p=g.cards[j];el.style.left=p.left+'px';el.style.top=p.top+'px';el.style.width=g.cardW+'px';el.style.height=g.cardH+'px';el.style.setProperty('--bl-card-angle',p.angle+'deg');});
         // The lower part of each instrument extends below the musician's body.
         const initial={x:geometry.actors[i].x,y:geometry.actors[i].y+100+g.height/2};
-        bodies.push({id:a.id,type:'cards',element:hand,w:g.width,h:g.height,initial,x:initial.x+valid(h.dx,0),y:initial.y+valid(h.dy,0)});
+        bodies.push({id:a.id,type:'cards',element:hand,w:g.width,h:g.height,count:cards.length,row:Math.floor(i/6),initial,x:initial.x+valid(h.dx,0),y:initial.y+valid(h.dy,0)});
+      }
+    }
+    for(let row=0;row<Math.ceil(game.actors.length/6);row++){
+      const packs=bodies.filter(b=>b.type==='cards'&&b.count&&b.row===row);
+      const positions=spaceHandPacks(packs.map(b=>({x:b.initial.x,w:b.w})),16,width-16);
+      for(const [i,b] of packs.entries()){
+        const dx=b.x-b.initial.x;
+        b.initial.x=positions[i];b.x=positions[i]+dx;
       }
     }
     const fans=host.querySelector('.bl-fans');fans.style.height=geometry.crowdHeight+'px';
@@ -66,7 +75,9 @@ export function createBandLiveStage({root,getReducedEffects}){
     game=state;host=next;
     if(!host){renderer?.pause();return;}
     fit();layout();
-    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.12').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
+    // Opening/restoring the view also compacts the outer navigation after mount.
+    scheduleLayout();
+    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.13').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
     const button=root.querySelector('#bl-layout');if(button){button.setAttribute('aria-pressed',editing);button.textContent=editing?'✓ Terminer la disposition':'✥ Disposition';}
     const tools=root.querySelector('.bl-layout-tools');if(tools)tools.hidden=!editing;
   }
@@ -82,7 +93,8 @@ export function createBandLiveStage({root,getReducedEffects}){
     if(b.slot)clampSlot(b,b.slot);if(b.type==='cards')settlePlacement(bodies,b,host.clientWidth,host.clientHeight);else if(b.type==='actor')settlePlacement(bodies.filter(x=>x.type==='actor'),b,host.clientWidth,host.clientHeight);apply();},true);
   for(const type of ['pointerup','pointercancel','lostpointercapture'])root.addEventListener(type,e=>{if(held&&e.pointerId===held.pointer){e.stopImmediatePropagation();finish();}},true);
   root.addEventListener('keydown',e=>{if(e.key==='Escape'&&editing){finish();editing=false;host?.classList.remove('bl-layout-editing');mount(host,game);}});
-  const observer=new ResizeObserver(()=>layout());observer.observe(root);
+  const observer=new ResizeObserver(scheduleLayout);observer.observe(root);
+  const header=document.querySelector('body>header');if(header)observer.observe(header);
   return {mount,leave(){finish();renderer?.pause();},get editing(){return editing;},toggle(){finish();editing=!editing;mount(host,game);},
     undo(){finish();if(history.length){prefs=JSON.parse(history.pop());persist();layout();}},reset(){finish();history.push(JSON.stringify(prefs));delete prefs[signature()];persist();layout();},
     tune(actorId,value){if(!game)return;const c=config();c.hands[actorId]={...c.hands[actorId],...value};persist();layout();},
