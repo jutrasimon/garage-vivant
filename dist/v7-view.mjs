@@ -1,4 +1,4 @@
-import {groupLinkHTML} from './group-link.mjs?v=0.8.11';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.12';
 import {
   TRAIT_CATALOG,
   effectiveTraits,
@@ -7,7 +7,7 @@ import {
   ACTIVITY_EFFECTS,
   partnerWeight,
   traitEffect,
-} from "./v7.mjs?v=0.8.11";
+} from "./v7.mjs?v=0.8.12";
 import {
   ACTIONS,
   SKILLS,
@@ -16,7 +16,7 @@ import {
   scores,
   stamp,
   relationship,
-} from "./engine.mjs?v=0.8.11";
+} from "./engine.mjs?v=0.8.12";
 const esc = (x) =>
   String(x ?? "").replace(
     /[&<>"']/g,

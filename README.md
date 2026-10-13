@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.8.11
+# Garage vivant · v0.8.12
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0811) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0812) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 
@@ -39,6 +39,8 @@ Les mains sont abaissées et les musiciens légèrement remontés pour montrer l
 Les arcs roses indiquent la conquête et les arcs jaunes de tempo suivent le curseur ou le doigt. Le ciblage collectif utilise une lueur et des ondes autour du public, avec des halos pour les cibles individuelles. L’énergie conserve son vert menthe. La prévision des effets suit le curseur en laissant visible la cible; son contenu et l’arc sont réutilisés pendant les petits déplacements. `npm run test:targeting`, inclus dans le smoke obligatoire, vérifie couleurs, suivi souris/tactile, effets réduits, cartes mixtes, cibles invalides et annulation sans dépense.
 
 Si le pouvoir du spectateur va se déclencher, la prévision le met au premier plan dans un encadré rose lumineux : nom en gros, effet, voisins touchés et chaînes de conquêtes. Son animation d’apparition respecte les effets réduits et ne recommence pas pendant les petits mouvements. `npm run test:conquest-preview`, inclus dans le smoke, vérifie les trois pouvoirs et les annonces au curseur, au doigt et après sélection de carte.
+
+Les fans conquis ont un halo rose permanent et une pastille « ♥ ✓ CONQUIS » à la place de leur barre. Leur intention et leur badge de pouvoir disparaissent de la salle. Le même test vérifie ces états après de vraies conquêtes et chaînes, leur stabilité au survol et leur conservation au rechargement.
 
 Énergie et tempo sont regroupés en bas à gauche, avec de gros chiffres et des segments lumineux. Gains, dépenses et recharge du tour affichent leur variation réelle et font réagir la jauge; le mode d’effets réduits garde l’information sans mouvement. `npm run test:resources`, inclus dans le smoke obligatoire, vérifie les valeurs jouées, le rechargement et cinq tailles d’écran.
 

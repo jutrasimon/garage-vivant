@@ -1,1 +1,1 @@
-export {GROUP_RULES} from './design-defaults.mjs?v=0.8.11';
+export {GROUP_RULES} from './design-defaults.mjs?v=0.8.12';

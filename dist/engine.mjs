@@ -1,9 +1,9 @@
-import {grantXp,xpProgress,migrateXp} from './progression.mjs?v=0.8.11';
-import {validatePersonDecks} from './bandlive-cards.mjs?v=0.8.11';
-import {rule,validateDesign} from './design-rules.mjs?v=0.8.11';
-import { musicalChemistry, pairEligible, membershipReason, considerMembership, initializeGroupData, resolveInvitation, rehearsalReady, upgradeGroups, validateGroups, leaveGroup } from './groups.mjs?v=0.8.11';
-import {compositionTurns,songTurns} from './song-rules.mjs?v=0.8.11';
-import { V71_RULES, initializeV71, setupAction, chooseInstrument, shouldLeave, musicName, reserveMusicName, classifySongs, upgradeV71, validateV71, decadenceCount } from "./v71.mjs?v=0.8.11";
+import {grantXp,xpProgress,migrateXp} from './progression.mjs?v=0.8.12';
+import {validatePersonDecks} from './bandlive-cards.mjs?v=0.8.12';
+import {rule,validateDesign} from './design-rules.mjs?v=0.8.12';
+import { musicalChemistry, pairEligible, membershipReason, considerMembership, initializeGroupData, resolveInvitation, rehearsalReady, upgradeGroups, validateGroups, leaveGroup } from './groups.mjs?v=0.8.12';
+import {compositionTurns,songTurns} from './song-rules.mjs?v=0.8.12';
+import { V71_RULES, initializeV71, setupAction, chooseInstrument, shouldLeave, musicName, reserveMusicName, classifySongs, upgradeV71, validateV71, decadenceCount } from "./v71.mjs?v=0.8.12";
 import {
   NEED_DRAIN,
   ACTIVITY_EFFECTS,
@@ -22,13 +22,13 @@ import {
   interactionProbabilities,
   coolRelationV7,
   validateV7,
-} from "./v7.mjs?v=0.8.11";
+} from "./v7.mjs?v=0.8.12";
 import {
   initializeV6Person,
   upgradeV6,
   markGrief,
   repairGrief,
-} from "./social.mjs?v=0.8.11";
+} from "./social.mjs?v=0.8.12";
 import {
   initializePerson,
   initializeGroup,
@@ -44,7 +44,7 @@ import {
   departForShow,
   refreshOpportunity,
   validateLife,
-} from "./life.mjs?v=0.8.11";
+} from "./life.mjs?v=0.8.12";
 export const VERSION = "0.7.3";
 export const NEEDS = {
   energy: "Énergie",

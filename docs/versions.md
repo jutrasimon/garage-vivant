@@ -1,5 +1,16 @@
 # Notes de version
 
+## V0.8.12 — Des fans conquis reconnaissables au premier regard {#v0812}
+
+13 octobre 2026.
+
+Les spectateurs conquis ont maintenant un état nettement distinct du public encore à convaincre.
+
+- Leur intention et leur badge de pouvoir disparaissent de la salle.
+- La barre pleine est remplacée au même endroit par une pastille rose **♥ ✓ CONQUIS**.
+- Un halo rose permanent, accompagné de petites étincelles, entoure le personnage. Il reste visible avec les effets réduits et n’ajoute aucune animation continue.
+- La position et la zone de survol du personnage restent stables. Les états conquis sont conservés au rechargement, sans redéclencher leurs pouvoirs.
+
 ## V0.8.11 — Les pouvoirs de conquête prennent le devant de la scène {#v0811}
 
 13 octobre 2026.

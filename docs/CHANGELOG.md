@@ -1,3 +1,7 @@
+# V0.8.12 — 13 octobre 2026
+
+Des fans conquis reconnaissables au premier regard. [Notes complètes](./versions.md#v0812).
+
 # V0.8.11 — 13 octobre 2026
 
 Les pouvoirs de conquête prennent le devant de la scène. [Notes complètes](./versions.md#v0811).
