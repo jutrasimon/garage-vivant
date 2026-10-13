@@ -1,4 +1,4 @@
-# BandLive · moteur de spectacle — 0.8.6
+# BandLive · moteur de spectacle — 0.8.7
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
 
@@ -20,7 +20,7 @@ L’énergie et le tempo sont regroupés en bas à gauche : gros chiffres, trois
 
 Le choix des tounes se fait dans un overlay avec les styles favoris, leurs effectifs, les réactions du public et le nombre de fans correspondant à chaque chanson. Les cartes utilisent partout le même composant au ratio 5:7 : main, preview, pioche, fiche et récompenses.
 
-La fiche d’un fan montre son portrait, sa barre de conquête, son style, sa réaction et son pouvoir. Pendant le ciblage, le preview explique aussi sa condition, son effet de conquête et les déclenchements prévus. Il utilise une copie du vrai moteur, sans dépenser de ressources. En glisser-déposer, un seul panneau de prévision reste fixé à droite de la salle, y compris lorsque la cible est invalide. Il ne suit plus la souris ni les personnages. Sur ordinateur, l’espace latéral est prévu avant la visée lorsque les marges naturelles ne suffisent pas; les musiciens, les mains et le public restent dégagés et ne bougent pas à l’ouverture du panneau.
+La fiche d’un fan montre son portrait, sa barre de conquête, son style, sa réaction et son pouvoir. Pendant le ciblage, le preview explique aussi sa condition, son effet de conquête et les déclenchements prévus. Il utilise une copie du vrai moteur, sans dépenser de ressources. En glisser-déposer, une seule prévision suit le curseur, décalée pour laisser visible le spectateur visé et rester dans l’écran, y compris lorsque la cible est invalide. Le déplacement utilise des dimensions en cache; la simulation n’est recalculée que si carte, cible, état du show ou choix en cours changent. La marge réservée à l’ancien panneau fixe de visée est retirée. Les arcs roses rejoignent les spectateurs touchés; les arcs verts rejoignent la jauge de tempo, même pour les cartes sans puissance. Les cartes mixtes montrent les deux. La géométrie des personnages reste stable pendant la visée. `npm run test:targeting` et `npm run test:performance`, inclus dans le smoke obligatoire, vérifient ces interactions et leur coût de rendu.
 
 ## Trois pouvoirs à la conquête
 
@@ -162,7 +162,7 @@ Le format BandLive 4 accepte deux passages de trois à cinq tours. Les formats 1
 
 La scène Three.js utilise la DA Minuit : sol, speakers, instruments, spots au plafond et lumières arrière. Les huit instruments utilisent des modèles simples, et les personnages conservent leur couleur, accessoires et petits corps. Musiciens et foule dansent à des rythmes individuels. Le renderer est chargé lorsque la scène est ouverte et réutilisé entre les cartes. Sans WebGL, les portraits et commandes restent disponibles.
 
-Les cinq cartes réellement présentes dans la main sont regroupées par musicien, en éventail. Le grand aperçu à droite conserve leur description pendant le drag. Un petit jeton et un popup prune/menthe affichent près du curseur le résultat exact calculé par le moteur, sans cacher le spectateur ciblé. Les effets directs, les chaînes et les statuts sont également détaillés dans l’aperçu. Les arcs partent des musiciens ; les projectiles passent au-dessus des cartes. Au téléphone, l’aperçu est compact et la scène peut se déplacer horizontalement.
+Les cinq cartes réellement présentes dans la main sont regroupées par musicien, en éventail. Le simple survol ouvre le détail de la carte sur le côté. Pendant le drag, un seul popup prune/menthe affiche près du curseur le résultat exact calculé par le moteur, sans cacher le spectateur ciblé. Les effets directs, les chaînes et les statuts sont également détaillés. Les arcs partent des musiciens : rose pour la conquête, vert vers la jauge pour le tempo. Au téléphone, l’aperçu est compact et la scène peut se déplacer horizontalement.
 
 **Disposition** permet de placer un musicien et sa main séparément, régler la taille complète de la main et son éventail, annuler et restaurer le placement initial. Ces réglages sont des préférences locales de présentation ; ils ne créent aucune carte et ne changent pas le show. Les mains n’ont aucun collider. Les spectateurs conservent une protection de 86 × 112 et restent dans leurs places logiques, visibles en mode Disposition. De petits décalages et une danse individuelle gardent la foule organique ; rangées, colonnes et voisins restent ceux du moteur, sans modifier les bonus de conquête.
 
@@ -247,7 +247,7 @@ Validation : `tests/bandlive-reactions.test.mjs`, cartes, conquête, sauvegardes
 
 ## Commandes et simulation — 0.7.20
 
-Fin du tour, Son, Voir les cartes et Simuler le show sont regroupés en haut à droite des informations du groupe et du morceau. L’en-tête reste visible au défilement. Sur téléphone, les commandes occupent la ligne juste sous ces informations. Les deux emplacements « Chanson 1/2 » et « Chanson 2/2 » affichent les tours de leur propre chanson ; une durée inconnue reste « À choisir », sans inventer un total.
+Son, Voir les cartes et Simuler le show sont regroupés en haut à droite des informations du groupe et du morceau. Fin du tour reste en bas à droite; énergie et tempo sont en bas à gauche. Sur téléphone, les commandes du haut occupent la ligne juste sous les informations du show. Les deux emplacements « Chanson 1/2 » et « Chanson 2/2 » affichent les tours de leur propre chanson ; une durée inconnue reste « À choisir », sans inventer un total.
 
 Pour un vrai show dont le répertoire dépasse six chansons actives, les six propositions sont sélectionnées par durée décroissante, puis par nombre de spectateurs du lieu aimant leur style. Les égalités restantes gardent l’ordre du répertoire. Le joueur choisit toujours les deux passages parmi ces propositions. Les groupes de six chansons ou moins gardent tout leur choix.
 

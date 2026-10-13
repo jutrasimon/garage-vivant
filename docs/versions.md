@@ -1,5 +1,19 @@
 # Notes de version
 
+## V0.8.7 — Arc vert de tempo et prévision près du curseur {#v087}
+
+13 octobre 2026.
+
+La visée montre maintenant un **arc vert vers la jauge de tempo** pour les cartes qui en donnent. L’arc rose reste destiné à la conquête des spectateurs. Une carte qui combine puissance et tempo affiche les deux.
+
+- Les cartes de tempo et de soutien comme Pulsation ou Roulement ont un arc même lorsqu’elles ne touchent directement aucun spectateur.
+- L’arc de tempo peut rejoindre la jauge en bas à gauche, en dehors de la scène. Les cibles invalides ont la couleur d’avertissement prévue.
+- La prévision des effets revient **près du curseur**, décalée pour laisser visible le personnage visé et rester dans l’écran. Elle suit les mouvements sans attendre un changement de cible.
+- Le contenu de la prévision reste en cache tant que carte, cible et état du show sont identiques; déplacer la boîte ne relance pas la simulation.
+- La scène n’a plus de marge réservée pour l’ancien panneau fixe de visée. Les détails d’une carte au simple survol et l’inspection au clavier restent accessibles sur le côté.
+
+Le panneau fixe de prévision avait été introduit en v0.8.3; l’absence d’arc sur les cartes de tempo venait d’une visée fondée seulement sur les spectateurs directement touchés. Les règles et les sauvegardes restent inchangées. Recharge le serveur local avec **Ctrl+F5** pour afficher **v0.8.7**.
+
 ## V0.8.6 — Énergie et tempo à gauche, avec du juice {#v086}
 
 13 octobre 2026.

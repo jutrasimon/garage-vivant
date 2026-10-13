@@ -1,5 +1,5 @@
-import {pendingBooking} from './calendar.mjs?v=0.8.6';
-import {eligibleSongs,availability,performanceSong} from './life.mjs?v=0.8.6';
+import {pendingBooking} from './calendar.mjs?v=0.8.7';
+import {eligibleSongs,availability,performanceSong} from './life.mjs?v=0.8.7';
 
 // One shared preparation model for the screen and its commands. Viewing it never
 // changes the world: invitations, repertoire and bookings remain explicit commands.

@@ -1,6 +1,6 @@
-import {audienceColumns} from './bandlive.mjs?v=0.8.6';
-import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.6';
-import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.6';
+import {audienceColumns} from './bandlive.mjs?v=0.8.7';
+import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.7';
+import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.7';
 
 export function createBandLiveStage({root,getReducedEffects}){
   let host=null,game=null,renderer=null,loading=null,editing=false,held=null,history=[],prefs={},bodies=[],geometry=null;
@@ -26,9 +26,6 @@ export function createBandLiveStage({root,getReducedEffects}){
     const footer=screen?parseFloat(getComputedStyle(screen).getPropertyValue('--bl-footer-height'))||94:94;
     const available=Math.max(260,screenHeight-(screen?.querySelector('.bl-hud')?.offsetHeight||86)-footer),width=1120;
     let playWidth=viewport.clientWidth,scale=Math.min(1,available/height,Math.max(740,playWidth-32)/width);
-    // Use the existing gutter on wide screens; otherwise reserve the side panel
-    // before aiming begins so that the targets never move under the pointer.
-    if(playWidth>=1000&&(playWidth-width*scale)/2<284){playWidth-=284;scale=Math.min(1,available/height,Math.max(740,playWidth)/width);}
     host.querySelector('.bl-audience-viewport').style.top=stageHeight+'px';host.querySelector('.bl-musicians').style.height=stageHeight+'px';host.dataset.scale=scale;host.style.transform=`scale(${scale})`;host.style.transformOrigin='top left';
     host.dataset.playWidth=playWidth;host.style.width=width+'px';host.style.minWidth='0';host.style.height=height+'px';host.style.left=Math.max(0,(playWidth-width*scale)/2)+'px';viewport.style.height=available+'px';
   }
@@ -68,7 +65,7 @@ export function createBandLiveStage({root,getReducedEffects}){
     game=state;host=next;
     if(!host){renderer?.pause();return;}
     fit();layout();
-    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.6').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
+    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.7').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
     const button=root.querySelector('#bl-layout');if(button){button.setAttribute('aria-pressed',editing);button.textContent=editing?'✓ Terminer la disposition':'✥ Disposition';}
     const tools=root.querySelector('.bl-layout-tools');if(tools)tools.hidden=!editing;
   }

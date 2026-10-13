@@ -1,23 +1,23 @@
-import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.6';
-import {cardFace} from './card-view.mjs?v=0.8.6';
-import {personCard} from './person-card.mjs?v=0.8.6';
-import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.6';
-import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.6';
-import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.6';
-import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.6';
-import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.6';
-import {createDragFeedback,showDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.6';
-import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.6';
-import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.6';
-import {drawMicroBody} from './character-view.mjs?v=0.8.6';
-import {songTurns} from './song-rules.mjs?v=0.8.6';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.6';
-import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.6';
-import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.6';
-import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.6';
-import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.6';
-import {instrumentArt} from './show-view.mjs?v=0.8.6';
-import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.6';
+import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.7';
+import {cardFace} from './card-view.mjs?v=0.8.7';
+import {personCard} from './person-card.mjs?v=0.8.7';
+import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.7';
+import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.7';
+import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.7';
+import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.7';
+import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.7';
+import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.7';
+import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.7';
+import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.7';
+import {drawMicroBody} from './character-view.mjs?v=0.8.7';
+import {songTurns} from './song-rules.mjs?v=0.8.7';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.7';
+import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.7';
+import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.7';
+import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.7';
+import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.7';
+import {instrumentArt} from './show-view.mjs?v=0.8.7';
+import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.7';
 
 const CARD_GLYPHS={guitar:'♬',bass:'↑',drums:'◉',keys:'≋',voice:'♫',sax:'♪',trumpet:'♩',percussion:'◉'};
 const STORAGE='garage-vivant-bandlive-v1';
@@ -208,15 +208,17 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`);
     const targetIds=valid?[...new Set(preview.event.hits.map(h=>h.id))]:fan?[fan.id]:[];
     if(pendingChoice?.type==='duo'&&!targetIds.includes(pendingChoice.targetId))targetIds.push(pendingChoice.targetId);
-    aim.draw(origin,targetIds.map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`)).filter(Boolean),valid||c.twoTargets);
+    const ends=targetIds.map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`)).filter(Boolean);
+    if(valid&&c.tempo){const tempo=pointFor('[data-bl-resource="tempo"]');if(tempo)ends.push({...tempo,kind:'tempo'});}
+    aim.draw(origin,ends,valid||!!c.twoTargets);
     if(!ghost||!dragPoint)return;
     const r=root.querySelector('.bl-viewport').getBoundingClientRect();
-    showDragFeedback(ghost,{outcome,target:fan,bounds:{left:Math.max(12,r.left+12),right:Math.min(innerWidth-12,r.right-12),top:Math.max(12,r.top+12),bottom:Math.min(innerHeight-12,r.bottom-12)}});
+    showDragFeedback(ghost,{outcome,pointer:dragPoint,target:fan&&target.getBoundingClientRect(),bounds:{left:Math.max(12,r.left+12),right:Math.min(innerWidth-12,r.right-12),top:Math.max(12,r.top+12),bottom:Math.min(innerHeight-12,r.bottom-12)}});
   }
   function highlightDrop(target){
     const current=activeCard||selectedCard;
-    if(target?.dataset.blFan&&previewMemo?.card===current&&previewMemo.target===target&&previewMemo.game===game&&previewMemo.events===game.events.length&&previewMemo.choice===pendingChoice)return;
-    previewMemo=target?.dataset.blFan?{card:current,target,game,events:game.events.length,choice:pendingChoice}:null;
+    if(previewMemo?.card===current&&previewMemo.target===target&&previewMemo.game===game&&previewMemo.events===game.events.length&&previewMemo.choice===pendingChoice)return;
+    previewMemo=current?{card:current,target,game,events:game.events.length,choice:pendingChoice}:null;
     root.querySelectorAll('.bl-drop-active').forEach(el=>el.classList.remove('bl-drop-active'));
     clearPreview();
     const id=activeCard||selectedCard;
@@ -253,6 +255,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function moveDrag(x,y){
     dragPoint={x,y};highlightDrop(dropAtPoint(x,y));
+    moveDragFeedback(ghost,dragPoint);
     if(dragFrame!==null)return;
     let previous=performance.now();
     function scrollFrame(now){

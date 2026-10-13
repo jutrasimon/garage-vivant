@@ -1,3 +1,7 @@
+# V0.8.7 — 13 octobre 2026
+
+Arc vert de tempo et prévision près du curseur. [Notes complètes](./versions.md#v087).
+
 # V0.8.6 — 13 octobre 2026
 
 Énergie et tempo à gauche, avec du juice. [Notes complètes](./versions.md#v086).
