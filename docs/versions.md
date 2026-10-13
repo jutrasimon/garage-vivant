@@ -1,5 +1,18 @@
 # Notes de version
 
+## V0.8.2 — Des cartes lisibles et mieux proportionnées {#v082}
+
+13 octobre 2026.
+
+Les cartes du show sont plus grandes et leur texte retrouve une place lisible : coût dans le coin, icône en haut, titre centré, règles agrandies et cible au bas de la carte. Le même format 5:7 est utilisé en main, en aperçu, dans les decks et dans les choix d’amélioration.
+
+- La taille de base des cartes en main augmente de 32 %. Les mains par défaut s’adaptent aussi lorsque la salle est réduite pour faire entrer le public.
+- Les descriptions longues sont conservées intégralement. Les couleurs du texte secondaire sont plus contrastées et l’ancienne petite bande d’illustration disparaît.
+- Le placement des musiciens, des mains et des rangées réserve la place des cartes et des barres de conquête. Les anciens spectacles à trois rangées gardent leurs voisins et leurs règles.
+- Les vérifications de composition contrôlent désormais la taille réelle du texte, les titres et descriptions des cartes de départ et améliorées, ainsi que les barres du public, notamment en 1280 × 720.
+
+Les sauvegardes et les règles de jeu sont conservées. Sur le serveur local, recharge le jeu avec **Ctrl+F5** pour afficher la version **0.8.2**.
+
 ## V0.8.1 — BandLive plus fluide {#v081}
 
 13 octobre 2026.

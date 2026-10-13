@@ -1,5 +1,5 @@
-import { attachment } from './groups.mjs?v=0.8.1';
-import {rule} from './design-rules.mjs?v=0.8.1';
+import { attachment } from './groups.mjs?v=0.8.2';
+import {rule} from './design-rules.mjs?v=0.8.2';
 // V7 rules shared by simulation, inspectors and documentation tests.
 export const BAG_ACTIONS = ["relax", "social", "practice", "jam", "write", "decadence"];
 export const BAG_SAMPLES = [
@@ -12,9 +12,9 @@ export const BAG_SAMPLES = [
   [10, 4, 24, 8, 34],
   [20, 20, 20, 20, 20],
 ];
-export {NEED_DRAIN,ACTIVITY_EFFECTS} from './design-defaults.mjs?v=0.8.1';
+export {NEED_DRAIN,ACTIVITY_EFFECTS} from './design-defaults.mjs?v=0.8.2';
 const clamp = (n, a = 0, b = 100) => Math.max(a, Math.min(b, n));
-export {V7_RULES} from './design-defaults.mjs?v=0.8.1';
+export {V7_RULES} from './design-defaults.mjs?v=0.8.2';
 export const TRAIT_CATALOG = {
   night: {
     label: "Oiseau de nuit",

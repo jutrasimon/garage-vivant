@@ -1,6 +1,6 @@
-import {audienceColumns} from './bandlive.mjs?v=0.8.1';
-import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.1';
-import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.1';
+import {audienceColumns} from './bandlive.mjs?v=0.8.2';
+import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.2';
+import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.2';
 
 export function createBandLiveStage({root,getReducedEffects}){
   let host=null,game=null,renderer=null,loading=null,editing=false,held=null,history=[],prefs={},bodies=[],geometry=null;
@@ -20,7 +20,7 @@ export function createBandLiveStage({root,getReducedEffects}){
     renderer?.attach(host,game);
   }
   function fit(){
-    if(!host)return;const viewport=host.parentElement,screen=host.closest('.bl-show-screen'),rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=375+Math.floor((game.actors.length-1)/6)*300,height=stageHeight+rows*140;
+    if(!host)return;const viewport=host.parentElement,screen=host.closest('.bl-show-screen'),rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=410+Math.floor((game.actors.length-1)/6)*300,height=stageHeight+rows*136;
     const main=screen?.closest('main'),screenHeight=Math.max(470,innerHeight-Math.max(0,main?.getBoundingClientRect().top||0));
     if(screen)screen.style.height=screenHeight+'px';
     const available=Math.max(260,screenHeight-(screen?.querySelector('.bl-hud')?.offsetHeight||86)-94),width=1120;
@@ -39,10 +39,13 @@ export function createBandLiveStage({root,getReducedEffects}){
       const initial=geometry.actors[i],p=c.actors[a.id]||{},body={id:a.id,type:'actor',element:info,...ACTOR_BODY,initial,x:initial.x+valid(p.dx,0),y:initial.y+valid(p.dy,0)};
       body.slot={left:geometry.stage.left,right:geometry.stage.right,top:geometry.stage.top-40,bottom:geometry.stage.bottom+30};clampSlot(body,body.slot);bodies.push(body);
       if(hand){
-        const h=c.hands[a.id]||{},cards=[...hand.querySelectorAll('[data-bl-card]')],scale=Math.max(.55,Math.min(1.65,valid(h.scale,1))),fan=Math.max(0,Math.min(60,valid(h.fan,26)));
+        // Preserve readable default hands when the room shrinks to fit its crowd.
+        // An explicitly tuned hand keeps the player's chosen scale.
+        const defaultScale=Math.min(1.18,Math.max(1,104/(132*Number(host.dataset.scale))));
+        const h=c.hands[a.id]||{},cards=[...hand.querySelectorAll('[data-bl-card]')],scale=Math.max(.55,Math.min(1.65,valid(h.scale,defaultScale))),fan=Math.max(0,Math.min(60,valid(h.fan,26)));
         const g=fanGeometry({count:cards.length,scale,fan});hand.style.width=g.width+'px';hand.style.height=g.height+'px';hand.style.setProperty('--bl-pack-scale',scale);
         cards.forEach((el,j)=>{const p=g.cards[j];el.style.left=p.left+'px';el.style.top=p.top+'px';el.style.width=g.cardW+'px';el.style.height=g.cardH+'px';el.style.setProperty('--bl-card-angle',p.angle+'deg');});
-        const initial={x:geometry.actors[i].x,y:geometry.actors[i].y+57+g.height/2};
+        const initial={x:geometry.actors[i].x,y:geometry.actors[i].y+30+g.height/2};
         bodies.push({id:a.id,type:'cards',element:hand,w:g.width,h:g.height,initial,x:initial.x+valid(h.dx,0),y:initial.y+valid(h.dy,0)});
       }
     }
@@ -61,7 +64,7 @@ export function createBandLiveStage({root,getReducedEffects}){
     game=state;host=next;
     if(!host){renderer?.pause();return;}
     fit();layout();
-    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.1').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
+    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.2').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
     const button=root.querySelector('#bl-layout');if(button){button.setAttribute('aria-pressed',editing);button.textContent=editing?'✓ Terminer la disposition':'✥ Disposition';}
     const tools=root.querySelector('.bl-layout-tools');if(tools)tools.hidden=!editing;
   }

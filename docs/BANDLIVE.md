@@ -1,4 +1,4 @@
-# BandLive · moteur de spectacle — 0.8.1
+# BandLive · moteur de spectacle — 0.8.2
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
 
@@ -7,6 +7,8 @@ Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les
 La version 0.8.1 mesure les positions au changement de mise en page, puis anime directement la scène. La danse décorative est limitée à 30 images par seconde; les commandes et les effets ont leur propre cadence. La résolution suit la taille affichée et le dessin s’arrête en mode mouvements réduits, lorsque la vue est masquée ou lorsque la scène est entièrement hors écran. Une preview est recalculée au changement de carte, de cible ou d’état du show, puis réutilisée sur la même cible. Les règles, cartes et sauvegardes sont conservées. Le test navigateur `npm run test:performance` surveille les lectures de géométrie, les duplications de preview, la suspension du rendu et le résultat exact de la carte; il est inclus dans le smoke obligatoire.
 
 ## Interface et lecture du public
+
+Les cartes partagent un format 5:7 : coût dans le coin, icône en haut, titre centré, nom du musicien, description complète et cible en pied de carte. La version 0.8.2 agrandit les cartes en main de 32 % et augmente leur typographie. Les mains par défaut compensent en partie la réduction de la salle sur les écrans plus petits; les tailles choisies manuellement restent conservées. Les descriptions longues gardent tout leur texte, y compris dans les decks, aperçus et améliorations. Le test de composition vérifie la lisibilité à la taille affichée et l’absence de texte coupé pour toutes les cartes.
 
 La composition reprend les proportions de la maquette : scène centrée de 1 120 unités maximum, fond de salle continu et bandeau compact avec chansons au centre, tour, énergie, tempo et conquêtes à droite. Les nouveaux shows utilisent deux rangées : quatre colonnes jusqu’à huit spectateurs, cinq pour neuf ou dix, six pour onze ou douze. Les anciennes sauvegardes sans nombre de colonnes gardent leur grille à quatre colonnes. Les effets spatiaux utilisent toujours les voisins de la grille affichée. Sur ordinateur, la scène est ajustée à la hauteur disponible pour montrer le public entier. Sur petit écran, la scène conserve un défilement horizontal. Le gros bouton **Fin du tour** et ses trois points d’énergie restent en bas à droite. La programmation de la soirée, les outils avancés et le déroulement commencent sous le premier écran de jeu. Une carte gratuite reste jouable à zéro énergie.
 

@@ -1,3 +1,7 @@
+# V0.8.2 — 13 octobre 2026
+
+Des cartes lisibles et mieux proportionnées. [Notes complètes](./versions.md#v082).
+
 # V0.8.1 — 13 octobre 2026
 
 BandLive plus fluide. [Notes complètes](./versions.md#v081).
