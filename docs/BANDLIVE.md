@@ -1,4 +1,4 @@
-# BandLive · moteur de spectacle — 0.8.2
+# BandLive · moteur de spectacle — 0.8.3
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
 
@@ -14,7 +14,7 @@ La composition reprend les proportions de la maquette : scène centrée de 1 120
 
 Le choix des tounes se fait dans un overlay avec les styles favoris, leurs effectifs, les réactions du public et le nombre de fans correspondant à chaque chanson. Les cartes utilisent partout le même composant au ratio 5:7 : main, preview, pioche, fiche et récompenses.
 
-La fiche d’un fan montre son portrait, sa barre de conquête, son style, sa réaction et son pouvoir. Pendant le ciblage, le preview explique aussi sa condition, son effet de conquête et les déclenchements prévus. Il utilise une copie du vrai moteur, sans dépenser de ressources.
+La fiche d’un fan montre son portrait, sa barre de conquête, son style, sa réaction et son pouvoir. Pendant le ciblage, le preview explique aussi sa condition, son effet de conquête et les déclenchements prévus. Il utilise une copie du vrai moteur, sans dépenser de ressources. En glisser-déposer, un seul panneau de prévision reste fixé à droite de la salle, y compris lorsque la cible est invalide. Il ne suit plus la souris ni les personnages. Sur ordinateur, l’espace latéral est prévu avant la visée lorsque les marges naturelles ne suffisent pas; les musiciens, les mains et le public restent dégagés et ne bougent pas à l’ouverture du panneau.
 
 ## Trois pouvoirs à la conquête
 

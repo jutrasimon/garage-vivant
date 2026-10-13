@@ -1,5 +1,18 @@
 # Notes de version
 
+## V0.8.3 — La prévision sur le côté, la salle dégagée {#v083}
+
+13 octobre 2026.
+
+La boîte de prévision des cartes reste désormais **sur le côté droit de la salle**. Elle ne se place plus autour de la souris ou devant les spectateurs.
+
+- La position reste fixe lorsque tu passes d’un spectateur à un autre, que la cible soit valide ou invalide.
+- Un seul panneau apparaît pendant le glisser-déposer : l’aperçu de carte en double est masqué.
+- Sur ordinateur, la salle utilise ses marges ou prévoit un espace latéral avant de commencer à viser. Le panneau ne recouvre pas les musiciens, les cartes ou le public dans les formats testés de 1024 à 1920 px.
+- La boîte prend la hauteur réelle de son contenu. Les indications restent disponibles pour les effets qui ciblent tout le public.
+
+Les règles, les sauvegardes et les calculs de prévision sont conservés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.3**.
+
 ## V0.8.2 — Des cartes lisibles et mieux proportionnées {#v082}
 
 13 octobre 2026.

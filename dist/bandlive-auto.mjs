@@ -1,5 +1,5 @@
-import {songTurns} from './song-rules.mjs?v=0.8.2';
-import {availableSongs,chooseSong,canPlay,cardById,cardDefinition,previewCard,playCard,endTurn} from './bandlive.mjs?v=0.8.2';
+import {songTurns} from './song-rules.mjs?v=0.8.3';
+import {availableSongs,chooseSong,canPlay,cardById,cardDefinition,previewCard,playCard,endTurn} from './bandlive.mjs?v=0.8.3';
 
 // Duration first, then the share of the venue audience with a matching style.
 export function rankShowSongs(songs,styles=[]){

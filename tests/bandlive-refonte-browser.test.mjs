@@ -5,6 +5,7 @@ import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {grantXp} from '../dist/progression.mjs';
+import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
 const root=resolve('dist');
 const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+(req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0]));assert(path.startsWith(root+sep));res.setHeader('Content-Type',({'.html':'text/html','.mjs':'text/javascript','.css':'text/css','.json':'application/json'})[extname(path)]||'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -13,6 +14,7 @@ try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});page.on('pageerror',e=>errors.push(e.stack));
  const world=preparedConcert({large:true,instruments:['guitar','drums','bass','sax','voice','keys'],following:true}).world;
  grantXp(world.people[0],50); // Practice before this show makes a level available in its report.
+ beginBandLiveConcert(world);Object.assign(world.performance.bandLive.game.fans[1],{hp:0,conquered:true,intent:'distracted',effect:'chorus',effectValue:1});
  await page.addInitScript(world=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(world));},world);
  await page.goto(`http://127.0.0.1:${server.address().port}`);
  await page.locator('[data-bl-song]').first().waitFor();assert(await page.locator('.bl-song-overlay').isVisible());
@@ -24,6 +26,14 @@ try{
   assert(geometry.fans.every(r=>r.top>=0&&r.bottom<=height&&r.left>=0&&r.right<=width),JSON.stringify({width,height,geometry}));
   assert(geometry.end.bottom<=height);assert(geometry.end.left>width*2/3,'The turn button sits at the lower right');assert((await page.locator('.bl-show-details').boundingBox()).y>=height-1,'Evening information starts below the playing screen');
   await page.screenshot({path:`test-results/refonte-${width}.png`});
+  const note=page.locator('[data-bl-card]:not(:disabled)').filter({has:page.locator('.bl-card-title',{hasText:/^Note$/})}).first(),hand=note.locator('..'),source=await note.boundingBox(),sourceHand=await hand.boundingBox(),fan=await page.locator('[data-bl-fan="f0"]').boundingBox();
+  const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game);
+  await page.mouse.move(source.x+source.width/2,source.y+source.height/2);await page.mouse.down();await page.mouse.move(source.x+source.width/2,source.y+source.height/2+25,{steps:4});await page.mouse.move(fan.x+fan.width/2,fan.y+fan.height/2,{steps:8});await page.locator('.drag-card-feedback.has-target:not(.invalid)').waitFor();
+  const box=await page.locator('.drag-card-feedback').boundingBox();assert(box.x>width*.7&&box.x+box.width<=width-10,'The preview is docked at the right edge');assert(await page.locator('#bl-card-preview').isHidden(),'Dragging shows one preview, without a duplicate card panel');
+  const uncovered=await page.locator('[data-bl-fan],[data-bl-actor],.bl-hand').evaluateAll((els,popup)=>els.every(el=>{const r=el.getBoundingClientRect();return r.right<=popup.x||r.left>=popup.x+popup.width||r.bottom<=popup.y||r.top>=popup.y+popup.height;}),box);assert(uncovered,'The side preview never covers the audience, musicians or hands');
+  const sameSource=await hand.boundingBox();assert(Math.abs(sameSource.x-sourceHand.x)<.1&&Math.abs(sameSource.y-sourceHand.y)<.1,'Opening the preview never moves the hand');
+  const conquered=await page.locator('[data-bl-fan="f1"]').boundingBox();await page.mouse.move(conquered.x+conquered.width/2,conquered.y+conquered.height/2,{steps:5});await page.locator('.drag-card-feedback.invalid.has-target').waitFor();const invalid=await page.locator('.drag-card-feedback').boundingBox();assert(Math.abs(invalid.x-box.x)<.1&&Math.abs(invalid.y-box.y)<.1,'Valid and invalid targets share the same fixed side panel');assert((await page.locator('.drag-conquest-rule').textContent()).length>15);
+  await page.screenshot({path:`test-results/preview-side-${width}.png`});await page.mouse.move(8,8,{steps:4});await page.mouse.up();await page.locator('.drag-card-feedback').waitFor({state:'detached'});assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game),before,'Cancelling a preview spends nothing and changes no show state');
  }
  await page.setViewportSize({width:1440,height:900});
  const live=await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game);
@@ -51,5 +61,5 @@ try{
  await reward.locator('input[name^="level-slot-"]').first().check();await reward.locator('input[name^="level-kind-"][value="new1"]').check();
  const owner=await reward.getAttribute('data-level-owner');await reward.locator('[data-level-claim]').click();assert(await page.evaluate(owner=>JSON.parse(localStorage.getItem('garage-vivant-v1')).people.find(p=>p.id===owner).levelRewards.some(r=>r.status==='claimed'),owner));
  await page.screenshot({path:'test-results/refonte-levels.png'});
- assert.deepEqual(errors,[]);console.log('Refonte passed: automatic BandLive, six musicians/twelve fans at four desktop sizes, fixed card ratio, fan rules during targeting, turn control, reload, group portraits and mobile width.');
+ assert.deepEqual(errors,[]);console.log('Refonte passed: six musicians/twelve fans, fixed side preview with valid/invalid targets and no covered characters/cards at four desktop sizes, fixed card ratio, targeting, turn control, reload, group portraits and mobile width.');
 }catch(error){console.error(errors);throw error;}finally{await browser.close();await new Promise(r=>server.close(r));}

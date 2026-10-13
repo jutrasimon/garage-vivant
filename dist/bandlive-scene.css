@@ -27,6 +27,7 @@ body.bandlive-mode .workspace.bandlive-layout>main{padding:0;scrollbar-gutter:au
 .bl-top-controls .bl-piles summary{max-width:none;white-space:nowrap}.bl-piles summary>span{opacity:.65;margin-left:4px}.bl-hud .bl-piles>div{right:0;max-height:65dvh}
 .bl-playfield{background:#203943}.bl-viewport{background-color:#203943;background-image:linear-gradient(#142f3738 1px,transparent 1px),linear-gradient(90deg,#142f3728 1px,transparent 1px);background-size:100% 64px,192px 128px;overflow-x:auto;overflow-y:hidden}
 .bl-world.bl-minuit{position:relative;margin:0;max-width:none;background:transparent}
+.drag-card-feedback,.drag-card-feedback.has-target{width:260px!important;height:auto!important;overflow:hidden}
 .bl-minuit .bl-zone-label,.bl-minuit .bl-drop-hint{display:none}
 .bl-minuit .bl-intent{font-size:9px;min-width:98px;max-width:120px;padding:3px 7px}
 .bl-minuit .bl-conquest-bonus{font-size:8px;padding:2px 5px;max-width:120px}

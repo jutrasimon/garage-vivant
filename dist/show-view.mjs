@@ -1,7 +1,7 @@
-import {drawMicroBody} from './character-view.mjs?v=0.8.2';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.2';
-import {CARDS} from './stage.mjs?v=0.8.2';
-import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext,showBeat,actorSize} from './show-playback.mjs?v=0.8.2';
+import {drawMicroBody} from './character-view.mjs?v=0.8.3';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.3';
+import {CARDS} from './stage.mjs?v=0.8.3';
+import {eventAge,songSeconds,actorPosition,stageGeometry,cardContext,showBeat,actorSize} from './show-playback.mjs?v=0.8.3';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={guitar:'Guitare',bass:'Basse',drums:'Batterie',voice:'Chant',keys:'Clavier',sax:'Saxophone',trumpet:'Trompette',percussion:'Percussions'};
 const colors={rhythm:'#a9c995',impact:'#e4bd75',emotion:'#d3a8c3',support:'#9fc8d2',curse:'#d39280'};

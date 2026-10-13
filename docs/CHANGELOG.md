@@ -1,3 +1,7 @@
+# V0.8.3 — 13 octobre 2026
+
+La prévision sur le côté, la salle dégagée. [Notes complètes](./versions.md#v083).
+
 # V0.8.2 — 13 octobre 2026
 
 Des cartes lisibles et mieux proportionnées. [Notes complètes](./versions.md#v082).

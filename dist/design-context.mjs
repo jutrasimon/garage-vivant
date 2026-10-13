@@ -1,4 +1,4 @@
-import {rule} from './design-rules.mjs?v=0.8.2';
+import {rule} from './design-rules.mjs?v=0.8.3';
 const n=x=>Number.isFinite(x)?new Intl.NumberFormat('fr-CA',{maximumFractionDigits:5}).format(x):'valeur à compléter';
 const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Explanations mirror the consuming rules; they never change simulation state.
