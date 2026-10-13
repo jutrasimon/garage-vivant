@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.8.9
+# Garage vivant · v0.8.10
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v089) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0810) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 
@@ -33,6 +33,8 @@ Les dates se renouvellent continuellement. Un gros événement revient toutes le
 ## BandLive · moteur de tous les nouveaux shows
 
 Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde un gros bouton de fin de tour en bas à droite. La programmation et les outils avancés sont sous le premier écran. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
+
+Les mains sont abaissées et les musiciens légèrement remontés pour montrer leurs instruments. La scène réserve cet espace tout en gardant les cartes lisibles et le public visible; le test de composition couvre les huit instruments et les mains de cinq cartes jusqu’au 1280 × 720.
 
 Les arcs roses indiquent la conquête et les arcs jaunes de tempo suivent le curseur ou le doigt. Le ciblage collectif utilise une lueur et des ondes autour du public, avec des halos pour les cibles individuelles. L’énergie conserve son vert menthe. La prévision des effets suit le curseur en laissant visible la cible; son contenu et l’arc sont réutilisés pendant les petits déplacements. `npm run test:targeting`, inclus dans le smoke obligatoire, vérifie couleurs, suivi souris/tactile, effets réduits, cartes mixtes, cibles invalides et annulation sans dépense.
 

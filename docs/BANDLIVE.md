@@ -1,4 +1,4 @@
-# BandLive · moteur de spectacle — 0.8.9
+# BandLive · moteur de spectacle — 0.8.10
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
 
@@ -13,6 +13,8 @@ La version 0.8.1 mesure les positions au changement de mise en page, puis anime 
 ## Interface et lecture du public
 
 Les cartes partagent un format 5:7 : coût dans le coin, icône en haut, titre centré, nom du musicien, description complète et cible en pied de carte. La version 0.8.2 agrandit les cartes en main de 32 % et augmente leur typographie. Les mains par défaut compensent en partie la réduction de la salle sur les écrans plus petits; les tailles choisies manuellement restent conservées. Les descriptions longues gardent tout leur texte, y compris dans les decks, aperçus et améliorations. Le test de composition vérifie la lisibilité à la taille affichée et l’absence de texte coupé pour toutes les cartes.
+
+La version 0.8.10 abaisse les mains et remonte légèrement les musiciens pour dégager leurs instruments. L’espace de scène augmente et les mains par défaut compensent davantage la réduction de la salle. Les cartes restent au même ratio et ne recouvrent pas la première rangée du public. Le test de composition vérifie les huit instruments, une main complète de cinq cartes, le 1280 × 720 et les anciennes grilles à trois rangées. Les décalages et tailles de mains choisis manuellement restent conservés.
 
 La composition reprend les proportions de la maquette : scène centrée de 1 120 unités maximum, fond de salle continu et bandeau compact avec chansons au centre, tour et conquêtes à droite. Les nouveaux shows utilisent deux rangées : quatre colonnes jusqu’à huit spectateurs, cinq pour neuf ou dix, six pour onze ou douze. Les anciennes sauvegardes sans nombre de colonnes gardent leur grille à quatre colonnes. Les effets spatiaux utilisent toujours les voisins de la grille affichée. Sur ordinateur, la scène est ajustée à la hauteur disponible pour montrer le public entier. Sur petit écran, la scène conserve un défilement horizontal. Le gros bouton **Fin du tour** reste en bas à droite. La programmation de la soirée, les outils avancés et le déroulement commencent sous le premier écran de jeu. Une carte gratuite reste jouable à zéro énergie.
 

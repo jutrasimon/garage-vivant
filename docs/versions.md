@@ -1,5 +1,14 @@
 # Notes de version
 
+## V0.8.10 — Les instruments retrouvent leur place sur scène {#v0810}
+
+13 octobre 2026.
+
+- Plus de place pour les musiciens sur scène : les cartes sont abaissées et les personnages légèrement remontés, pour laisser leurs instruments visibles.
+- La hauteur de la scène et la compensation des mains sont ajustées ensemble : cartes au même ratio, textes lisibles et public entier à l’écran.
+- Vérification des huit instruments, des mains de cinq cartes, des anciennes grilles à trois rangées et du format 1280 × 720.
+- Les parties et les réglages manuels de disposition sont conservés.
+
 ## V0.8.9 — Tempo doré au curseur et ciblage vibrant {#v089}
 
 13 octobre 2026.

@@ -1,3 +1,7 @@
+# V0.8.10 — 13 octobre 2026
+
+Les instruments retrouvent leur place sur scène. [Notes complètes](./versions.md#v0810).
+
 # V0.8.9 — 13 octobre 2026
 
 Tempo doré au curseur et ciblage vibrant. [Notes complètes](./versions.md#v089).

@@ -1,4 +1,4 @@
-import {clampBody,resolveBodies} from './bandlive-physics.mjs?v=0.8.9';
+import {clampBody,resolveBodies} from './bandlive-physics.mjs?v=0.8.10';
 export const FAN_BODY=Object.freeze({w:86,h:112});
 export const ACTOR_BODY=Object.freeze({w:132.5,h:110});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -7,7 +7,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export function stageLayout(width,memberCount,fanCount,columns,compact=false){
   const area=width,stage={left:90,right:area-90,top:75,bottom:265+Math.floor((memberCount-1)/6)*300};
   const cellW=180,cellH=136,crowdLeft=Math.max(24,(area-columns*cellW)/2);
-  return {area,stage,actors:Array.from({length:memberCount},(_,i)=>({x:stage.left+(stage.right-stage.left)*(i%6+.5)/Math.min(6,memberCount-Math.floor(i/6)*6),y:130+Math.floor(i/6)*300})),
+  return {area,stage,actors:Array.from({length:memberCount},(_,i)=>({x:stage.left+(stage.right-stage.left)*(i%6+.5)/Math.min(6,memberCount-Math.floor(i/6)*6),y:110+Math.floor(i/6)*300})),
     slots:Array.from({length:fanCount},(_,i)=>({left:crowdLeft+i%columns*cellW,right:crowdLeft+(i%columns+1)*cellW,top:Math.floor(i/columns)*cellH,bottom:(Math.floor(i/columns)+1)*cellH})),
     crowdHeight:Math.ceil(fanCount/columns)*cellH};
 }

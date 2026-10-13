@@ -1,6 +1,6 @@
-import {audienceColumns} from './bandlive.mjs?v=0.8.9';
-import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.9';
-import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.9';
+import {audienceColumns} from './bandlive.mjs?v=0.8.10';
+import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.10';
+import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.10';
 
 export function createBandLiveStage({root,getReducedEffects}){
   let host=null,game=null,renderer=null,loading=null,editing=false,held=null,history=[],prefs={},bodies=[],geometry=null;
@@ -20,7 +20,7 @@ export function createBandLiveStage({root,getReducedEffects}){
     renderer?.attach(host,game);
   }
   function fit(){
-    if(!host)return;const viewport=host.parentElement,screen=host.closest('.bl-show-screen'),rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=410+Math.floor((game.actors.length-1)/6)*300,height=stageHeight+rows*136;
+    if(!host)return;const viewport=host.parentElement,screen=host.closest('.bl-show-screen'),rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=480+Math.floor((game.actors.length-1)/6)*300,height=stageHeight+rows*136;
     const main=screen?.closest('main'),screenHeight=Math.max(470,innerHeight-Math.max(0,main?.getBoundingClientRect().top||0));
     if(screen)screen.style.height=screenHeight+'px';
     const footer=screen?parseFloat(getComputedStyle(screen).getPropertyValue('--bl-footer-height'))||94:94;
@@ -42,11 +42,12 @@ export function createBandLiveStage({root,getReducedEffects}){
       if(hand){
         // Preserve readable default hands when the room shrinks to fit its crowd.
         // An explicitly tuned hand keeps the player's chosen scale.
-        const defaultScale=Math.min(1.18,Math.max(1,104/(132*Number(host.dataset.scale))));
+        const defaultScale=Math.min(1.25,Math.max(1,104/(132*Number(host.dataset.scale))));
         const h=c.hands[a.id]||{},cards=[...hand.querySelectorAll('[data-bl-card]')],scale=Math.max(.55,Math.min(1.65,valid(h.scale,defaultScale))),fan=Math.max(0,Math.min(60,valid(h.fan,26)));
         const g=fanGeometry({count:cards.length,scale,fan});hand.style.width=g.width+'px';hand.style.height=g.height+'px';hand.style.setProperty('--bl-pack-scale',scale);
         cards.forEach((el,j)=>{const p=g.cards[j];el.style.left=p.left+'px';el.style.top=p.top+'px';el.style.width=g.cardW+'px';el.style.height=g.cardH+'px';el.style.setProperty('--bl-card-angle',p.angle+'deg');});
-        const initial={x:geometry.actors[i].x,y:geometry.actors[i].y+30+g.height/2};
+        // The lower part of each instrument extends below the musician's body.
+        const initial={x:geometry.actors[i].x,y:geometry.actors[i].y+100+g.height/2};
         bodies.push({id:a.id,type:'cards',element:hand,w:g.width,h:g.height,initial,x:initial.x+valid(h.dx,0),y:initial.y+valid(h.dy,0)});
       }
     }
@@ -65,7 +66,7 @@ export function createBandLiveStage({root,getReducedEffects}){
     game=state;host=next;
     if(!host){renderer?.pause();return;}
     fit();layout();
-    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.9').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
+    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.10').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
     const button=root.querySelector('#bl-layout');if(button){button.setAttribute('aria-pressed',editing);button.textContent=editing?'✓ Terminer la disposition':'✥ Disposition';}
     const tools=root.querySelector('.bl-layout-tools');if(tools)tools.hidden=!editing;
   }
