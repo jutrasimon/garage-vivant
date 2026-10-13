@@ -1,5 +1,5 @@
-import * as T from './bandlive-three.mjs?v=0.8.10';
-import {spotlightVertices} from './bandlive-spotlight-geometry.mjs?v=0.8.10';
+import * as T from './bandlive-three.mjs?v=0.8.11';
+import {spotlightVertices} from './bandlive-spotlight-geometry.mjs?v=0.8.11';
 
 export function createMinuitRenderer({getReducedEffects}){
   const canvas=document.createElement('canvas');canvas.className='bl-scene-canvas';canvas.setAttribute('aria-hidden','true');

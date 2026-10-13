@@ -1,6 +1,6 @@
-import {musicianDeck,definitionFor,specialChoices,INSTRUMENTS} from './bandlive-cards.mjs?v=0.8.10';
-import {cardFace,escapeCard as esc} from './card-view.mjs?v=0.8.10';
-import {personCard} from './person-card.mjs?v=0.8.10';
+import {musicianDeck,definitionFor,specialChoices,INSTRUMENTS} from './bandlive-cards.mjs?v=0.8.11';
+import {cardFace,escapeCard as esc} from './card-view.mjs?v=0.8.11';
+import {personCard} from './person-card.mjs?v=0.8.11';
 const selections=new Map();
 export function rememberLevelChoice(owner,level,type,value){const key=owner+':'+level;selections.set(key,{...selections.get(key),[type]:value});}
 export function showLevelRewards(world,show){

@@ -1,3 +1,7 @@
+# V0.8.11 — 13 octobre 2026
+
+Les pouvoirs de conquête prennent le devant de la scène. [Notes complètes](./versions.md#v0811).
+
 # V0.8.10 — 13 octobre 2026
 
 Les instruments retrouvent leur place sur scène. [Notes complètes](./versions.md#v0810).

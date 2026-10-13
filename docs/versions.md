@@ -1,5 +1,17 @@
 # Notes de version
 
+## V0.8.11 — Les pouvoirs de conquête prennent le devant de la scène {#v0811}
+
+13 octobre 2026.
+
+Lorsqu’une carte va déclencher le pouvoir du spectateur visé, sa prévision affiche maintenant un **grand encadré rose lumineux**, placé avant les règles ordinaires.
+
+- Mention « VA SE DÉCLENCHER ! », icône et nom du pouvoir en gros, description et noms des voisins réellement touchés.
+- Annonce visible des chaînes de conquêtes prévues par le moteur.
+- Une brève animation souligne l’apparition de l’effet; elle ne recommence pas aux petits mouvements du curseur et respecte les effets réduits.
+- Même annonce dans la prévision au curseur, au doigt et après sélection d’une carte. Sur mobile, le popup utilise au besoin l’espace du haut pour laisser le spectateur visible.
+- Sans déclenchement prévu, la règle reste discrète. Viser et annuler conserve intégralement le show et ses ressources.
+
 ## V0.8.10 — Les instruments retrouvent leur place sur scène {#v0810}
 
 13 octobre 2026.

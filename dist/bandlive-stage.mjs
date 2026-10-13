@@ -1,6 +1,6 @@
-import {audienceColumns} from './bandlive.mjs?v=0.8.10';
-import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.10';
-import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.10';
+import {audienceColumns} from './bandlive.mjs?v=0.8.11';
+import {fanGeometry} from './bandlive-hand-geometry.mjs?v=0.8.11';
+import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.11';
 
 export function createBandLiveStage({root,getReducedEffects}){
   let host=null,game=null,renderer=null,loading=null,editing=false,held=null,history=[],prefs={},bodies=[],geometry=null;
@@ -66,7 +66,7 @@ export function createBandLiveStage({root,getReducedEffects}){
     game=state;host=next;
     if(!host){renderer?.pause();return;}
     fit();layout();
-    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.10').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
+    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.11').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
     const button=root.querySelector('#bl-layout');if(button){button.setAttribute('aria-pressed',editing);button.textContent=editing?'✓ Terminer la disposition':'✥ Disposition';}
     const tools=root.querySelector('.bl-layout-tools');if(tools)tools.hidden=!editing;
   }

@@ -1,4 +1,4 @@
-# BandLive · moteur de spectacle — 0.8.10
+# BandLive · moteur de spectacle — 0.8.11
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
 
@@ -25,6 +25,8 @@ Le choix des tounes se fait dans un overlay avec les styles favoris, leurs effec
 La fiche d’un fan montre son portrait, sa barre de conquête, son style, sa réaction et son pouvoir. Pendant le ciblage, le preview explique aussi sa condition, son effet de conquête et les déclenchements prévus. Il utilise une copie du vrai moteur, sans dépenser de ressources. En glisser-déposer, une seule prévision suit le curseur, décalée pour laisser visible le spectateur visé et rester dans l’écran, y compris lorsque la cible est invalide. Le déplacement utilise des dimensions en cache; la simulation n’est recalculée que si carte, cible, état du show ou choix en cours changent. La marge réservée à l’ancien panneau fixe de visée est retirée. Les arcs roses rejoignent les spectateurs touchés; les arcs jaunes de tempo suivent le curseur ou le doigt, même sur une même cible. Les cartes mixtes montrent les deux avec des courbes distinctes. Une lueur et des ondes remplacent le rectangle de ciblage collectif; les cibles individuelles ont un halo. Le tempo utilise le doré dans le tooltip, les indications de gain ou dépense et l’éclairage de la salle. Le vert reste associé aux actions et à l’énergie. La géométrie des personnages reste stable pendant la visée, l’arc déjà créé est réutilisé, et les pulsations s’arrêtent en mode effets réduits. `npm run test:targeting` et `npm run test:performance`, inclus dans le smoke obligatoire, vérifient ces interactions et leur coût de rendu.
 
 ## Trois pouvoirs à la conquête
+
+Quand la simulation prévoit le déclenchement du pouvoir du spectateur visé, un encadré rose lumineux le présente avant les règles ordinaires : « VA SE DÉCLENCHER ! », icône, grand nom, description et noms des voisins réellement affectés. Une chaîne prévue affiche le nombre d’effets de conquête. L’annonce est commune au glisser-déposer, au tactile et à la carte sélectionnée; elle n’apparaît pas sur une cible survivante ou déjà conquise. Son apparition est animée une fois par changement d’effet, sans boucle ni nouvelle simulation aux petits mouvements; les effets réduits gardent une annonce statique. Sur téléphone, elle peut utiliser l’espace du haut pour ne pas recouvrir la cible. `npm run test:conquest-preview`, inclus dans le smoke, vérifie ces cas et l’annulation sans dépense.
 
 Chaque nouveau spectateur reçoit un pouvoir et sa valeur, déterminés par la graine :
 

@@ -1,6 +1,6 @@
-import {activeGroup} from './groups.mjs?v=0.8.10';
-import {eligibleSongs} from './life.mjs?v=0.8.10';
-import {RULES,createBandLive} from './bandlive.mjs?v=0.8.10';
+import {activeGroup} from './groups.mjs?v=0.8.11';
+import {eligibleSongs} from './life.mjs?v=0.8.11';
+import {RULES,createBandLive} from './bandlive.mjs?v=0.8.11';
 
 // Resolve only the module's draft. Group membership, canonical songs, mastery
 // and the world's RNG are read without being changed.
