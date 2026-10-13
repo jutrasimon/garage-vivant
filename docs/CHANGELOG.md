@@ -1,3 +1,7 @@
+# V0.7.21 — 12 octobre 2026
+
+Réglages après un spectacle terminé. [Notes complètes](./versions.md#v0721).
+
 # V0.7.20 — 12 octobre 2026
 
 BandLive : tempo, réactions persistantes et simulation. [Notes complètes](./versions.md#v0720).

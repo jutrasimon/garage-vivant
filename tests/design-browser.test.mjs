@@ -31,5 +31,27 @@ try{
  await page.locator('[data-design-context="groups.proposal"] summary').click();await page.locator('[data-design-context="groups.proposal"]').scrollIntoViewIfNeeded();await page.screenshot({path:'test-results/design-desktop.png'});
  await page.setViewportSize({width:390,height:844});await page.locator('[data-design-context="groups.proposal"]').scrollIntoViewIfNeeded();
  assert(await page.locator('#design-dashboard').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'No horizontal overflow in dashboard');await page.screenshot({path:'test-results/design-mobile.png'});
- assert.deepEqual(errors,[]);console.log('Design dashboard passed: staged edits, actual saved values, reload, validation, profile import/export, reset, filters and mobile width.');
+ // Exercise the actual dashboard handler with retained reports and active shows.
+ const showGuards=await page.evaluate(async()=>{
+  const {mountDesignDashboard}=await import('/design-dashboard.mjs');
+  const {createWorld}=await import('/engine.mjs');
+  const results=[];
+  for(const [status,eventId] of [['finished',null],['cancelled',null],['playing',null],['finished','evening']]){
+   const world=createWorld(71,4);world.performance={status};world.showEventId=eventId;
+   const root=document.createElement('div');let applied=0;
+   mountDesignDashboard(root,{world:()=>world,onApply:()=>applied++});
+   const input=root.querySelector('[data-design-value="groups.proposal"]');
+   input.value='0.6';input.dispatchEvent(new Event('input',{bubbles:true}));
+   root.querySelector('[data-design-apply]').click();
+   results.push({status,eventId,applied,value:world.design?.values['groups.proposal']??null});
+  }
+  return results;
+ });
+ assert.deepEqual(showGuards,[
+  {status:'finished',eventId:null,applied:1,value:.6},
+  {status:'cancelled',eventId:null,applied:1,value:.6},
+  {status:'playing',eventId:null,applied:0,value:null},
+  {status:'finished',eventId:'evening',applied:0,value:null},
+ ]);
+ assert.deepEqual(errors,[]);console.log('Design dashboard passed: staged edits, actual saved values, reload, validation, profile import/export, reset, filters, mobile width and show completion guards.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

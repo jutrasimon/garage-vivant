@@ -1,6 +1,6 @@
-import {songTurns,songQualityHTML} from './song-rules.mjs?v=0.7.20';
-import {groupLinkHTML} from './group-link.mjs?v=0.7.20';
-import {stamp,SKILLS} from './engine.mjs?v=0.7.20';
+import {songTurns,songQualityHTML} from './song-rules.mjs?v=0.7.21';
+import {groupLinkHTML} from './group-link.mjs?v=0.7.21';
+import {stamp,SKILLS} from './engine.mjs?v=0.7.21';
 export const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const authorName=(s,x,id)=>s.people.find(p=>p.id===id)?.name||x.authorNames?.[id]||'Ancien voisin';
 export function compositionCreditHTML(s,x){

@@ -1,5 +1,5 @@
-import {designContextHTML} from './design-context.mjs?v=0.7.20';
-import {DESIGN_FIELDS,DESIGN_CATEGORIES,designProfile,validateDesign,applyDesign,rule} from './design-rules.mjs?v=0.7.20';
+import {designContextHTML} from './design-context.mjs?v=0.7.21';
+import {DESIGN_FIELDS,DESIGN_CATEGORIES,designProfile,validateDesign,applyDesign,rule} from './design-rules.mjs?v=0.7.21';
 const number=n=>new Intl.NumberFormat('fr-CA',{maximumFractionDigits:5}).format(n);
 const normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function mountDesignDashboard(root,{world,onApply}) {
@@ -29,7 +29,7 @@ export function mountDesignDashboard(root,{world,onApply}) {
  if(button.hasAttribute('data-design-reset')){draft={};render();status.textContent='Valeurs par défaut préparées. Rien ne change avant application.';}
  if(button.hasAttribute('data-design-import'))root.querySelector('[data-design-file]').click();
  if(button.hasAttribute('data-design-export')){const profile=designProfile(draft),url=URL.createObjectURL(new Blob([JSON.stringify(profile,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='garage-vivant-equilibrage.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Profil préparé exporté. La partie n’a pas été modifiée.';}
- if(button.hasAttribute('data-design-apply')){const s=world();if(s.performance||s.showEventId)throw Error('Termine le spectacle en cours avant de changer l’équilibrage.');const profile=designProfile(draft),changes=DESIGN_FIELDS.filter(f=>value(draft,f)!==rule(s,f.id)).map(f=>({id:f.id,before:rule(s,f.id),after:value(draft,f)}));if(!changes.length)return;applyDesign(s,profile);applied=s.design;draft={...profile.values};onApply(changes);render();status.textContent=`${changes.length} changement${changes.length===1?'':'s'} appliqué${changes.length===1?'':'s'} à cette partie. Les prochaines évaluations utilisent ces valeurs.`;}
+ if(button.hasAttribute('data-design-apply')){const s=world();if(s.performance?.status==='playing'||s.showEventId)throw Error('Termine le spectacle en cours avant de changer l’équilibrage.');const profile=designProfile(draft),changes=DESIGN_FIELDS.filter(f=>value(draft,f)!==rule(s,f.id)).map(f=>({id:f.id,before:rule(s,f.id),after:value(draft,f)}));if(!changes.length)return;applyDesign(s,profile);applied=s.design;draft={...profile.values};onApply(changes);render();status.textContent=`${changes.length} changement${changes.length===1?'':'s'} appliqué${changes.length===1?'':'s'} à cette partie. Les prochaines évaluations utilisent ces valeurs.`;}
  }catch(error){status.textContent='Changement refusé : '+error.message;}});
  sync();return {sync};
 }
