@@ -15,8 +15,9 @@
     "release:prepare": "node scripts/release.mjs prepare",
     "release:check": "node scripts/release.mjs check",
     "test:quick": "node scripts/check-syntax.mjs && npm run release:check && npm test",
-    "test:smoke": "node tests/smoke-browser.test.mjs && node tests/cache-upgrade-browser.test.mjs && node tests/local-server-browser.test.mjs",
+    "test:smoke": "node tests/smoke-browser.test.mjs && node tests/cache-upgrade-browser.test.mjs && node tests/local-server-browser.test.mjs && node tests/bandlive-composition-browser.test.mjs",
     "test:refonte": "node tests/bandlive-refonte-browser.test.mjs",
+    "test:composition": "node tests/bandlive-composition-browser.test.mjs",
     "start": "node scripts/serve.mjs"
   },
   "devDependencies": {

@@ -32,7 +32,7 @@ Les dates se renouvellent continuellement. Un gros événement revient toutes le
 
 ## BandLive · moteur de tous les nouveaux shows
 
-Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde un gros bouton de fin de tour en bas à gauche. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
+Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde un gros bouton de fin de tour en bas à droite. La programmation et les outils avancés sont sous le premier écran. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
 
 Trois pouvoirs de conquête : Onde de choc 2–5, Projecteur 1–3 et Chœur du public 1–2. Rythme et voisinage déclenchent immédiatement leurs gains; les réactions consommées disparaissent jusqu’au prochain tour. Animations et rétroaction couvrent chaque effet, le tempo, les soutiens et la finale.
 

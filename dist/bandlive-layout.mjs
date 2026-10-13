@@ -5,9 +5,9 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 // These slots present the engine's topology. They never reorder game.fans.
 export function stageLayout(width,memberCount,fanCount,columns,compact=false){
-  const area=width,stage={left:65,right:area-65,top:75,bottom:212+Math.floor((memberCount-1)/6)*300};
-  const cellW=142,cellH=140,crowdLeft=Math.max(24,(area-columns*cellW)/2);
-  return {area,stage,actors:Array.from({length:memberCount},(_,i)=>({x:stage.left+(stage.right-stage.left)*(i%6+.5)/Math.min(6,memberCount-Math.floor(i/6)*6),y:83+Math.floor(i/6)*300})),
+  const area=width,stage={left:90,right:area-90,top:75,bottom:265+Math.floor((memberCount-1)/6)*300};
+  const cellW=180,cellH=140,crowdLeft=Math.max(24,(area-columns*cellW)/2);
+  return {area,stage,actors:Array.from({length:memberCount},(_,i)=>({x:stage.left+(stage.right-stage.left)*(i%6+.5)/Math.min(6,memberCount-Math.floor(i/6)*6),y:150+Math.floor(i/6)*300})),
     slots:Array.from({length:fanCount},(_,i)=>({left:crowdLeft+i%columns*cellW,right:crowdLeft+(i%columns+1)*cellW,top:Math.floor(i/columns)*cellH,bottom:(Math.floor(i/columns)+1)*cellH})),
     crowdHeight:Math.ceil(fanCount/columns)*cellH};
 }

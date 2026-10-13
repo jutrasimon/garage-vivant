@@ -22,7 +22,7 @@ try{
   await page.setViewportSize({width,height});await page.waitForTimeout(250);
   const geometry=await page.evaluate(()=>({fans:[...document.querySelectorAll('[data-bl-fan]')].map(el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right};}),end:document.querySelector('#bl-end').getBoundingClientRect().toJSON(),audience:document.querySelector('.bl-audience-viewport').getBoundingClientRect().toJSON()}));
   assert(geometry.fans.every(r=>r.top>=0&&r.bottom<=height&&r.left>=0&&r.right<=width),JSON.stringify({width,height,geometry}));
-  assert(geometry.end.bottom<=height);assert(geometry.end.left<width/3);
+  assert(geometry.end.bottom<=height);assert(geometry.end.left>width*2/3,'The turn button sits at the lower right');assert((await page.locator('.bl-show-details').boundingBox()).y>=height-1,'Evening information starts below the playing screen');
   await page.screenshot({path:`test-results/refonte-${width}.png`});
  }
  await page.setViewportSize({width:1440,height:900});

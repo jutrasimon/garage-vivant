@@ -8,7 +8,7 @@ export function createBandLiveStage({root,getReducedEffects}){
   try{const value=JSON.parse(localStorage.getItem(key)||'{}');if(value&&typeof value==='object')prefs=value;}catch{}
   const valid=(n,f)=>Number.isFinite(n)?n:f;
   const persist=()=>{try{localStorage.setItem(key,JSON.stringify(prefs));}catch{}};
-  const signature=()=>game.actors.map(a=>a.id+':'+a.instrument).join('|')+'/'+game.fans.length+'/'+audienceColumns(game);
+  const signature=()=> 'scene-v2/'+game.actors.map(a=>a.id+':'+a.instrument).join('|')+'/'+game.fans.length+'/'+audienceColumns(game);
   const config=()=>{const id=signature();let c=prefs[id];if(!c||typeof c!=='object'||Array.isArray(c))c=prefs[id]={};for(const key of ['actors','fans','hands'])if(!c[key]||typeof c[key]!=='object'||Array.isArray(c[key]))c[key]={};return c;};
   function save(){const c=config();for(const b of bodies){if(b.type==='fan')c.fans[b.id]={dx:b.x-(b.slot.left+b.slot.right)/2,dy:b.y-(b.slot.top+b.slot.bottom)/2};else if(b.type==='actor')c.actors[b.id]={dx:b.x-b.initial.x,dy:b.y-b.initial.y};else c.hands[b.id]={...c.hands[b.id],dx:b.x-b.initial.x,dy:b.y-b.initial.y};}persist();}
   function apply(){
@@ -20,11 +20,13 @@ export function createBandLiveStage({root,getReducedEffects}){
     renderer?.attach(host,game);
   }
   function fit(){
-    if(!host)return;const viewport=host.parentElement,rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=330+Math.floor((game.actors.length-1)/6)*300,height=stageHeight+rows*140;
-    const available=Math.max(390,innerHeight-viewport.getBoundingClientRect().top-92);
-    const scale=Math.min(1,available/height);
+    if(!host)return;const viewport=host.parentElement,screen=host.closest('.bl-show-screen'),rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=375+Math.floor((game.actors.length-1)/6)*300,height=stageHeight+rows*140;
+    const main=screen?.closest('main'),screenHeight=Math.max(470,innerHeight-Math.max(0,main?.getBoundingClientRect().top||0));
+    if(screen)screen.style.height=screenHeight+'px';
+    const available=Math.max(260,screenHeight-(screen?.querySelector('.bl-hud')?.offsetHeight||86)-94),width=1120;
+    const scale=Math.min(1,available/height,Math.max(740,viewport.clientWidth-32)/width);
     host.querySelector('.bl-audience-viewport').style.top=stageHeight+'px';host.querySelector('.bl-musicians').style.height=stageHeight+'px';host.dataset.scale=scale;host.style.transform=`scale(${scale})`;host.style.transformOrigin='top left';
-    host.style.width=Math.max(740,viewport.clientWidth/scale)+'px';host.style.minWidth='0';host.style.height=height+'px';viewport.style.height=height*scale+'px';
+    host.style.width=width+'px';host.style.minWidth='0';host.style.height=height+'px';host.style.left=Math.max(0,(viewport.clientWidth-width*scale)/2)+'px';viewport.style.height=available+'px';
   }
   function layout(){
     fit();

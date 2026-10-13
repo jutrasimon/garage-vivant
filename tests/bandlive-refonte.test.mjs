@@ -3,7 +3,7 @@ import {claimLevelReward,showLevelRewards} from '../dist/level-rewards.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWorld,restore,decide,step} from '../dist/engine.mjs';
-import {createBandLive,chooseSong,playCard,previewCard,endTurn,restoreBandLive,conquestTargets} from '../dist/bandlive.mjs';
+import {createBandLive,chooseSong,playCard,previewCard,endTurn,restoreBandLive,conquestTargets,audienceColumns} from '../dist/bandlive.mjs';
 import {beginBandLiveConcert,commitBandLiveConcert,createConcertReplay} from '../dist/bandlive-concert.mjs';
 import {completePerformance,groupRehearsal,skipShow,nextSlot} from '../dist/life.mjs';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
@@ -46,6 +46,11 @@ test('solo practice earns XP only while playing and early levels come sooner',()
  step(w,40);assert.equal(p.xp,2);assert.equal(p.practiceXpMinutes,10);assert.equal(xpProgress(p).level,1);assert(levelThreshold(3)-levelThreshold(2)>levelThreshold(2)-levelThreshold(1));const saved=restore(w);assert.deepEqual(saved,w);
  step(w,5);step(saved,5);assert.equal(p.xp,3);assert.equal(p.practiceXpMinutes,0);assert.deepEqual(saved,w,'Partial practice XP survives reloading');
  const b={id:'x',name:'X'};grantXp(b,180);assert.equal(xpProgress(b).level,3);
+});
+test('new crowds use two rows and spatial effects follow the saved columns',()=>{
+ const g=createBandLive({people:createWorld(2,3).people,songs:[{id:'a',title:'A',style:'Punk'}],audienceSize:12});assert.equal(audienceColumns(g),6);g.fans[0].effect='shock';assert.deepEqual(conquestTargets(g,g.fans[0]).map(f=>f.id),['f1','f6']);assert.deepEqual(restoreBandLive(g),g);
+ const legacy=structuredClone(g);delete legacy.gridColumns;assert.equal(audienceColumns(restoreBandLive(legacy)),4);assert.deepEqual(conquestTargets(legacy,legacy.fans[0]).map(f=>f.id),['f1','f4']);
+ assert.throws(()=>restoreBandLive({...g,gridColumns:7}));
 });
 
 test('level rewards replace per-show exchanges and persist until claimed once',()=>{

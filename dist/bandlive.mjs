@@ -18,7 +18,7 @@ export function conquestDescription(game,fan){
   if(game.conquestVersion!==2)return CONQUEST_EFFECTS[fan.effect]?.description||'';
   return fan.effect==='shock'?`${fan.effectValue} puissance à chaque voisin immédiat.`:fan.effect==='spotlight'?`Voisins immédiats : +${fan.effectValue} puissance par carte jusqu’à la fin du tour. Non cumulable; la valeur la plus forte reste.`:`${fan.effectValue} voisin(s) adoptent le style de la toune jusqu’à sa fin. Priorité aux voisins non conquis d’un autre style, dans l’ordre de la grille.`;
 }
-export const audienceColumns=game=>game.conquestVersion?Math.min(4,game.fans.length):game.fans.length>6?Math.ceil(game.fans.length/2):game.fans.length;
+export const audienceColumns=game=>game.gridColumns??(game.conquestVersion?Math.min(4,game.fans.length):game.fans.length>6?Math.ceil(game.fans.length/2):game.fans.length);
 export const favoriteStyle=fan=>fan.turnStyle||fan.chorusStyle||fan.favorite;
 // Board positions are independent of screen size and never collapse after a conquest.
 export function conquestTargets(game,fan){
@@ -87,6 +87,7 @@ function createGame({people,groupId=null,groupName='Le band du quartier',songs,s
   // Preserve ENCORE's varied opening hand, without looping for a two-person band.
   if(actors.length>=3)for(let tries=0;tries<100&&new Set(game.deck.slice(-5).map(id=>cardById(game,id).actorId)).size<3;tries++)shuffle(game,game.deck);
   if(conquestEffects)assignConquestEffects(game,rulesVersion);
+  if(rulesVersion>=2)game.gridColumns=audienceSize>8?Math.ceil(audienceSize/2):Math.min(4,audienceSize);
   if(persistentReactions)initializeReactions(game,rulesVersion);
   return game;
 }
@@ -296,6 +297,7 @@ export function restoreBandLive(input) {
   if(game.phase==='choose'&&game.turn>0&&(lengths.length!==1||game.section!==lengths[0]))fail();
   if(game.phase==='play'&&(!currentSong(game)||game.turn<1||game.section<1)||game.phase==='lost'&&(game.usedSongs.length!==2||game.section!==lengths.at(-1)))fail();
   if(!Array.isArray(game.fans)||game.fans.length<RULES.minAudience||game.fans.length>RULES.maxAudience||new Set(game.fans.map(f=>f?.id)).size!==game.fans.length||game.fans.some(f=>!f||typeof f.id!=='string'||!f.id||typeof f.name!=='string'||!Number.isInteger(f.max)||f.max<1||f.max>1000||!Number.isInteger(f.hp)||f.hp<0||f.hp>f.max||!(game.reactionVersion?Object.keys(REACTIONS):['bored','solo']).includes(f.intent)||!(game.audienceRules?.styles||game.songs.map(s=>s.style)).includes(f.favorite)||!!f.conquered!==(f.hp===0)))fail();
+  if(game.gridColumns!==undefined&&(!Number.isInteger(game.gridColumns)||game.gridColumns<3||game.gridColumns>6||game.gridColumns>game.fans.length))fail();
   for(const f of game.fans){if(f.turnStyle!==undefined&&(game.turn===0||game.phase==='choose'||f.turnStyle!==currentSong(game)?.style)||f.noBoredom!==undefined&&(f.noBoredom!==true||game.turn===0||game.phase==='choose'))fail();}
   if(game.reactionVersion!==undefined&&![1,2].includes(game.reactionVersion))fail();
   if(game.reactionVersion){

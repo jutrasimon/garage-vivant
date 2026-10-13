@@ -5,7 +5,8 @@
 12 octobre 2026.
 
 - BandLive devient le moteur de tous les nouveaux shows et essais : jams, longues réservations et formations jusqu’à 24 musiciens sont acceptées. Les anciens shows gardent leurs snapshots.
-- Scène centrée et adaptée à la hauteur, choix des tounes en overlay avec aperçu du public, cartes communes au ratio 5:7, fiches et portraits réutilisés, gros bouton de fin de tour avec énergie en bas à gauche.
+- Scène centrée et adaptée à la hauteur, choix des tounes en overlay avec aperçu du public, cartes communes au ratio 5:7, fiches et portraits réutilisés, gros bouton de fin de tour avec énergie en bas à droite.
+- Composition rapprochée de la maquette : largeur de scène maîtrisée, bandeau resserré et programmation sous le premier écran. Les nouveaux shows affichent jusqu’à six colonnes sur deux rangées; les shows commencés conservent leur grille.
 - Les personnages dansent sans déplacer leur zone de survol. La preview d’effet reste ancrée tant que la cible reste la même; elle se replace lors d’un changement de cible, d’un scroll ou de la taille de fenêtre.
 - Trois pouvoirs de conquête paramétrés : Onde de choc, Projecteur et Chœur du public. Réactions immédiates, consommées jusqu’au tour suivant; preview des conditions et des chaînes. Rétroaction sur les conquêtes, réactions, pouvoirs, tempo, soutiens et finale.
 - Musiciens et ordre variés par graine, nouvelle graine proposée par défaut, deux chansons pour un band initial ou trois à quatre réparties entre plusieurs bands.

@@ -4,7 +4,7 @@ Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les
 
 ## Interface et lecture du public
 
-L’en-tête est compact, la scène centrée et les spectateurs disposés dans une grille stable à quatre colonnes maximum. Sur ordinateur, la scène est ajustée à la hauteur disponible pour montrer le public entier. Sur petit écran, la scène conserve un défilement horizontal. Le gros bouton **Fin du tour** et ses trois points d’énergie restent en bas à gauche. Une carte gratuite reste jouable à zéro énergie.
+La composition reprend les proportions de la maquette : scène centrée de 1 120 unités maximum, fond de salle continu et bandeau compact avec chansons au centre, tour, énergie, tempo et conquêtes à droite. Les nouveaux shows utilisent deux rangées : quatre colonnes jusqu’à huit spectateurs, cinq pour neuf ou dix, six pour onze ou douze. Les anciennes sauvegardes sans nombre de colonnes gardent leur grille à quatre colonnes. Les effets spatiaux utilisent toujours les voisins de la grille affichée. Sur ordinateur, la scène est ajustée à la hauteur disponible pour montrer le public entier. Sur petit écran, la scène conserve un défilement horizontal. Le gros bouton **Fin du tour** et ses trois points d’énergie restent en bas à droite. La programmation de la soirée, les outils avancés et le déroulement commencent sous le premier écran de jeu. Une carte gratuite reste jouable à zéro énergie.
 
 Le choix des tounes se fait dans un overlay avec les styles favoris, leurs effectifs, les réactions du public et le nombre de fans correspondant à chaque chanson. Les cartes utilisent partout le même composant au ratio 5:7 : main, preview, pioche, fiche et récompenses.
 
