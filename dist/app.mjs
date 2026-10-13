@@ -1,20 +1,20 @@
-import {PATCH_NOTES} from './release.mjs?v=0.8.4';
+import {PATCH_NOTES} from './release.mjs?v=0.8.5';
 const freshSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
-import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.8.4';
-import {cardFace} from './card-view.mjs?v=0.8.4';
-import {xpHTML,personCard,levelRewardButton,rosterProgressHTML} from './person-card.mjs?v=0.8.4';
-import {createLevelNotifications} from './level-notifications.mjs?v=0.8.4';
-import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.4';
-import {songQualityHTML} from './song-rules.mjs?v=0.8.4';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.4';
-import {mountDesignDashboard} from './design-dashboard.mjs?v=0.8.4';
-import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.8.4';
-import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.8.4';
+import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.8.5';
+import {cardFace} from './card-view.mjs?v=0.8.5';
+import {xpHTML,personCard,levelRewardButton,rosterProgressHTML} from './person-card.mjs?v=0.8.5';
+import {createLevelNotifications} from './level-notifications.mjs?v=0.8.5';
+import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.5';
+import {songQualityHTML} from './song-rules.mjs?v=0.8.5';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.5';
+import {mountDesignDashboard} from './design-dashboard.mjs?v=0.8.5';
+import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.8.5';
+import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.8.5';
 const mapOptions=readMapOptions(localStorage);
-import { placeActivityLabels } from './map-labels.mjs?v=0.8.4';
-import { createBandLiveModule } from './bandlive-view.mjs?v=0.8.4';
-import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.8.4';
-import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.8.4";
+import { placeActivityLabels } from './map-labels.mjs?v=0.8.5';
+import { createBandLiveModule } from './bandlive-view.mjs?v=0.8.5';
+import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.8.5';
+import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.8.5";
 let catalogueFilters={...DEFAULT_FILTERS};
 import {
   thresholdsHTML,
@@ -23,13 +23,13 @@ import {
   exchangeTrace,
   sessionHTML,
   rapinHTML,
-} from "./v7-view.mjs?v=0.8.4";
+} from "./v7-view.mjs?v=0.8.5";
 import {
   effectiveTraits,
   updateTraits,
   TRAIT_CATALOG,
   BAG_ACTIONS,
-} from "./v7.mjs?v=0.8.4";
+} from "./v7.mjs?v=0.8.5";
 import {
   createShowClock,
   advanceShowClock,
@@ -39,22 +39,22 @@ import {
   songKey,
   stageGeometry,
   showBeat,
-} from "./show-playback.mjs?v=0.8.4";
+} from "./show-playback.mjs?v=0.8.5";
 import {
   showOverlayHTML,
   showResourcesHTML,
   deckInspectionHTML,
   cardInspectionHTML,
-} from "./show-view.mjs?v=0.8.4";
-import { setupDocSearch } from "./doc-search.mjs?v=0.8.4";
-import { calendarHTML } from "./v6-view.mjs?v=0.8.4";
-import { pendingBooking, eventById } from "./calendar.mjs?v=0.8.4";
-import { editBag } from "./social.mjs?v=0.8.4";
+} from "./show-view.mjs?v=0.8.5";
+import { setupDocSearch } from "./doc-search.mjs?v=0.8.5";
+import { calendarHTML } from "./v6-view.mjs?v=0.8.5";
+import { pendingBooking, eventById } from "./calendar.mjs?v=0.8.5";
+import { editBag } from "./social.mjs?v=0.8.5";
 import {
   profileMarkup,
   changeModule,
   resetLayout,
-} from "./profile-layout.mjs?v=0.8.4";
+} from "./profile-layout.mjs?v=0.8.5";
 import {
   VERSION,
   NEEDS,
@@ -93,7 +93,7 @@ import {
   compositionProject,
   journalEntries,
   chemistryKnowledge,
-} from "./engine.mjs?v=0.8.4";
+} from "./engine.mjs?v=0.8.5";
 import {
   command,
   bandStage,
@@ -109,20 +109,20 @@ import {
   nextBandLiveSlot,
   skipShow,
   completePerformance,
-} from "./life.mjs?v=0.8.4";
+} from "./life.mjs?v=0.8.5";
 import {
   CARDS,
   CURSES,
   INTENTIONS,
   SHOW_TICKS,
   createPerformance,
-} from "./stage.mjs?v=0.8.4";
-import { resolveShowPlan } from "./show-planning.mjs?v=0.8.4";
+} from "./stage.mjs?v=0.8.5";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.8.5";
 import {
   reconcile,
   createViewPositions,
   withReadingAnchor,
-} from "./ui-state.mjs?v=0.8.4";
+} from "./ui-state.mjs?v=0.8.5";
 import {
   quickHTML,
   skillHTML,
@@ -137,14 +137,14 @@ import {
   drawStage,
   enableAudio,
   playSound,
-} from "./v5-view.mjs?v=0.8.4";
+} from "./v5-view.mjs?v=0.8.5";
 import {
   createPlayback,
   snapSpeed,
   setPlaybackSpeed,
   advancePlayback,
   updatePositions,
-} from "./runtime.mjs?v=0.8.4";
+} from "./runtime.mjs?v=0.8.5";
 const playback = createPlayback();
 const $ = (q) => document.querySelector(q),
   $$ = (q) => [...document.querySelectorAll(q)],
@@ -190,8 +190,7 @@ let selected = world.people[0].id,
   tabInactive = false,
   labValues = false,
   rawJournal = false;
-const viewPositions = createViewPositions(),
-  personPositions = createViewPositions();
+const viewPositions = createViewPositions();
 const showPlan = {
   groupId: null,
   songId: undefined,
@@ -338,15 +337,17 @@ function save() {
 function select(id, open = true) {
   if (!world.people.some((x) => x.id === id)) return;
   if (selected !== id) {
-    personPositions.save(selected, $("#inspector"));
     profileSongLimit = 30;
   }
-  const changed = selected !== id;
   selected = id;
-  if (open) $("#inspector").classList.add("open");
+  const inspector = $("#inspector");
+  if (open) inspector.classList.add("open");
+  // Read after opening the mobile panel, then keep one position across people.
+  const top = inspector.scrollTop, left = inspector.scrollLeft;
   renderPeople();
   renderProfile(true);
-  if (changed) personPositions.restore(id, $("#inspector"));
+  inspector.scrollTop = top;
+  inspector.scrollLeft = left;
   if (view === "journal") renderJournal();
   if (view === "actions") renderActions();
 }
@@ -430,7 +431,6 @@ function renderProfile(force = false) {
   $("#profile").dataset.person = p.id;
   const preserve = [],
     catalogScroll = 0;
-  const scroll = $("#inspector").scrollTop;
   const a = p.action;
   const friends = world.people
     .filter((x) => x !== p)
@@ -1312,7 +1312,6 @@ $("#import-file").onchange = async (e) => {
     liveEvent = !!world.showEventId;
     showingPerformance = world.performance?.status === "playing" || liveEvent;
     viewPositions.clear();
-    personPositions.clear();
     journalPinnedIds = null;
     loadFailed = false;
     displayPos.clear();
@@ -1346,7 +1345,6 @@ document.addEventListener("click", (e) => {
       $("#export").click();
     }
     viewPositions.clear();
-    personPositions.clear();
     journalPinnedIds = null;
     loadFailed = false;
     showingPerformance = false;

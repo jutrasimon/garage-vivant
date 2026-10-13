@@ -1,3 +1,7 @@
+# V0.8.5 — 13 octobre 2026
+
+La fiche garde sa position entre les musiciens. [Notes complètes](./versions.md#v085).
+
 # V0.8.4 — 13 octobre 2026
 
 Des niveaux visibles et une vraie célébration. [Notes complètes](./versions.md#v084).

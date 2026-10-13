@@ -1,9 +1,9 @@
-import {personCard} from './person-card.mjs?v=0.8.4';
-import {songTurns,songQualityHTML,songQualityTier} from './song-rules.mjs?v=0.8.4';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.4';
-import {compositionCreditHTML} from './catalogue.mjs?v=0.8.4';
-import { attachment, groupSkills, groupStyle, catalogueReputation, adoptionReason } from './groups.mjs?v=0.8.4';
-import { showTitleHTML } from "./show-view.mjs?v=0.8.4";
+import {personCard} from './person-card.mjs?v=0.8.5';
+import {songTurns,songQualityHTML,songQualityTier} from './song-rules.mjs?v=0.8.5';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.5';
+import {compositionCreditHTML} from './catalogue.mjs?v=0.8.5';
+import { attachment, groupSkills, groupStyle, catalogueReputation, adoptionReason } from './groups.mjs?v=0.8.5';
+import { showTitleHTML } from "./show-view.mjs?v=0.8.5";
 import {
   ACTIONS,
   SKILLS,
@@ -11,21 +11,21 @@ import {
   stamp,
   round,
   scores,
-} from "./engine.mjs?v=0.8.4";
+} from "./engine.mjs?v=0.8.5";
 import {
   bandStage,
   eligibleSongs,
   availability,
   acceptance,
-} from "./life.mjs?v=0.8.4";
+} from "./life.mjs?v=0.8.5";
 import {
   pendingBooking,
   eventById,
   morale,
   assess,
-} from "./calendar.mjs?v=0.8.4";
-import { CARDS, INTENTIONS } from "./stage.mjs?v=0.8.4";
-import { resolveShowPlan } from "./show-planning.mjs?v=0.8.4";
+} from "./calendar.mjs?v=0.8.5";
+import { CARDS, INTENTIONS } from "./stage.mjs?v=0.8.5";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.8.5";
 const esc = (x) =>
   String(x ?? "").replace(
     /[&<>"']/g,
@@ -58,7 +58,7 @@ export function bandsHTML(s,chosen=null,query='',archives=false,bandLiveEnabled=
  const report=s.showHistory.filter(r=>r.groupId===g.id).slice().reverse().map(r=>`<details data-key="history-${r.id}"><summary>${stamp(r.time)} · ${esc(r.opportunityName)} · ${r.score}/100</summary><p>${r.conquered}/${r.total} spectateurs conquis · ${(r.songs||[{title:r.songTitle}]).map(x=>esc(x.title)).join(' → ')}</p>${r.trace?`<button data-history-replay="${r.id}">${r.mode==='bandlive'?'Rejouer BandLive · répétition':'Revoir la dernière chanson'}</button>`:''}</details>`).join('');
  return `<div class="bands-browser">${index}<article class="panel band-detail" data-key="band-detail-${g.id}"><h2>${esc(g.name)} · ${esc(g.genre)}</h2><p>${esc(g.genre)} · ${bandStage(g)} · ${g.id} · créé ${stamp(g.created)}</p>${!active?`<p>Dissolution définitive ${stamp(g.archivedAt)} : ${esc(g.dissolvedReason)}</p>`:''}<div class="result-stats"><span><b>${round(g.development)}</b>Coordination</span><span><b>${round(g.reputation)}</b>Réputation</span><span><b>${round(morale(g,s.time))}</b>Moral de scène</span></div><p class="muted">Réputation : spectacles ${round(g.showReputation)} + catalogue ${round(catalogueReputation(s,g))}. Couleur musicale : ${Object.entries(style.counts).map(([k,n])=>`${esc(k)} ${n}`).join(' · ')||'fondateurs : '+esc(g.initialGenre)}.</p>${(g.moraleEffects||[]).filter(e=>e.until>s.time).map(e=>`<p>${esc(e.reason)} · ${e.amount} · fin ${stamp(e.until)}</p>`).join('')}<div class="inline-actions">${active?`<button data-open-shows="${g.id}" class="primary">Préparer / réserver</button>${bandLiveEnabled?`<button data-bandlive-open data-bandlive-group="${g.id}">Jouer avec BandLive</button>`:''}${own?`<button data-invite-group="${g.id}">Inviter</button>`:''}`:''}</div><details open data-key="members-${g.id}"><summary>${active?'Membres · '+g.members.length:'Anciens membres · '+alumni.length}</summary>${active?members||'<p>Aucun membre actif.</p>':former||'<p>Aucun ancien membre renseigné.</p>'}</details>${active?skillsHTML(s,g):''}<details open data-key="repertoire-${g.id}"><summary>Répertoire · ${g.repertoire.length} morceaux</summary><p class="muted">Le groupe conserve ses morceaux même si leur auteur quitte. La pratique entraîne les musiciens et augmente la coordination; les shows donnent aussi de l’XP aux participants.</p>${songs||'<p>Aucune chanson adoptée. Une improvisation reste possible en spectacle.</p>'}${active?`<details data-key="catalogue-${g.id}"><summary>Compositions disponibles à adopter</summary>${s.songs.filter(x=>!adoptionReason(s,g,x)).map(song=>`<div class="repertoire-row"><button data-song-details="song:${song.id}" class="text-button">Chanson · « ${esc(song.title)} »</button>${compositionCreditHTML(s,song)}<small>${songQualityHTML(song)} · Qualité ${song.quality}/100</small><button data-v6-add-song="${g.id}:${song.id}">Adopter</button></div>`).join('')||'<p>Aucune composition disponible.</p>'}</details>`:''}</details>${active?`<p class="muted">Prochaine recherche de chanson : ${stamp(g.nextAdoption)} · prochaine décision de pratique : ${stamp(g.nextPractice)}. Une décision ne garantit pas un appel.</p>`:''}<details open data-key="requests-${g.id}"><summary>Appels de pratique · ${requests.length}</summary>${requests.map(r=>`<p>« ${esc(s.songs.find(x=>x.id===r.songId)?.title)} » · ${r.status==='playing'?'En cours':'Invitations en attente'} · échéance ${stamp(r.expires)}</p>`).join('')||'<p>Aucun appel en cours.</p>'}</details><details data-key="shows-${g.id}"><summary>Shows passés · ${g.shows.length}</summary>${report||'<p>Aucun show joué.</p>'}</details><details data-key="story-${g.id}"><summary>Fondateurs, histoire et départs</summary><p>Fondateurs : ${g.founders.map(id=>esc(person(s,id)?.name||g.alumni.find(p=>p.id===id)?.name||'Ancien voisin')).join(', ')}</p>${g.alumni.map(p=>`<p>${esc(p.name)} · départ ${stamp(p.left)} · ${esc(p.reason||'Historique')}</p>`).join('')}${g.moments.map(m=>`<p>${stamp(m.time)} · ${esc(m.text)}</p>`).join('')}</details></article></div>`;
 }
-export { rapinHTML } from "./v7-view.mjs?v=0.8.4";
+export { rapinHTML } from "./v7-view.mjs?v=0.8.5";
 export function showSetupHTML(s, plan) {
   const prep = resolveShowPlan(s, plan),
     {

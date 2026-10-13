@@ -1,5 +1,17 @@
 # Notes de version
 
+## V0.8.5 — La fiche garde sa position entre les musiciens {#v085}
+
+13 octobre 2026.
+
+Le panneau de droite **conserve sa position de défilement quand tu changes de musicien**. Tu peux comparer leurs fiches sans revenir en haut ni retrouver une ancienne position propre à chaque personnage.
+
+- La position courante est gardée à la première ouverture d’un autre musicien comme lorsque tu reviens sur une fiche déjà consultée.
+- Si la nouvelle fiche est plus courte, le défilement s’arrête naturellement en bas de cette fiche.
+- Les mises à jour du quartier continuent de stabiliser les champs en cours de modification. Le comportement est aussi vérifié à la réouverture de la fiche sur mobile.
+
+Aucun changement aux personnages, à l’XP ou aux sauvegardes. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.5**.
+
 ## V0.8.4 — Des niveaux visibles et une vraie célébration {#v084}
 
 13 octobre 2026.

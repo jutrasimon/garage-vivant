@@ -1,4 +1,4 @@
-# BandLive · moteur de spectacle — 0.8.4
+# BandLive · moteur de spectacle — 0.8.5
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
 

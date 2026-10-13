@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.8.4
+# Garage vivant · v0.8.5
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v084) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v085) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 
@@ -43,6 +43,8 @@ Nouvelles parties : musiciens et ordre variés, deux chansons avec un seul band,
 Pour les essais entre amis : `npm run bandlive:test-file` crée un HTML autonome dans `BandLive-test/`, avec ses sauvegardes séparées. `npm run test:refonte` vérifie la nouvelle interface.
 
 ## Quartier V7.2
+
+Le panneau des fiches à droite garde sa position de défilement quand on change de musicien, y compris au retour sur une fiche déjà consultée. Une fiche plus courte s’arrête à son propre bas. `npm run test:profile`, inclus dans le smoke obligatoire, vérifie ce comportement et la stabilité des champs pendant les mises à jour.
 
 Six actions d’éveil : Détente, Socialiser, Pratiquer, Jam, Composer et Déchéance. Le jeton est défaussé dès la pige ; aucun remboursement après refus ou interruption. Les acquisitions arrivent dans le sac ; les retraits se font depuis la défausse, en attendant la pige des exemplaires encore dans le sac. Fourchettes personnelles et cycles remplacent les durées fixes. Le sommeil reste quotidien et hors sac.
 
