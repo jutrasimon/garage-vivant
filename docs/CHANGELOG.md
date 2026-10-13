@@ -1,3 +1,7 @@
+# V0.8.6 — 13 octobre 2026
+
+Énergie et tempo à gauche, avec du juice. [Notes complètes](./versions.md#v086).
+
 # V0.8.5 — 13 octobre 2026
 
 La fiche garde sa position entre les musiciens. [Notes complètes](./versions.md#v085).

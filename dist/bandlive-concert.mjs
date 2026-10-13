@@ -1,7 +1,7 @@
-import {shortlistShowSongs} from './bandlive-auto.mjs?v=0.8.5';
-import {musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.5';
-import {RULES,STYLES,createBandLive,restoreBandLive,currentSong} from './bandlive.mjs?v=0.8.5';
-import {performanceResult} from './stage.mjs?v=0.8.5';
+import {shortlistShowSongs} from './bandlive-auto.mjs?v=0.8.6';
+import {musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.6';
+import {RULES,STYLES,createBandLive,restoreBandLive,currentSong} from './bandlive.mjs?v=0.8.6';
+import {performanceResult} from './stage.mjs?v=0.8.6';
 
 // Interactive audiences are compact. Calendar capacity and the full audience
 // passed to the next band remain unchanged.

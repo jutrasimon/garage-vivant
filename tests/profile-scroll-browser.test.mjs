@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
+import {readFileSync} from 'node:fs';
 import {chromium} from 'playwright';
-import {createWorld} from '../dist/engine.mjs';
+import {createWorld,restore} from '../dist/engine.mjs';
 
 const world=createWorld(619,8,{setup:'none'});
+const song=restore(JSON.parse(readFileSync(new URL('v071-world.json',import.meta.url)))).songs[0];
 // Different profile heights exercise both preserved offsets and bottom clamping.
-world.songs=Array.from({length:25},(_,i)=>({id:i+1,title:`Chanson du quartier ${i+1}`,authors:[world.people[0].id],genre:'Indie',emotion:'joy',tone:'lumineuse',intensity:40,resonance:60,quality:65,sources:[],hit:false,time:world.time}));
+world.songs=Array.from({length:25},(_,i)=>({...structuredClone(song),id:i+1,title:`Chanson du quartier ${i+1}`,authors:[world.people[0].id],authorNames:{[world.people[0].id]:world.people[0].name},ownerGroupId:null,groupId:null,projectId:null,quality:65,weak:false,sources:[],time:world.time}));
 world.nextSongId=26;
+restore(world);
 const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});
 let browser;
 try {
@@ -25,6 +28,7 @@ try {
     await page.goto(url);
     await page.locator('#profile .profile-head').waitFor({state:'attached'});
     await page.locator('#speed').fill('0');
+    assert.equal(await page.locator('#people [data-person]').count(),world.people.length,'The prepared world loaded without a fallback');
     return page;
   }
   const position=page=>page.locator('#inspector').evaluate(el=>({top:el.scrollTop,max:el.scrollHeight-el.clientHeight}));
@@ -52,7 +56,7 @@ try {
   await changePerson(page,0,top);
   top=await scrollTo(page,1e6);
   await changePerson(page,1,top);
-  assert((await position(page)).max<top,'The shorter profile clamps naturally at its own bottom');
+  assert((await position(page)).max<top,'The shorter profile clamps naturally at its own bottom: '+JSON.stringify({before:top,after:await position(page)}));
   top=await scrollTo(page,0);
   await changePerson(page,0,top);
 

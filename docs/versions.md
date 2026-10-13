@@ -1,5 +1,19 @@
 # Notes de version
 
+## V0.8.6 — Énergie et tempo à gauche, avec du juice {#v086}
+
+13 octobre 2026.
+
+L’**énergie et le tempo sont maintenant regroupés en bas à gauche** du show, avec de gros chiffres, des segments lumineux et leurs propres couleurs : vert menthe pour l’énergie, doré pour le tempo. Le gros bouton **Fin du tour** reste en bas à droite.
+
+- Chaque gain et dépense fait réagir la jauge, ses chiffres et les segments concernés. Un **+ / −** visible indique la variation réelle, y compris près du maximum de tempo.
+- Le tempo plein brille davantage; les segments s’éteignent quand il est consommé. L’énergie se recharge visiblement au début du tour suivant.
+- Le haut est allégé : énergie et tempo ne sont plus répétés dans l’en-tête.
+- L’espace nécessaire est réservé sous le public. Les deux blocs restent séparés sur mobile; sur les écrans les plus étroits, les ressources passent au-dessus du bouton.
+- Les animations sont brèves et se déclenchent seulement quand les valeurs changent. Les effets réduits conservent les chiffres et les indications de gain ou dépense sans mouvement.
+
+Les règles, les coûts et les sauvegardes sont conservés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.6**.
+
 ## V0.8.5 — La fiche garde sa position entre les musiciens {#v085}
 
 13 octobre 2026.
