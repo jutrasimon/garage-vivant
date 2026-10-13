@@ -59,6 +59,13 @@ export function showDragFeedback(ghost,{outcome,pointer,target,obstacles,bounds}
     ghost.querySelector('.drag-impact').animate?.([{transform:'translateY(3px) scale(.93)',opacity:.65},{transform:'translateY(-1px) scale(1.045)',opacity:1,offset:.65},{transform:'none',opacity:1}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});
   }
   ghost._feedbackKey=key;
-  const position=placeDragFeedback({pointer,width:ghost.offsetWidth,height:ghost.offsetHeight,bounds,target,obstacles});
-  ghost.style.setProperty('--ghost-x',position.x+'px');ghost.style.setProperty('--ghost-y',position.y+'px');
+  const width=ghost.offsetWidth,height=ghost.offsetHeight;
+  // Hold the chosen position while aiming at one stable character hitbox.
+  // Moving to another target, scrolling or resizing chooses a new placement.
+  const placementKey=target?JSON.stringify([outcome.name,target.left,target.top,target.right,target.bottom,width,height,bounds]):null;
+  if(!target||ghost._placementKey!==placementKey){
+    const position=placeDragFeedback({pointer,width,height,bounds,target,obstacles});
+    ghost.style.setProperty('--ghost-x',position.x+'px');ghost.style.setProperty('--ghost-y',position.y+'px');
+  }
+  ghost._placementKey=placementKey;
 }

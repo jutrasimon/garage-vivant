@@ -3,6 +3,13 @@ import {cardFace,escapeCard as esc} from './card-view.mjs?v=0.8.0';
 import {personCard} from './person-card.mjs?v=0.8.0';
 const selections=new Map();
 export function rememberLevelChoice(owner,level,type,value){const key=owner+':'+level;selections.set(key,{...selections.get(key),[type]:value});}
+export function showLevelRewards(world,show){
+ return (world.showHistory.find(r=>r.id===show.id)?.individualXp||[]).flatMap(gain=>{
+  const person=world.people.find(p=>p.id===gain.id);if(!person)return [];
+  const levelRewards=(person.levelRewards||[]).filter(r=>r.status==='pending'&&r.level>gain.levelBefore&&r.level<=gain.levelAfter);
+  return levelRewards.length?[{...person,levelRewards}]:[];
+ });
+}
 export function claimLevelReward(world,{actorId,level,slot,kind}){
  const person=world.people.find(p=>p.id===actorId),reward=person?.levelRewards?.find(r=>r.level===level&&r.status==='pending');
  if(!reward||!Number.isInteger(slot)||slot<0||slot>4||!['special','new1','new2'].includes(kind))return {ok:false,message:'Choisis une récompense de niveau, une carte et sa remplaçante.'};
@@ -10,7 +17,7 @@ export function claimLevelReward(world,{actorId,level,slot,kind}){
  const deck=musicianDeck(person,reward.instrument),before=deck[slot];if(before===kind)return {ok:false,message:'Choisis une carte différente.'};
  deck[slot]=kind;person.bandLiveDecks??={};person.bandLiveDecks[reward.instrument]=deck;
  Object.assign(reward,{status:'claimed',slot,before,after:kind});selections.delete(actorId+':'+level);
- return {ok:true,message:`${person.name} · niveau ${level} : ${definitionFor(reward.instrument,kind).name} rejoint le deck.`};
+ return {ok:true,instrument:reward.instrument,before,after:kind,message:`${person.name} · niveau ${level} : ${definitionFor(reward.instrument,before).name} est remplacée par ${definitionFor(reward.instrument,kind).name}. Deck mis à jour pour les prochains shows.`};
 }
 export function levelRewardsHTML(person,{limit=Infinity}={}){
  const pending=(person.levelRewards||[]).filter(r=>r.status==='pending');if(!pending.length)return '';

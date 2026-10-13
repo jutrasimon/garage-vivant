@@ -6,10 +6,12 @@
 
 - BandLive devient le moteur de tous les nouveaux shows et essais : jams, longues réservations et formations jusqu’à 24 musiciens sont acceptées. Les anciens shows gardent leurs snapshots.
 - Scène centrée et adaptée à la hauteur, choix des tounes en overlay avec aperçu du public, cartes communes au ratio 5:7, fiches et portraits réutilisés, gros bouton de fin de tour avec énergie en bas à gauche.
+- Les personnages dansent sans déplacer leur zone de survol. La preview d’effet reste ancrée tant que la cible reste la même; elle se replace lors d’un changement de cible, d’un scroll ou de la taille de fenêtre.
 - Trois pouvoirs de conquête paramétrés : Onde de choc, Projecteur et Chœur du public. Réactions immédiates, consommées jusqu’au tour suivant; preview des conditions et des chaînes. Rétroaction sur les conquêtes, réactions, pouvoirs, tempo, soutiens et finale.
 - Musiciens et ordre variés par graine, nouvelle graine proposée par défaut, deux chansons pour un band initial ou trois à quatre réparties entre plusieurs bands.
-- Pratique solo et collective : 1 XP par minute jouée. Pratique collective : +1 coordination par cycle de 15 minutes à deux ou plus. L’XP des shows est attribuée aux participants; formation, chanson terminée, premier show et public entièrement conquis donnent aussi de l’XP.
-- Niveaux plus rapides au départ (40, 120, 240, 400 XP cumulés). Chaque niveau donne un échange de carte persistant, accessible dans la fiche ou au bilan. Ce système remplace l’échange automatique de fin de show; les anciennes récompenses restent disponibles.
+- Pratique solo et collective : 1 XP par 15 minutes jouées. Pratique collective : +1 coordination par cycle de 15 minutes à deux ou plus. L’XP des shows est attribuée aux participants; formation, chanson terminée, premier show et public entièrement conquis donnent aussi de l’XP.
+- Niveaux plus rapides au départ (80, 180, 360, 650, 1 100 XP cumulés). Chaque niveau donne un échange de carte persistant, accessible avec « Améliorer le deck » dans la fiche, le groupe ou au bilan. Un niveau gagné en pratique se choisit immédiatement depuis le perso; le bilan propose seulement les niveaux gagnés dans ce show. Le choix affiche les cartes avant/après; le quartier attend pendant ce choix. Ce système remplace l’échange automatique de fin de show; les anciennes récompenses restent disponibles.
+- Le lancement local utilise `npm start`, avec les bons types JavaScript sous Windows. Les notes de version restent accessibles pendant BandLive.
 - Un HTML autonome permet les essais entre amis avec des sauvegardes séparées. Le rythme de progression et l’équilibrage des nouveaux pouvoirs restent à éprouver pendant ces essais. Aucun bonus de compétence supplémentaire n’est accordé automatiquement par le niveau.
 
 ## V0.7.21 — Réglages après un spectacle terminé {#v0721}

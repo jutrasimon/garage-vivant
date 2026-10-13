@@ -1,4 +1,4 @@
-import {levelRewardsHTML} from './level-rewards.mjs?v=0.8.0';
+import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.0';
 import {cardFace} from './card-view.mjs?v=0.8.0';
 import {personCard} from './person-card.mjs?v=0.8.0';
 import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.0';
@@ -124,9 +124,9 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function rewardHTML(show){
     const reward=show.bandLive.reward;if(!reward){
-      const people=game.actors.map(a=>getWorld().people.find(p=>p.id===a.id)).filter(p=>(p?.levelRewards||[]).some(r=>r.status==='pending'));if(!people.length)return '';
+      const people=showLevelRewards(getWorld(),show);if(!people.length)return '';
       const chosen=people.find(p=>p.id===rewardChoice.actorId)||people[0];
-      return `<section class="bl-reward panel"><h3>✦ Améliorations de niveau</h3><p>Choisis un musicien. Les récompenses restent disponibles dans sa fiche si tu continues la soirée.</p><div class="bl-reward-actors">${people.map(p=>`<button data-bl-reward-actor="${esc(p.id)}" aria-pressed="${p.id===chosen.id}">${personCard(p,{interactive:false})}</button>`).join('')}</div>${levelRewardsHTML(chosen,{limit:1})}</section>`;
+      return `<section class="bl-reward panel"><h3>✦ Niveaux gagnés pendant ce show</h3><p>Choisis un musicien. Les récompenses restent disponibles dans sa fiche si tu continues la soirée.</p><div class="bl-reward-actors">${people.map(p=>`<button data-bl-reward-actor="${esc(p.id)}" aria-pressed="${p.id===chosen.id}">${personCard(p,{interactive:false})}</button>`).join('')}</div>${levelRewardsHTML(chosen,{limit:1})}</section>`;
     }
     if(reward.status!=='pending')return `<section class="panel bl-reward"><h3>${reward.status==='claimed'?'Deck mis à jour':'Échange passé'}</h3>${reward.status==='claimed'?`<p>${esc(game.actors.find(a=>a.id===reward.actorId)?.name)} · ${INSTRUMENTS[reward.instrument]} : ${esc(definitionFor(reward.instrument,reward.before).name)} → <b>${esc(definitionFor(reward.instrument,reward.after).name)}</b>. Ce deck sera utilisé au prochain spectacle avec cet instrument.</p>`:''}</section>`;
     if(rewardChoice.showId!==show.id)rewardChoice={showId:show.id};
@@ -144,7 +144,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     const initial=show.bandLive?.game.initialFanHp, fans=show.bandLive?.game.fans;
     const welcome=initial?Math.round(initial.reduce((sum,hp,i)=>sum+(1-hp/fans[i].max)*100,0)/initial.length):0;
     const state=entry=>entry.status==='played'?'Terminé':entry.status==='cancelled'?'Annulé':entry.current?'Sur scène':'À suivre';
-    return `<details class="bl-evening panel" ${expanded?'open':''}><summary>Programmation de la soirée · ${lineup.length} groupes${welcome?` · accueil initial ${welcome} %`:''}</summary><ol>${lineup.map(entry=>`<li ${entry.current?'aria-current="step"':''}><b>${esc(entry.role)} · ${esc(entry.name)}</b><span>${state(entry)}</span></li>`).join('')}</ol><p>Le groupe suivant conserve 20 % de l’accueil obtenu auprès de chaque spectateur, dans la limite de 30 %. Chaque groupe joue avec ses musiciens, ses decks et son répertoire.</p>${show.bandLive?`<p>${enabled?'Les groupes compatibles suivants continuent dans BandLive. Les jams, les longues setlists et les formations de plus de six musiciens restent en spectacle classique.':'BandLive est désactivé : le groupe suivant jouera en spectacle classique.'}</p>`:''}</details>`;
+    return `<details class="bl-evening panel" ${expanded?'open':''}><summary>Programmation de la soirée · ${lineup.length} groupes${welcome?` · accueil initial ${welcome} %`:''}</summary><ol>${lineup.map(entry=>`<li ${entry.current?'aria-current="step"':''}><b>${esc(entry.role)} · ${esc(entry.name)}</b><span>${state(entry)}</span></li>`).join('')}</ol><p>Le groupe suivant conserve 20 % de l’accueil obtenu auprès de chaque spectateur, dans la limite de 30 %. Chaque groupe joue avec ses musiciens, ses decks et son répertoire.</p>${show.bandLive?`<p>${enabled?'Les groupes suivants continuent dans BandLive avec leurs musiciens, leurs decks et leur répertoire. Les jams libres et les longues réservations utilisent aussi ce moteur.':'BandLive est désactivé : le groupe suivant jouera en spectacle classique.'}</p>`:''}</details>`;
   }
   function layoutToolsHTML(){
     if(game.phase!=='play')return '';

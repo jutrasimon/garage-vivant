@@ -1,7 +1,8 @@
+import {PATCH_NOTES} from './release.mjs?v=0.8.0';
 const freshSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
 import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.8.0';
 import {cardFace} from './card-view.mjs?v=0.8.0';
-import {xpHTML,personCard} from './person-card.mjs?v=0.8.0';
+import {xpHTML,personCard,levelRewardButton} from './person-card.mjs?v=0.8.0';
 import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.0';
 import {songQualityHTML} from './song-rules.mjs?v=0.8.0';
 import {groupLinkHTML} from './group-link.mjs?v=0.8.0';
@@ -442,7 +443,7 @@ function renderProfile(force = false) {
   replacePreserving(
     "#profile",
     profileMarkup(
-      `<div class="profile-head">${characterPortrait(p,64)}<div><h2>${esc(characterName(p))}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p>${xpHTML(p)}</div></div>${levelRewardsHTML(p)}<div class="profile-commands"><button data-edit-character>Nom et apparence</button><button data-delete-character class="danger" ${world.people.length<=1||world.performance?.status==='playing'||world.showEventId?'disabled':''}>Supprimer</button></div><div class="pills">${groupsOf(
+      `<div class="profile-head">${characterPortrait(p,64)}<div><h2>${esc(characterName(p))}</h2><p>${p.age} ans · ${SKILLS[p.instrument]} · ${p.genre}</p>${xpHTML(p)}</div></div>${levelRewardButton(p)}<div class="profile-commands"><button data-edit-character>Nom et apparence</button><button data-delete-character class="danger" ${world.people.length<=1||world.performance?.status==='playing'||world.showEventId?'disabled':''}>Supprimer</button></div><div class="pills">${groupsOf(
         world,
         p,
       )
@@ -1026,13 +1027,15 @@ function render() {
   if (view === "journal") renderJournal();
   if (view === "shows") renderShows();
 }
-let modalOrigin = null;
+let modalOrigin = null,levelRewardOwner = null;
 function modal(html) {
   modalOrigin = document.activeElement;
   $("#dialog-content").innerHTML = html;
   $("#dialog").showModal();
 }
 $("#dialog").addEventListener("close", () => {
+  levelRewardOwner = null;
+  $("#dialog").classList.remove("level-reward-dialog");
   if (resumeInspectedShow) {
     resumeInspectedShow();
     resumeInspectedShow = null;
@@ -1953,7 +1956,8 @@ function launchPreview(replay = false) {
 }
 $("#version").onclick = (e) => {
   e.stopPropagation();
-  window.open("docs/versions.html#v074", "_blank", "noopener");
+  e.preventDefault();
+  window.open("docs/versions.html#"+PATCH_NOTES[0], "_blank", "noopener");
 };
 $("#brand-home").onclick = (e) => {
   e.preventDefault();
@@ -2533,7 +2537,7 @@ function frame(now) {
   const dt = advancePlayback(
     playback,
     now,
-    !tabInactive && view !== 'bandlive' && !liveEvent && world.performance?.status !== "playing",
+    !tabInactive && !levelRewardOwner && view !== 'bandlive' && !liveEvent && world.performance?.status !== "playing",
     (minutes) => {
       step(world, minutes);
       if (world.people.every((p) => p.action?.key === "sleep"))
@@ -2836,12 +2840,23 @@ function personBandLiveDecks(p){
 }
 
 document.addEventListener('click',event=>{
+ const open=event.target.closest('[data-open-level-rewards]');if(!open)return;
+ if(world.performance?.status==='playing'){notify('Termine le show avant d’améliorer le deck.');return;}
+ const person=world.people.find(p=>p.id===open.dataset.openLevelRewards);if(!person||(person.levelRewards||[]).every(r=>r.status!=='pending'))return;
+ levelRewardOwner=person.id;
+ modal(`<div data-level-modal><h2>Améliorer le deck de ${esc(person.name)}</h2><p>Chaque niveau te donne un changement de carte. Choisis lequel : il sera conservé pour les prochains shows. Le quartier attend pendant ton choix.</p>${levelRewardsHTML(person,{limit:1})}</div>`);
+ $('#dialog').classList.add('level-reward-dialog');
+});
+
+document.addEventListener('click',event=>{
  const button=event.target.closest('[data-level-claim]');if(!button)return;
  const box=button.closest('[data-level-reward]'),slot=box.querySelector('input[name^="level-slot-"]:checked'),kind=box.querySelector('input[name^="level-kind-"]:checked');
  if(!slot||!kind){box.querySelector('.level-reward-status').textContent='Choisis la carte à remplacer et la spéciale à obtenir.';return;}
  const result=claimLevelReward(world,{actorId:button.dataset.levelClaim,level:Number(button.dataset.levelNumber),slot:Number(slot.value),kind:kind.value});
  if(!result.ok){box.querySelector('.level-reward-status').textContent=result.message;return;}
- notify(result.message);save();renderProfile(true);if(view==='bandlive')bandLive.refresh();
+ const inModal=!!button.closest('[data-level-modal]'),person=world.people.find(p=>p.id===button.dataset.levelClaim);
+ notify(result.message);save();renderProfile(true);if(view==='groups')renderGroups();if(view==='bandlive')bandLive.refresh();
+ if(inModal){$('#dialog-content').innerHTML=`<div data-level-modal><h2>✦ Deck amélioré !</h2><p role="status">${esc(result.message)}</p><div class="level-reward-comparison"><div><h3>Remplacée</h3>${cardFace({card:definitionFor(result.instrument,result.before),owner:person.name,instrument:result.instrument})}</div><b aria-hidden="true">→</b><div><h3>Dans le deck</h3>${cardFace({card:definitionFor(result.instrument,result.after),owner:person.name,instrument:result.instrument})}</div></div>${levelRewardButton(person)}</div>`;}
 });
 
 document.addEventListener('change',event=>{

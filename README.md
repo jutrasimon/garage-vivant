@@ -36,7 +36,7 @@ Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et gran
 
 Trois pouvoirs de conquête : Onde de choc 2–5, Projecteur 1–3 et Chœur du public 1–2. Rythme et voisinage déclenchent immédiatement leurs gains; les réactions consommées disparaissent jusqu’au prochain tour. Animations et rétroaction couvrent chaque effet, le tempo, les soutiens et la finale.
 
-La pratique solo et collective donne de l’XP individuelle; la pratique collective augmente aussi la coordination. Les shows et les grands moments du groupe donnent de l’XP. Les premiers niveaux arrivent plus rapidement et **les récompenses de niveau remplacent l’échange systématique de fin de show**. Les récompenses en attente sont conservées dans les fiches.
+La pratique solo et collective donne 1 XP individuelle par 15 minutes réellement jouées; la pratique collective augmente aussi la coordination. Les shows et les grands moments du groupe donnent de l’XP. Les premiers niveaux arrivent plus rapidement et **les récompenses de niveau remplacent l’échange systématique de fin de show**. Les récompenses en attente sont conservées dans les fiches et accessibles avec « Améliorer le deck » depuis les membres du groupe.
 
 Nouvelles parties : musiciens et ordre variés, deux chansons avec un seul band, trois à quatre réparties entre plusieurs bands. Les parties existantes sont conservées. [Règles et progression](docs/BANDLIVE.md).
 
@@ -86,7 +86,7 @@ npx playwright install --with-deps chromium
 npm run test:browser
 ```
 
-Pour jouer localement : `python3 -m http.server 8000 --directory dist`, puis `http://localhost:8000/`. `npm run docs:build` puis `npm run bandlive:test-file` créent `BandLive-test/LANCER-BandLive.html`, un essai autonome à ouvrir dans Chrome avec ses sauvegardes séparées.
+Pour jouer localement : `npm start`, puis `http://localhost:8000/`. `npm run docs:build` puis `npm run bandlive:test-file` créent `BandLive-test/LANCER-BandLive.html`, un essai autonome à ouvrir dans Chrome avec ses sauvegardes séparées.
 
 `npm run audit:groups` rejoue les 20 graines sur 30 jours, dont trois prolongées à 90 jours, et produit `docs/BALANCE_V7_10.json`, tailles et stabilité comprises. Le build crée la documentation et son index de recherche. Les fichiers de tests moteur/interface/doc couvrent les règles V7.5 et BandLive, imports réels V1–V7, déterminisme, compositions, engagements, setlists, skip/replay, récompenses uniques, 100 jours de calendrier et cohérence documentaire. Chromium couvre ordinateur et tactile, rendu, recherche VitePress et parcours de jeu. Le viewport tactile ne remplace pas un test sur appareil réel.
 

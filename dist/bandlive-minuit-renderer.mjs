@@ -61,7 +61,8 @@ export function createMinuitRenderer({getReducedEffects}){
     for(const p of entries){
       const f=3.15+((p.index*.61803398875)%1)*1.35,movement=p.person.identity?.movement,amplitude=movement==='calm'?.6:movement==='flamboyant'?1.2:1;
       const dx=reduced?0:Math.sin(t*f*.73+p.phase)*amplitude*(p.actor?1.1:1.5),dy=reduced?0:-Math.max(0,Math.sin(t*f*1.73+p.phase))*amplitude*2;
-      p.element.style.setProperty('--bl-dance-x',dx+'px');p.element.style.setProperty('--bl-dance-y',dy+'px');
+      // Animate the visual, while the button, labels and hover anchor stay still.
+      p.image.style.translate=dx+'px '+dy+'px';
       const r=p.image.getBoundingClientRect(),scale=Number(host.dataset.scale)||1,x=(r.left+r.width/2-rect.left)/scale,y=(r.top+r.height/2-rect.top)/scale;
       p.sprite.position.copy(floorPoint(x,y,p.actor?1.6:1));p.sprite.scale.set(r.width/scale/unit,r.height/scale/unit,1);p.sprite.material.rotation=reduced?0:Math.sin(t*f+p.phase)*.045;
       const visible=p.actor||r.top+r.height/2>crowd.top+10&&r.top+r.height/2<crowd.bottom-10;p.sprite.visible=p.shadow.visible=visible;

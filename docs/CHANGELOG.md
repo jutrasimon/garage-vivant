@@ -1,6 +1,6 @@
 # V0.8.0 — 12 octobre 2026
 
-BandLive, conquêtes et progression individuelle. [Notes complètes](./versions.md#v080).
+BandLive, conquêtes et progression individuelle. Pratique à 4 XP par heure jouée, choix d’amélioration de deck directement accessible, lancement local et notes de version corrigés. [Notes complètes](./versions.md#v080).
 
 # V0.7.21 — 12 octobre 2026
 

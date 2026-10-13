@@ -1,5 +1,5 @@
 import {xpProgress,grantXp,levelThreshold} from '../dist/progression.mjs';
-import {claimLevelReward} from '../dist/level-rewards.mjs';
+import {claimLevelReward,showLevelRewards} from '../dist/level-rewards.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWorld,restore,decide,step} from '../dist/engine.mjs';
@@ -43,21 +43,36 @@ test('real collective practice adds coordination; shows grant equal participant 
 test('solo practice earns XP only while playing and early levels come sooner',()=>{
  const w=createWorld(6,1),p=w.people[0];decide(w,p,'practice');p.sleep.nextBedtime=1e12;p.needs.energy=100;p.actionRanges.practice={min:1000,max:1000};
  const before=p.xp||0;step(w,1);assert.equal(p.xp||0,before,'Travelling does not earn XP');p.action.route=[];p.place=p.action.dest;
- step(w,40);assert.equal(p.xp,40);assert.equal(xpProgress(p).level,2);assert(levelThreshold(3)-levelThreshold(2)>levelThreshold(2)-levelThreshold(1));assert.deepEqual(restore(w),w);
- const b={id:'x',name:'X'};grantXp(b,120);assert.equal(xpProgress(b).level,3);
+ step(w,40);assert.equal(p.xp,2);assert.equal(p.practiceXpMinutes,10);assert.equal(xpProgress(p).level,1);assert(levelThreshold(3)-levelThreshold(2)>levelThreshold(2)-levelThreshold(1));const saved=restore(w);assert.deepEqual(saved,w);
+ step(w,5);step(saved,5);assert.equal(p.xp,3);assert.equal(p.practiceXpMinutes,0);assert.deepEqual(saved,w,'Partial practice XP survives reloading');
+ const b={id:'x',name:'X'};grantXp(b,180);assert.equal(xpProgress(b).level,3);
 });
 
 test('level rewards replace per-show exchanges and persist until claimed once',()=>{
- const w=createWorld(31,2),p=w.people[0];grantXp(p,120);assert.equal(p.levelRewards.length,2);
+ const w=createWorld(31,2),p=w.people[0];grantXp(p,180);assert.equal(p.levelRewards.length,2);
  const saved=restore(w);assert.deepEqual(saved,w);
  const reward=saved.people[0].levelRewards[0],before=structuredClone(saved.people[0]);
  saved.performance={status:'playing'};assert(!claimLevelReward(saved,{actorId:p.id,level:reward.level,slot:0,kind:'new1'}).ok);assert.deepEqual(saved.people[0],before);saved.performance=null;
  assert(claimLevelReward(saved,{actorId:p.id,level:reward.level,slot:0,kind:'new1'}).ok);
  assert.equal(saved.people[0].bandLiveDecks[reward.instrument].length,5);assert(!claimLevelReward(saved,{actorId:p.id,level:reward.level,slot:1,kind:'new2'}).ok);assert.deepEqual(restore(saved),saved);
+ const game=createBandLive({people:saved.people,songs:[{id:'a',title:'A',style:'Punk'}],seed:1});assert(game.cards.some(c=>c.actorId===p.id&&c.kind==='new1'),'The upgraded card is present in the next show');
  const {world}=preparedConcert();beginBandLiveConcert(world);assert.equal(world.performance.bandLive.reward,undefined);
 });
 
 test('classic skip controls cannot bypass an active BandLive opening act',()=>{
  const {world}=preparedConcert({following:true});beginBandLiveConcert(world);const before=structuredClone(world);
  skipShow(world,true);assert.equal(nextSlot(world),false);assert.deepEqual(world,before);
+});
+
+test('the post-show menu offers only levels gained in that show; practice rewards stay on the musician',()=>{
+ const world=createWorld(41,2),person=world.people[0];grantXp(person,170);const gain=grantXp(person,30),show={id:'show-xp'};world.showHistory=[{id:show.id,individualXp:[gain]}];
+ const before=structuredClone(world);assert.deepEqual(showLevelRewards(world,show)[0].levelRewards.map(r=>r.level),[3]);assert.deepEqual(world,before);
+ assert(claimLevelReward(world,{actorId:person.id,level:3,slot:0,kind:'new1'}).ok);assert.equal(showLevelRewards(world,show).length,0);assert.equal(person.levelRewards.find(r=>r.level===2).status,'pending');
+});
+
+test('early trial saves keep earned levels, rewards and proportional progress on the new curve',()=>{
+ const world=createWorld(42,2),person=world.people[0];person.xp=164;person.levelRewards=[2,3].map(level=>({level,instrument:person.instrument,status:'pending'}));
+ const updated=restore(world),p=updated.people[0];assert.equal(xpProgress(p).level,3);assert.equal(p.xp,246);assert.deepEqual(p.levelRewards,person.levelRewards);assert.equal(p.xpCurve,2);assert.deepEqual(restore(updated),updated);
+ assert.deepEqual([2,3,4,5,6].map(levelThreshold),[80,180,360,650,1100]);assert(levelThreshold(7)-levelThreshold(6)>levelThreshold(6)-levelThreshold(5));
+ world.people[0].xp=Number.MAX_SAFE_INTEGER;assert.throws(()=>restore(world),/XP individuelle invalide/);
 });

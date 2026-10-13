@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {chromium} from 'playwright';
+import {PATCH_NOTES} from '../dist/release.mjs';
+import {preparedConcert} from './bandlive-concert-helpers.mjs';
+import {createWorld} from '../dist/engine.mjs';
+import {grantXp} from '../dist/progression.mjs';
+import {musicianDeck} from '../dist/bandlive-cards.mjs';
+const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});
+let browser;
+try{
+ const url=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Serveur local indisponible.')),5000);let output='';child.on('error',reject);child.stdout.on('data',chunk=>{output+=chunk;const match=output.match(/http:\/\/127\.0\.0\.1:\d+\//);if(match){clearTimeout(timer);resolve(match[0]);}});});
+ browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[],failed=[];
+ page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)failed.push(r.url());});
+ await page.goto(url);await page.locator('#profile .profile-head').waitFor();assert(await page.locator('#people [data-person]').count()>0);
+ const popup=page.waitForEvent('popup');await page.locator('#version').click();const notes=await popup;notes.on('pageerror',e=>errors.push(e.message));await notes.waitForLoadState();await notes.locator('#'+PATCH_NOTES[0]).waitFor();assert((await notes.locator('h1').textContent()).includes('Notes de version'));
+ assert(await notes.locator('link[rel~="stylesheet"]').count()>0);const stylesheet=await notes.locator('link[rel~="stylesheet"]').first().getAttribute('href');const css=await page.request.get(new URL(stylesheet,url).href);assert(css.ok(),'Built documentation assets work under the Pages prefix locally');
+ await notes.close();
+ const live=await browser.newPage({viewport:{width:1440,height:900}});await live.addInitScript(w=>localStorage.setItem('garage-vivant-v1',JSON.stringify(w)),preparedConcert().world);await live.goto(url);await live.locator('[data-bl-song]').first().waitFor();assert(await live.locator('#version').isVisible(),'Patch notes remain visible during BandLive');
+ const world=createWorld(55,3,{setup:'large'}),person=world.people[0];grantXp(person,180);
+ const levels=await browser.newPage({viewport:{width:1440,height:900}});levels.on('pageerror',e=>errors.push(e.message));await levels.addInitScript(w=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(w));},world);await levels.goto(url);
+ await levels.locator('[data-view="groups"]').click();await levels.locator(`.group-member [data-open-level-rewards="${person.id}"]`).first().click();await levels.locator('#dialog [data-level-reward]').waitFor();
+ await levels.waitForTimeout(400);const time=await levels.locator('#clock').textContent();await levels.waitForTimeout(400);assert.equal(await levels.locator('#clock').textContent(),time,'The world waits during the level choice');
+ const choice=levels.locator('#dialog [data-level-reward]');await choice.locator('input[name^="level-slot-"]').first().check();await choice.locator('input[name^="level-kind-"][value="new1"]').check();await choice.locator('[data-level-claim]').click();
+ assert((await levels.locator('#dialog h2').textContent()).includes('Deck amélioré'));assert.equal(await levels.locator('.level-reward-comparison .bl-card-face').count(),2);
+ const claimed=await levels.evaluate(id=>JSON.parse(localStorage.getItem('garage-vivant-v1')).people.find(p=>p.id===id),person.id);assert.equal(musicianDeck(claimed)[0],'new1');assert.equal(claimed.levelRewards.filter(r=>r.status==='pending').length,1);
+ await levels.screenshot({path:'test-results/level-improvement.png'});await levels.locator('#dialog-close').click();await levels.reload();await levels.locator('#profile [data-open-level-rewards]').first().waitFor();
+ const reloaded=await levels.evaluate(id=>JSON.parse(localStorage.getItem('garage-vivant-v1')).people.find(p=>p.id===id),person.id);assert.equal(musicianDeck(reloaded)[0],'new1');assert.equal(reloaded.levelRewards.filter(r=>r.status==='pending').length,1);
+ assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);console.log('Real local server passed: game boot, character profiles, patch notes popup, built documentation assets and visible notes in BandLive.');
+}finally{await browser?.close();child.kill();}

@@ -1,4 +1,4 @@
-import {grantXp} from './progression.mjs?v=0.8.0';
+import {grantXp,xpProgress,migrateXp} from './progression.mjs?v=0.8.0';
 import {validatePersonDecks} from './bandlive-cards.mjs?v=0.8.0';
 import {rule,validateDesign} from './design-rules.mjs?v=0.8.0';
 import { musicalChemistry, pairEligible, membershipReason, considerMembership, initializeGroupData, resolveInvitation, rehearsalReady, upgradeGroups, validateGroups, leaveGroup } from './groups.mjs?v=0.8.0';
@@ -1946,7 +1946,10 @@ function practiceMinute(s,p){
   const host=weightedChoice(hosts,q=>partnerWeight(s,p,q,relationship(s,p,q)),()=>rand(s));
   if(host&&admission(s,p,host,'practice')){const group=s.groups.find(g=>g.archivedAt===null&&g.members.includes(p.id)&&g.members.includes(host.id)&&(!host.action.groupId||g.id===host.action.groupId)&&g.repertoire.some(r=>r.songId===host.action.songId));host.action.groupId=a.groupId=group.id;a.songId=host.action.songId;a.content='song';if(host.action.rehearsalId){a.rehearsalId=host.action.rehearsalId;const req=s.groupState.requests.find(r=>r.id===a.rehearsalId);if(req&&!req.invited.includes(p.id))req.invited.push(p.id);}routeTo(s,p,a,PLACES.find(x=>x.id===host.action.dest));}
  }
- if(!a.route.length){awardExperience(s,p,1,'Pratique');}
+ if(!a.route.length){
+  p.practiceXpMinutes=(p.practiceXpMinutes||0)+1;
+  if(p.practiceXpMinutes>=15){p.practiceXpMinutes-=15;awardExperience(s,p,1,'Pratique');}
+ }
  const members=s.people.filter(q=>q.action?.key==='practice'&&!q.action.route.length&&q.place===p.place&&a.groupId&&q.action.groupId===a.groupId&&q.action.songId===a.songId);
  if(members.length>=2&&members[0]===p&&(!a.rehearsalId||s.groupState.requests.find(r=>r.id===a.rehearsalId)?.status==='playing')){groupRehearsal(s,{groupId:a.groupId,songId:a.songId,elapsed:a.elapsed},members);if(a.elapsed%15===0)interact(s,p,pick(s,members.slice(1)),true,true);}
  if(--a.cycleRemaining>0)return;
@@ -2566,8 +2569,11 @@ export function restore(input) {
   const ids = new Set();
   for (const p of raw.people) {
     validatePersonDecks(p);
-    if(p.levelRewards!==undefined&&(!Array.isArray(p.levelRewards)||p.levelRewards.some(r=>!Number.isInteger(r.level)||r.level<2||r.level>Math.floor((Math.sqrt(1+(p.xp||0)/5)-1)/2)+1||!['pending','claimed'].includes(r.status)||!Object.hasOwn(SKILLS,r.instrument)||r.instrument==='writing'||r.status==='claimed'&&(!Number.isInteger(r.slot)||r.slot<0||r.slot>4||!['note','special','new1','new2'].includes(r.before)||!['special','new1','new2'].includes(r.after)||r.before===r.after))||new Set(p.levelRewards.map(r=>r.level)).size!==p.levelRewards.length))throw Error('Récompenses de niveau invalides.');
     if(p.xp!==undefined&&(!Number.isSafeInteger(p.xp)||p.xp<0))throw Error('XP individuelle invalide.');
+    if(p.xpCurve!==undefined&&p.xpCurve!==2)throw Error('Courbe d’XP invalide.');
+    migrateXp(p);
+    if(p.levelRewards!==undefined&&(!Array.isArray(p.levelRewards)||p.levelRewards.some(r=>!Number.isInteger(r.level)||r.level<2||r.level>xpProgress(p).level||!['pending','claimed'].includes(r.status)||!Object.hasOwn(SKILLS,r.instrument)||r.instrument==='writing'||r.status==='claimed'&&(!Number.isInteger(r.slot)||r.slot<0||r.slot>4||!['note','special','new1','new2'].includes(r.before)||!['special','new1','new2'].includes(r.after)||r.before===r.after))||new Set(p.levelRewards.map(r=>r.level)).size!==p.levelRewards.length))throw Error('Récompenses de niveau invalides.');
+    if(p.practiceXpMinutes!==undefined&&(!Number.isInteger(p.practiceXpMinutes)||p.practiceXpMinutes<0||p.practiceXpMinutes>=15))throw Error('Minutes d’XP de pratique invalides.');
     if (
       !/^p\d+$/.test(p.id) ||
       ids.has(p.id) ||

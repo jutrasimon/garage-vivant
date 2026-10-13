@@ -4,6 +4,7 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
+import {grantXp} from '../dist/progression.mjs';
 const root=resolve('dist');
 const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+(req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0]));assert(path.startsWith(root+sep));res.setHeader('Content-Type',({'.html':'text/html','.mjs':'text/javascript','.css':'text/css','.json':'application/json'})[extname(path)]||'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -11,6 +12,7 @@ const browser=await chromium.launch(),errors=[];await mkdir('test-results',{recu
 try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});page.on('pageerror',e=>errors.push(e.stack));
  const world=preparedConcert({large:true,instruments:['guitar','drums','bass','sax','voice','keys'],following:true}).world;
+ grantXp(world.people[0],50); // Practice before this show makes a level available in its report.
  await page.addInitScript(world=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(world));},world);
  await page.goto(`http://127.0.0.1:${server.address().port}`);
  await page.locator('[data-bl-song]').first().waitFor();assert(await page.locator('.bl-song-overlay').isVisible());
@@ -29,6 +31,13 @@ try{
  if(pulse){await page.locator(`[data-bl-card="${pulse}"]`).click();await page.locator('.bl-audience').click({position:{x:10,y:20},force:true});await page.locator('.bl-juice-label').first().waitFor();assert((await page.locator('.bl-juice-label').allTextContents()).some(x=>x.includes('TEMPO')));await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);}
  const card=page.locator('[data-bl-card]:not(:disabled)').first();await card.hover();await page.locator('#bl-card-preview:not([hidden]) .bl-card-face').waitFor();
  const ratios=await page.evaluate(()=>[document.querySelector('.bl-hand .bl-card-face'),document.querySelector('#bl-card-preview .bl-card-face')].map(el=>el.offsetWidth/el.offsetHeight));assert(Math.abs(ratios[0]-ratios[1])<.02);
+ await page.locator('.bl-render-ready').waitFor();const target=page.locator('[data-bl-fan="f0"]'),stableBox=await target.boundingBox();
+ for(let i=0;i<4;i++){await page.waitForTimeout(90);const box=await target.boundingBox();assert(Math.abs(box.x-stableBox.x)<.1&&Math.abs(box.y-stableBox.y)<.1,'Character animation keeps its hitbox still');}
+ const source=await card.boundingBox(),cx=stableBox.x+stableBox.width/2,cy=stableBox.y+stableBox.height/2;
+ await page.mouse.move(source.x+source.width/2,source.y+source.height/2);await page.mouse.down();await page.mouse.move(source.x+source.width/2,source.y+source.height/2+25,{steps:4});await page.mouse.move(cx,cy,{steps:8});await page.locator('.drag-card-feedback.has-target').waitFor();
+ const popup=await page.locator('.drag-card-feedback').boundingBox(),name=await page.locator('.drag-outcome-name').textContent();
+ for(const dx of [-5,5,-3,3]){await page.mouse.move(cx+dx,cy);await page.waitForTimeout(90);const box=await page.locator('.drag-card-feedback').boundingBox();assert(Math.abs(box.x-popup.x)<.1&&Math.abs(box.y-popup.y)<.1,'Preview stays fixed while aiming at the same character');assert.equal(await page.locator('.drag-outcome-name').textContent(),name);}
+ await page.screenshot({path:'test-results/refonte-stable-hover.png'});await page.mouse.move(8,8,{steps:5});await page.mouse.up();
  await card.click();await page.locator('[data-bl-fan="f0"]').hover({force:true});assert((await page.locator('.outcome-conquest').textContent()).length>15);assert((await page.locator('.outcome-reaction').textContent()).length>15);
  await page.keyboard.press('Escape');
  await page.locator('#bl-end').click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);

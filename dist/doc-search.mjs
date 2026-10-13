@@ -23,7 +23,7 @@ export function setupDocSearch({modal,playback,setPlaybackSpeed,suspendShow=()=>
     let read=[];try{const value=JSON.parse(localStorage.getItem('garage-vivant-read-notes')||'[]');if(Array.isArray(value))read=value;}catch{}
     const n=PATCH_NOTES.filter(id=>!read.includes(id)).length,button=document.getElementById('version');
     button.textContent='v'+RELEASE_VERSION+(n?` · ${n} nouveautés`:'');
-    button.onclick=()=>window.open('docs/versions.html#'+(PATCH_NOTES.find(id=>!read.includes(id))||PATCH_NOTES[0]),'_blank','noopener');
+    button.onclick=event=>{event.preventDefault();event.stopPropagation();window.open('docs/versions.html#'+(PATCH_NOTES.find(id=>!read.includes(id))||PATCH_NOTES[0]),'_blank','noopener');};
   };
   badge();window.addEventListener('storage',badge);
   const open=async()=>{
