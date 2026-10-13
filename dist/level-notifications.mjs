@@ -1,8 +1,8 @@
-import {characterPortrait,characterName} from './character-view.mjs?v=0.8.7';
-import {escapeCard as esc} from './card-view.mjs?v=0.8.7';
+import {characterPortrait,characterName} from './character-view.mjs?v=0.8.8';
+import {escapeCard as esc} from './card-view.mjs?v=0.8.8';
 
 // Presentation acknowledgements stay outside the saved game and never claim a reward.
-export function createLevelNotifications({getWorld,getReducedEffects=()=>false}){
+export function createLevelNotifications({getWorld,getReducedEffects=()=>false,isShowVisible=()=>false}){
  const storageKey='garage-vivant-level-notices-v1';
  const panel=document.createElement('aside');panel.id='level-notification';panel.hidden=true;panel.setAttribute('role','status');panel.setAttribute('aria-live','polite');panel.setAttribute('aria-atomic','true');document.body.append(panel);
  let seed=getWorld().seed,dismissed=new Set(),currentId=null,signature='';
@@ -12,8 +12,8 @@ export function createLevelNotifications({getWorld,getReducedEffects=()=>false})
  function acknowledge(id){const person=getWorld().people.find(p=>p.id===id);for(const reward of person?.levelRewards||[])if(reward.status==='pending')dismissed.add(key(person,reward));persist();currentId=null;update();}
  function update(){
   const world=getWorld();if(world.seed!==seed){seed=world.seed;dismissed.clear();currentId=null;signature='';}
-  // A level celebration must never cover an ongoing show or an open choice.
-  if(world.performance?.status==='playing'||document.querySelector('#dialog')?.open){panel.hidden=true;return;}
+  // Finishing one act does not end its evening or close the show/result screen.
+  if(world.showEventId||world.performance?.status==='playing'||isShowVisible()||document.querySelector('#dialog')?.open){panel.hidden=true;return;}
   const candidates=world.people.map(person=>({person,rewards:(person.levelRewards||[]).filter(r=>r.status==='pending'&&!dismissed.has(key(person,r)))})).filter(item=>item.rewards.length);
   const item=candidates.find(item=>item.person.id===currentId)||candidates[0];if(!item){panel.hidden=true;currentId=null;signature='';return;}
   const {person,rewards}=item,level=Math.max(...rewards.map(r=>r.level)),pending=person.levelRewards.filter(r=>r.status==='pending').length;

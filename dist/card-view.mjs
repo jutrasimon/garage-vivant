@@ -1,4 +1,4 @@
-import {instrumentArt} from './show-view.mjs?v=0.8.7';
+import {instrumentArt} from './show-view.mjs?v=0.8.8';
 export const escapeCard=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function cardFace({card,owner,instrument}){
  const esc=escapeCard,target=card.twoTargets?'Deux spectateurs':card.shape==='row'?'Une rangée':card.target==='single'?'Un spectateur':'Tout le public';

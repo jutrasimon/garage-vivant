@@ -1,5 +1,5 @@
-import {designContextHTML} from './design-context.mjs?v=0.8.7';
-import {DESIGN_FIELDS,DESIGN_CATEGORIES,designProfile,validateDesign,applyDesign,rule} from './design-rules.mjs?v=0.8.7';
+import {designContextHTML} from './design-context.mjs?v=0.8.8';
+import {DESIGN_FIELDS,DESIGN_CATEGORIES,designProfile,validateDesign,applyDesign,rule} from './design-rules.mjs?v=0.8.8';
 const number=n=>new Intl.NumberFormat('fr-CA',{maximumFractionDigits:5}).format(n);
 const normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function mountDesignDashboard(root,{world,onApply}) {

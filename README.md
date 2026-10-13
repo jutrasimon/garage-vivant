@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.8.7
+# Garage vivant · v0.8.8
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v087) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v088) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 
@@ -41,6 +41,8 @@ Les arcs roses indiquent la conquête et les arcs verts rejoignent la jauge pour
 Trois pouvoirs de conquête : Onde de choc 2–5, Projecteur 1–3 et Chœur du public 1–2. Rythme et voisinage déclenchent immédiatement leurs gains; les réactions consommées disparaissent jusqu’au prochain tour. Animations et rétroaction couvrent chaque effet, le tempo, les soutiens et la finale.
 
 La pratique solo et collective donne 1 XP individuelle par 15 minutes réellement jouées; la pratique collective augmente aussi la coordination. Les shows et les grands moments du groupe donnent de l’XP. Les premiers niveaux arrivent plus rapidement et **les récompenses de niveau remplacent l’échange systématique de fin de show**. Les récompenses en attente sont conservées dans les fiches et accessibles avec « Améliorer le deck » depuis les membres du groupe.
+
+La grande notification de niveau attend la fin de la soirée et le retour dans le quartier : aucun popup pendant le show, son bilan, les groupes suivants ou une répétition. Les récompenses restent en attente et l’ouverture manuelle d’une amélioration est bloquée pendant une prestation active.
 
 Nouvelles parties : musiciens et ordre variés, deux chansons avec un seul band, trois à quatre réparties entre plusieurs bands. Les parties existantes sont conservées. [Règles et progression](docs/BANDLIVE.md).
 

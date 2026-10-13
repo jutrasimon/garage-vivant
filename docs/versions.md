@@ -1,5 +1,18 @@
 # Notes de version
 
+## V0.8.8 — Aucun popup de niveau pendant le show {#v088}
+
+13 octobre 2026.
+
+La grande notification **Niveau supérieur !** ne s’ouvre plus pendant la vue du show, **y compris au bilan et entre deux groupes**. Elle attend la fin de la soirée et le retour dans le quartier.
+
+- Une prestation marquée « terminée » ne suffit plus à débloquer le popup si la soirée est encore ouverte.
+- Le blocage reste actif après rechargement et si tu consultes le quartier avant la fin de la soirée. Il couvre aussi les répétitions et leur écran de résultat.
+- L’XP et les améliorations gagnées sont conservées. Masquer le popup pendant le show ne consomme ni ne reporte définitivement les récompenses; elles sont annoncées ensuite.
+- L’ouverture manuelle d’une amélioration reste bloquée pendant une prestation active.
+
+Le problème venait d’un contrôle limité au statut de la prestation, sans vérifier la soirée ni la vue encore affichée. Les gains d’XP, les niveaux, les decks et les sauvegardes restent inchangés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.8**.
+
 ## V0.8.7 — Arc vert de tempo et prévision près du curseur {#v087}
 
 13 octobre 2026.
