@@ -1,4 +1,4 @@
-import {RULES} from './bandlive.mjs?v=0.8.8';
+import {RULES} from './bandlive.mjs?v=0.8.9';
 
 const meters={
   energy:{name:'Énergie',max:RULES.energy,path:'m13 2-9 12h7l-1 8 10-13h-7z'},

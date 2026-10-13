@@ -1,5 +1,19 @@
 # Notes de version
 
+## V0.8.9 — Tempo doré au curseur et ciblage vibrant {#v089}
+
+13 octobre 2026.
+
+L’**arc de tempo suit maintenant le curseur**, à l’endroit où tu vises, plutôt que de rejoindre la jauge. Il est **jaune doré**; le vert reste associé aux actions et à l’énergie, le rose à la conquête.
+
+- La pointe suit les petits mouvements sur une même cible, à la souris comme au doigt. Les cartes mixtes gardent un arc rose vers le spectateur et un arc jaune vers le point visé.
+- Le grand rectangle de ciblage collectif est remplacé par une **lueur et des ondes lumineuses autour du public**. Les cibles individuelles ont un halo, avec leurs personnages et leurs barres toujours lisibles.
+- Le tooltip de tempo, les indications de gain ou de dépense et l’éclairage de la salle utilisent la même teinte dorée. L’énergie conserve son vert menthe.
+- Le suivi réutilise l’arc et la prévision déjà calculés. Déplacer le curseur ne relance pas la simulation du show.
+- Les pulsations restent limitées à la visée et s’arrêtent en mode effets réduits. Annuler la visée ne dépense aucune ressource.
+
+Les règles, les coûts et les sauvegardes sont inchangés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.9**.
+
 ## V0.8.8 — Aucun popup de niveau pendant le show {#v088}
 
 13 octobre 2026.

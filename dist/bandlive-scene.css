@@ -27,7 +27,24 @@ body.bandlive-mode .workspace.bandlive-layout>main{padding:0;scrollbar-gutter:au
 .bl-top-controls .bl-piles summary{max-width:none;white-space:nowrap}.bl-piles summary>span{opacity:.65;margin-left:4px}.bl-hud .bl-piles>div{right:0;max-height:65dvh}
 .bl-playfield{background:#203943}.bl-viewport{background-color:#203943;background-image:linear-gradient(#142f3738 1px,transparent 1px),linear-gradient(90deg,#142f3728 1px,transparent 1px);background-size:100% 64px,192px 128px;overflow-x:auto;overflow-y:hidden}
 .bl-world.bl-minuit{position:relative;margin:0;max-width:none;background:transparent}
-.bl-aim-line.bl-aim-tempo{stroke:#a4f1be}.bl-aim-halo.bl-aim-tempo{stroke:#a4f1be}.bl-aim-ring.bl-aim-tempo{stroke:#baf8c9;fill:#a4f1be15}
+.bl-aim-line.bl-aim-tempo{stroke:#ffdc72}.bl-aim-halo.bl-aim-tempo{stroke:#ffd05b;opacity:.2}.bl-aim-ring.bl-aim-tempo{stroke:#ffe9a1;fill:#ffd56a20;stroke-dasharray:3 4}.bl-aim:not(.visible) .bl-aim-line{animation:none}
+.drag-card-feedback.is-tempo .drag-feedback-surface{border-color:#ffe09b}.drag-card-feedback.is-tempo .drag-mini{background:radial-gradient(circle at 30% 20%,#fff1ba,#e4b758);color:#654821;border-color:#fff1b8;box-shadow:0 2px 0 #b0883c,0 0 12px #ffd56544}.drag-card-feedback.is-tempo .drag-head-spark{color:#fff0a8}.drag-card-feedback.is-tempo-only:not(.invalid) .drag-outcome-main{color:#ffe18d}
+.bl-juice-label.bl-juice-tempo{color:#ffe18d;text-shadow:0 2px 0 #263443,0 0 12px #f6c95e66}.bl-world.bl-tempo-flash{box-shadow:inset 0 0 100px #ffd56a33}
+/* A soft musical ripple replaces the box around a collective target. */
+.bl-minuit .bl-audience.bl-drop-valid,.bl-minuit .bl-audience.bl-drop-active{outline:none!important;border:0!important;box-shadow:none!important;background:transparent!important}
+.bl-minuit .bl-audience.bl-drop-active{--bl-zone-color:244 181 204;isolation:isolate}.bl-minuit .bl-audience.bl-tempo-target{--bl-zone-color:255 214 100}
+.bl-minuit .bl-audience.bl-drop-active:before,.bl-minuit .bl-audience.bl-drop-active:after{content:'';position:absolute;pointer-events:none;z-index:0;border-radius:50%;transform-origin:center;will-change:transform,opacity}
+.bl-minuit .bl-audience.bl-drop-active:before{inset:8% 13%;border:2px solid rgb(var(--bl-zone-color)/.48);background:radial-gradient(ellipse,rgb(var(--bl-zone-color)/.12),transparent 70%);box-shadow:0 0 26px rgb(var(--bl-zone-color)/.15),inset 0 0 30px rgb(var(--bl-zone-color)/.08);animation:bl-zone-breathe 1.6s ease-in-out infinite}
+.bl-minuit .bl-audience.bl-drop-active:after{inset:1% 6%;border:1px dashed rgb(var(--bl-zone-color)/.3);animation:bl-zone-ripple 1.8s ease-out infinite}
+.bl-minuit .bl-audience.bl-drop-active .bl-fans{z-index:1}
+.bl-minuit .bl-fan.bl-drop-valid,.bl-minuit .bl-fan.bl-drop-active,.bl-minuit .bl-fan.bl-conquest-area{outline:none!important;box-shadow:none!important;background:transparent!important}
+.bl-minuit .bl-fan.bl-drop-active,.bl-minuit .bl-fan.bl-conquest-area{isolation:isolate}
+.bl-minuit .bl-fan.bl-drop-active:before,.bl-minuit .bl-fan.bl-conquest-area:before{content:'';position:absolute;inset:4px -4px 13px;border-radius:50%;pointer-events:none;z-index:-1;border:1px solid #f4b5cc88;background:radial-gradient(ellipse,#f4b5cc20,transparent 72%);box-shadow:0 0 16px #f4b5cc44}
+.bl-minuit .bl-fan.bl-drop-active:before{animation:bl-zone-breathe 1.3s ease-in-out infinite}
+@keyframes bl-zone-breathe{0%,100%{opacity:.6;transform:scale(.98)}50%{opacity:1;transform:scale(1.025)}}@keyframes bl-zone-ripple{0%{opacity:.1;transform:scale(.94)}45%{opacity:.65}100%{opacity:0;transform:scale(1.06)}}
+@media(prefers-reduced-motion:reduce){.bl-minuit .bl-audience.bl-drop-active:before,.bl-minuit .bl-audience.bl-drop-active:after,.bl-minuit .bl-fan.bl-drop-active:before{animation:none;opacity:.65;will-change:auto}}
+.reduce-effects .bl-minuit .bl-audience.bl-drop-active:before,.reduce-effects .bl-minuit .bl-audience.bl-drop-active:after,.reduce-effects .bl-minuit .bl-fan.bl-drop-active:before{animation:none;opacity:.65;will-change:auto}
+.reduce-effects .bl-aim-line{animation:none}
 .drag-card-feedback,.drag-card-feedback.has-target{width:260px!important;height:auto!important;overflow:hidden}
 .bl-minuit .bl-zone-label,.bl-minuit .bl-drop-hint{display:none}
 .bl-minuit .bl-intent{font-size:9px;min-width:98px;max-width:120px;padding:3px 7px}

@@ -1,3 +1,7 @@
+# V0.8.9 — 13 octobre 2026
+
+Tempo doré au curseur et ciblage vibrant. [Notes complètes](./versions.md#v089).
+
 # V0.8.8 — 13 octobre 2026
 
 Aucun popup de niveau pendant le show. [Notes complètes](./versions.md#v088).

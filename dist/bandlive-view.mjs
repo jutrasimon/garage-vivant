@@ -1,23 +1,23 @@
-import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.8';
-import {cardFace} from './card-view.mjs?v=0.8.8';
-import {personCard} from './person-card.mjs?v=0.8.8';
-import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.8';
-import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.8';
-import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.8';
-import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.8';
-import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.8';
-import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.8';
-import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.8';
-import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.8';
-import {drawMicroBody} from './character-view.mjs?v=0.8.8';
-import {songTurns} from './song-rules.mjs?v=0.8.8';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.8';
-import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.8';
-import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.8';
-import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.8';
-import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.8';
-import {instrumentArt} from './show-view.mjs?v=0.8.8';
-import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.8';
+import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.9';
+import {cardFace} from './card-view.mjs?v=0.8.9';
+import {personCard} from './person-card.mjs?v=0.8.9';
+import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.9';
+import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.9';
+import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.9';
+import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.9';
+import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.9';
+import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.9';
+import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.9';
+import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.9';
+import {drawMicroBody} from './character-view.mjs?v=0.8.9';
+import {songTurns} from './song-rules.mjs?v=0.8.9';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.9';
+import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.9';
+import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.9';
+import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.9';
+import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.9';
+import {instrumentArt} from './show-view.mjs?v=0.8.9';
+import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.9';
 
 const CARD_GLYPHS={guitar:'♬',bass:'↑',drums:'◉',keys:'≋',voice:'♫',sax:'♪',trumpet:'♩',percussion:'◉'};
 const STORAGE='garage-vivant-bandlive-v1';
@@ -178,7 +178,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   function announce(message){const help=root.querySelector('#bl-help');if(help)help.textContent=message;}
   function clearDrag(){
     previewMemo=null;
-    activeCard=null;dragPointer=null;dragPoint=null;if(dragFrame!==null)cancelAnimationFrame(dragFrame);dragFrame=null;ghost?.remove();ghost=null;root.classList.remove('bl-dragging');inspection.hide();clearPreview();root.querySelectorAll('.bl-drop-active,.bl-drop-valid').forEach(el=>el.classList.remove('bl-drop-active','bl-drop-valid'));
+    activeCard=null;dragPointer=null;dragPoint=null;if(dragFrame!==null)cancelAnimationFrame(dragFrame);dragFrame=null;ghost?.remove();ghost=null;root.classList.remove('bl-dragging');inspection.hide();clearPreview();root.querySelectorAll('.bl-drop-active,.bl-drop-valid,.bl-tempo-target').forEach(el=>el.classList.remove('bl-drop-active','bl-drop-valid','bl-tempo-target'));
   }
   function startDrag(id){
     if(!game||!canPlay(game,id)||animation||stage.editing)return false;
@@ -209,7 +209,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     const targetIds=valid?[...new Set(preview.event.hits.map(h=>h.id))]:fan?[fan.id]:[];
     if(pendingChoice?.type==='duo'&&!targetIds.includes(pendingChoice.targetId))targetIds.push(pendingChoice.targetId);
     const ends=targetIds.map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`)).filter(Boolean);
-    if(valid&&c.tempo){const tempo=pointFor('[data-bl-resource="tempo"]');if(tempo)ends.push({...tempo,kind:'tempo'});}
+    if(c.tempo){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
     aim.draw(origin,ends,valid||!!c.twoTargets);
     if(!ghost||!dragPoint)return;
     const r=root.querySelector('.bl-viewport').getBoundingClientRect();
@@ -219,14 +219,14 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     const current=activeCard||selectedCard;
     if(previewMemo?.card===current&&previewMemo.target===target&&previewMemo.game===game&&previewMemo.events===game.events.length&&previewMemo.choice===pendingChoice)return;
     previewMemo=current?{card:current,target,game,events:game.events.length,choice:pendingChoice}:null;
-    root.querySelectorAll('.bl-drop-active').forEach(el=>el.classList.remove('bl-drop-active'));
+    root.querySelectorAll('.bl-drop-active,.bl-tempo-target').forEach(el=>el.classList.remove('bl-drop-active','bl-tempo-target'));
     clearPreview();
     const id=activeCard||selectedCard;
     if(!id||!canPlay(game,id))return;
     if(!target){updateDragPreview(id,null,null);return;}
     const card=cardById(game,id),c=cardDefinition(card);
     if(c.target==='single'&&(target.dataset.blTarget==='audience'||target.classList.contains('bl-conquered'))){updateDragPreview(id,target,null);return;}
-    (c.target==='single'?target:root.querySelector('.bl-audience'))?.classList.add('bl-drop-active');
+    const dropZone=c.target==='single'?target:root.querySelector('.bl-audience');dropZone?.classList.add('bl-drop-active');if(c.tempo&&c.target==='audience')dropZone?.classList.add('bl-tempo-target');
     const preview=pendingChoice?.type==='duo'?previewCard(game,id,pendingChoice.targetId,{secondTargetId:target.dataset.blTarget}):previewCard(game,id,target.dataset.blTarget);updateDragPreview(id,target,preview);if(!preview.ok)return;
     const hits=[...preview.event.hits,...preview.effects.flatMap(e=>e.hits)];
     for(const fan of game.fans.filter(f=>hits.some(h=>h.id===f.id)||fanStatus(f)!==fanStatus(preview.game.fans.find(n=>n.id===f.id)))){
@@ -255,6 +255,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function moveDrag(x,y){
     dragPoint={x,y};highlightDrop(dropAtPoint(x,y));
+    aim.movePointer(dragPoint);
     moveDragFeedback(ghost,dragPoint);
     if(dragFrame!==null)return;
     let previous=performance.now();
@@ -320,9 +321,9 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
       if(!animation.cued.has(i)){
         animation.cued.add(i);
         if(event.type!=='card')label(event.type==='finale'?'♫ FINALE':event.name,source,'bl-juice-support');
-        if(event.tempoGain){label('♫ +'+event.tempoGain+' TEMPO',source,'bl-juice-support');world.classList.add('bl-tempo-flash');setTimeout(()=>world.classList.remove('bl-tempo-flash'),500);if(!reduced)world.querySelector('.bl-scene-canvas')?.animate([{translate:'0 0'},{translate:'-3px 1px'},{translate:'3px -1px'},{translate:'0 0'}],{duration:250});}
+        if(event.tempoGain){label('♫ +'+event.tempoGain+' TEMPO',source,'bl-juice-support bl-juice-tempo');world.classList.add('bl-tempo-flash');setTimeout(()=>world.classList.remove('bl-tempo-flash'),500);if(!reduced)world.querySelector('.bl-scene-canvas')?.animate([{translate:'0 0'},{translate:'-3px 1px'},{translate:'3px -1px'},{translate:'0 0'}],{duration:250});}
         if(event.boostGain)label('✦ +'+event.boostGain+' SOUTIEN',source?{x:source.x,y:source.y+28}:source,'bl-juice-support');
-        if(event.tempoSpent)label('♫ −'+event.tempoSpent+' TEMPO',source?{x:source.x,y:source.y-25}:source,'bl-juice-support');
+        if(event.tempoSpent)label('♫ −'+event.tempoSpent+' TEMPO',source?{x:source.x,y:source.y-25}:source,'bl-juice-support bl-juice-tempo');
         if(event.type==='card'&&!event.hits.length&&!event.tempoGain&&!event.boostGain)label(event.boost?'✦ +'+event.boost+' SOUTIEN':'♫ '+event.name,source,'bl-juice-support');
         for(const hit of event.hits||[]){
           const pos=pointFor(`[data-bl-fan="${CSS.escape(hit.id)}"] .bl-cube`);if(!pos)continue;

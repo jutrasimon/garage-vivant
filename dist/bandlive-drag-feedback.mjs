@@ -27,6 +27,7 @@ export function moveDragFeedback(ghost,pointer) {
 
 export function createDragFeedback({card,owner,icon,accent}) {
   const ghost=document.createElement('div');ghost.className='drag-card-feedback';
+  ghost.classList.toggle('is-tempo',!!card.tempo);ghost.classList.toggle('is-tempo-only',!!card.tempo&&!Object.hasOwn(card,'power'));
   ghost.innerHTML='<div class="drag-feedback-surface"><div class="drag-feedback-head"><span class="drag-mini"><i></i><b></b></span><div><strong class="drag-card-title"></strong><span class="drag-card-owner"></span></div><span class="drag-head-spark" aria-hidden="true">✦</span></div><div class="drag-local-outcome" hidden><div class="drag-target-line"><strong class="drag-outcome-name"></strong><span class="drag-conquered" hidden>✦ CONQUIS</span></div><div class="drag-impact"><span class="drag-gain" hidden><b></b><span>♥</span></span><div class="drag-outcome-main"></div></div><div class="drag-outcome-meta"></div><div class="drag-fan-rules"><span class="drag-reaction"></span><span class="drag-conquest-rule"></span><b class="drag-trigger"></b></div><div class="drag-release"><span>↗</span> Relâche pour jouer</div></div></div>';
   ghost.style.setProperty('--drag-accent',accent);
   ghost.querySelector('.drag-mini i').textContent=icon;

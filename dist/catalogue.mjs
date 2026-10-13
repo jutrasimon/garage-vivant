@@ -1,7 +1,7 @@
-import {personCard} from './person-card.mjs?v=0.8.8';
-import {songTurns,songQualityHTML} from './song-rules.mjs?v=0.8.8';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.8';
-import {stamp,SKILLS} from './engine.mjs?v=0.8.8';
+import {personCard} from './person-card.mjs?v=0.8.9';
+import {songTurns,songQualityHTML} from './song-rules.mjs?v=0.8.9';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.9';
+import {stamp,SKILLS} from './engine.mjs?v=0.8.9';
 export const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const authorName=(s,x,id)=>s.people.find(p=>p.id===id)?.name||x.authorNames?.[id]||'Ancien voisin';
 export function compositionCreditHTML(s,x){
