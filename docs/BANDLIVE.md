@@ -30,6 +30,8 @@ Une fois conquis, le spectateur perd sa bulle d’intention et son badge de pouv
 
 Quand la simulation prévoit le déclenchement du pouvoir du spectateur visé, un encadré rose lumineux le présente avant les règles ordinaires : « VA SE DÉCLENCHER ! », icône, grand nom, description et noms des voisins réellement affectés. Une chaîne prévue affiche le nombre d’effets de conquête. L’annonce est commune au glisser-déposer, au tactile et à la carte sélectionnée; elle n’apparaît pas sur une cible survivante ou déjà conquise. Son apparition est animée une fois par changement d’effet, sans boucle ni nouvelle simulation aux petits mouvements; les effets réduits gardent une annonce statique. Sur téléphone, elle peut utiliser l’espace du haut pour ne pas recouvrir la cible. `npm run test:conquest-preview`, inclus dans le smoke, vérifie ces cas et l’annulation sans dépense.
 
+Après sélection d’une carte, l’annonce d’un pouvoir imminent passe avant sa grande fiche, pour rester à l’écran même avec une faible hauteur disponible ou des polices différentes. Le format de la carte reste inchangé. Ce cas est vérifié jusqu’au 1024 × 600.
+
 Chaque nouveau spectateur reçoit un pouvoir et sa valeur, déterminés par la graine :
 
 | Pouvoir | Effet |

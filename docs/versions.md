@@ -10,6 +10,7 @@ Les spectateurs conquis ont maintenant un état nettement distinct du public enc
 - La barre pleine est remplacée au même endroit par une pastille rose **♥ ✓ CONQUIS**.
 - Un halo rose permanent, accompagné de petites étincelles, entoure le personnage. Il reste visible avec les effets réduits et n’ajoute aucune animation continue.
 - La position et la zone de survol du personnage restent stables. Les états conquis sont conservés au rechargement, sans redéclencher leurs pouvoirs.
+- Après sélection d’une carte, les effets de conquête imminents passent au-dessus de sa grande fiche : ils restent visibles sur les écrans courts et avec les différentes polices du navigateur.
 
 ## V0.8.11 — Les pouvoirs de conquête prennent le devant de la scène {#v0811}
 
