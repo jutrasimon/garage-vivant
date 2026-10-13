@@ -1,5 +1,16 @@
 # Notes de version
 
+## V0.8.1 — BandLive plus fluide {#v081}
+
+13 octobre 2026.
+
+- BandLive plus fluide : les positions des personnages sont mesurées au changement de mise en page, puis animées directement dans la scène sans recalculer le document à chaque image.
+- La preview de carte est réutilisée tant que la carte, la cible et l’état du show restent identiques. Elle est recalculée immédiatement au changement de cible; les règles et les résultats sont conservés.
+- La danse décorative utilise au plus 30 images par seconde. Les commandes et les effets gardent leur propre cadence. La résolution du rendu suit la taille réellement affichée; la scène cesse de dessiner quand elle est masquée, hors écran ou en mode mouvements réduits.
+- Les panneaux du quartier et l’ancienne scène ne sont plus recalculés pendant BandLive.
+- Nouveau numéro et nouvelles adresses de fichiers pour charger ensemble les corrections de fluidité et la composition récente : scène centrée, bouton de fin de tour en bas à droite et programmation sous le premier écran.
+- Sauvegardes, niveaux, decks, récompenses et spectacles en cours conservés. Recharger la page pour prendre cette version en compte.
+
 ## V0.8.0 — BandLive, conquêtes et progression individuelle {#v080}
 
 12 octobre 2026.

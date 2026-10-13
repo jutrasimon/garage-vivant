@@ -1,22 +1,22 @@
-import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.0';
-import {cardFace} from './card-view.mjs?v=0.8.0';
-import {personCard} from './person-card.mjs?v=0.8.0';
-import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.0';
-import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.0';
-import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.0';
-import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.0';
-import {createDragFeedback,showDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.0';
-import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.0';
-import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.0';
-import {drawMicroBody} from './character-view.mjs?v=0.8.0';
-import {songTurns} from './song-rules.mjs?v=0.8.0';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.0';
-import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.0';
-import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.0';
-import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.0';
-import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.0';
-import {instrumentArt} from './show-view.mjs?v=0.8.0';
-import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.0';
+import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.1';
+import {cardFace} from './card-view.mjs?v=0.8.1';
+import {personCard} from './person-card.mjs?v=0.8.1';
+import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.1';
+import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.1';
+import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.1';
+import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.1';
+import {createDragFeedback,showDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.1';
+import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.1';
+import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.1';
+import {drawMicroBody} from './character-view.mjs?v=0.8.1';
+import {songTurns} from './song-rules.mjs?v=0.8.1';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.1';
+import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.1';
+import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.1';
+import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.1';
+import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.1';
+import {instrumentArt} from './show-view.mjs?v=0.8.1';
+import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.1';
 
 const CARD_GLYPHS={guitar:'♬',bass:'↑',drums:'◉',keys:'≋',voice:'♫',sax:'♪',trumpet:'♩',percussion:'◉'};
 const STORAGE='garage-vivant-bandlive-v1';
@@ -56,7 +56,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){enabled=true;if(saved.draft)draft=saved.draft;if(saved.game)game=restoreBandLive(saved.game);}}catch{notify('La répétition BandLive enregistrée ne peut pas être reprise. Le quartier est disponible.');}
   const stage=createBandLiveStage({root,getReducedEffects});
   const aim=createBandLiveAim();
-  let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null;
+  let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null,previewMemo=null;
   const liveShow=()=>{const s=getWorld().performance;return liveId&&s?.id===liveId&&s.bandLive&&getWorld().showEventId?s:null;};
   function syncConcert(){
     unlockBandLiveRepertoire(getWorld());
@@ -160,6 +160,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     return `<div class="bl-arena ${!!game.conquestVersion?'bl-conquest-board':''} ${choosing?'bl-is-choosing':''}"><section class="bl-show-screen"><div class="bl-hud"><div class="bl-show-title"><span class="eyebrow">${eyebrow}</span><h2>${groupLinkHTML(getWorld().groups.find(g=>g.id===game.groupId),game.groupName)}</h2><p>${song?`${esc(song.title)} · ${esc(song.style)} · ${sectionName(game)} · passage ${game.usedSongs.length}/2`:'Deux passages pour conquérir le public.'}</p></div>${songProgressHTML()}<div class="bl-resources"><span><small>TOUR</small><b>${game.turn||1}</b></span><span><small>ÉNERGIE</small><b data-bl-energy>${game.energy} / 3</b></span><span><small>TEMPO</small><b data-bl-tempo>${game.tempo} / 10</b></span><span><small>CONQUIS</small><b>${game.fans.filter(f=>f.hp===0).length} / ${game.fans.length}</b></span>${game.relayBoosts?.length?`<span class="bl-boost"><b>+${game.relayBoosts.reduce((n,b)=>n+b.power,0)}</b> Relais · autre musicien</span>`:''}${game.boost?`<span class="bl-boost"><b>+${game.boost}</b> Prochaine puissance · ce tour</span>`:''}</div>${topControlsHTML(finished,live)}</div>${choosing?`<div class="bl-song-overlay" role="dialog" aria-modal="true" aria-label="Choisir la toune"><div class="bl-song-choice"><span class="eyebrow">LE PUBLIC CE SOIR</span><div class="bl-crowd-overview">${[...new Set(game.fans.map(favoriteStyle))].map(style=>`<span>${styleIcon(style)} ${esc(style)} <b>${game.fans.filter(f=>favoriteStyle(f)===style).length}</b></span>`).join('')}</div><p class="bl-crowd-moods">${Object.entries(REACTIONS).map(([id,r])=>{const n=game.fans.filter(f=>!f.conquered&&!f.reactionUsed&&f.intent===id).length;return n?`${n} ${r.name}`:'';}).filter(Boolean).join(' · ')}</p><b>${game.songOrder?(game.turn?'Deuxième passage de la setlist · −2 tempo au départ':'Setlist réservée · première chanson'):game.turn?(game.songs.length===1?'Reprise de la chanson · −2 tempo au départ':'Choisis la deuxième chanson · −2 tempo au départ'):'Choisis la première chanson'}</b>${availableSongs(game).map(s=>`<button data-bl-song="${esc(s.id)}"><strong>${esc(s.title)}</strong>${styleIcon(s.style)}<small>${esc(s.style)} · ${game.version>=4?songTurns(s):3} tours · finale : 3 puissance sur tout le public</small><span class="bl-song-match">♥ ${game.fans.filter(f=>!f.conquered&&favoriteStyle(f)===s.style).length} fans partagent ce style</span></button>`).join('')}</div></div>`:''}<div class="bl-playfield"><div class="bl-viewport"><div class="bl-world bl-minuit" style="--bl-players:${game.actors.length};--bl-fans:${game.fans.length>6?Math.ceil(game.fans.length/2):game.fans.length}"><canvas class="bl-effects" aria-hidden="true"></canvas><div class="bl-stage-sign" aria-hidden="true"><span>GARAGE VIVANT</span><b>LIVE SESSION</b></div><div class="bl-musicians">${game.actors.map(actor=>`<section class="bl-musician" data-bl-musician="${esc(actor.id)}"><div class="bl-musician-info" data-bl-actor="${esc(actor.id)}" tabindex="0" aria-label="Informations de ${esc(actor.name)}"><span class="bl-status-icon" aria-label="Statistiques et action de ${esc(actor.name)}">${animation?.event?.actorId===actor.id?'♫':'ⓘ'}<small>${animation?.event?.actorId===actor.id?esc(animation.event.name):'Prêt'} · ${Math.round(actor.needs.energy??0)} ⚡</small></span><span class="bl-performer">${cubeHTML(actor,'actor')}${instrumentArt(actor.instrument,'rhythm')}</span><div class="bl-name"><b>${esc(actor.name)}</b>${styleIcon(actor.genre)}</div><small>${INSTRUMENTS[actor.instrument]}</small></div>${!choosing&&!finished?handHTML(actor):''}</section>`).join('')}</div><div class="bl-audience-viewport" tabindex="0" role="region" aria-label="Public du concert"><div class="bl-audience" data-bl-target="audience" tabindex="0" role="group" aria-label="Zone du public. Dépose ici une carte collective ou de préparation."><span class="bl-zone-label">Public</span><div class="bl-fans" ${!!game.conquestVersion?`style="grid-template-columns:repeat(${audienceColumns(game)},minmax(0,1fr))"`:""}>${game.fans.map(fan=>`<div class="bl-fan-wrap"><button class="bl-fan ${fan.hp===0?'bl-conquered bl-reaction-'+reaction(fan):''}" data-bl-fan="${fan.id}" data-bl-target="${fan.id}" aria-label="${esc(fan.name)} · ${fan.max-fan.hp}/${fan.max} · ${fan.hp===0?'Conquis':esc(reactionText(game,fan))}"><span class="bl-intent">${fan.hp===0?(fan.effect?'♥ ✓':reactionLabel(fan)):esc(reactionText(game,fan))}</span>${cubeHTML(fan,'fan')}<span class="bl-name"><b>${esc(fan.name)}</b>${styleIcon(favoriteStyle(fan))}</span><span class="bl-resistance" role="progressbar" aria-label="Conquête de ${esc(fan.name)}" aria-valuemin="0" aria-valuemax="${fan.max}" aria-valuenow="${fan.max-fan.hp}"><i style="width:${(1-fan.hp/fan.max)*100}%"></i></span><span class="bl-hp">${fan.max-fan.hp}/${fan.max}</span>${conquestBadge(game,fan)}<output class="bl-damage-preview" data-bl-preview="${fan.id}" hidden></output></button></div>`).join('')}</div><span class="bl-drop-hint">Cartes collectives et préparations → dépose dans cette zone</span></div></div></div></div></div>${game.phase==='play'?`<div class="bl-turn-dock"><button id="bl-end" class="primary ${game.hand.some(id=>canPlay(game,id))?'':'bl-turn-ready'}" ${animation?'disabled':''}>Fin du tour <span>➜</span></button><div class="bl-energy-dock" aria-label="${game.energy} énergie restante"><strong>${game.energy}<small>/3</small></strong><div>${[0,1,2].map(i=>`<i class="${i<game.energy?'charged':''}"></i>`).join('')}</div><span>ÉNERGIE</span></div></div>`:''}</section><section class="bl-show-details">${live?eveningHTML(live,finished):''}${report}${finished&&live?`<section class="bl-xp-report">${(getWorld().showHistory.find(r=>r.id===live.id)?.individualXp||[]).map(x=>`<div>${personCard(getWorld().people.find(p=>p.id===x.id))}<b class="${x.levelAfter>x.levelBefore?'bl-level-up':''}">+${x.gain} XP ${x.levelAfter>x.levelBefore?`✦ NIVEAU ${x.levelAfter} !`:''}</b></div>`).join('')}</section>`+rewardHTML(live):''}${choiceHTML()}<div class="bl-controls">${layoutToolsHTML()}<p id="bl-help" role="status">${finished?(won?'Tout le public est conquis !':'Le show est terminé. Il reste du public à conquérir.'):choosing?'Choisis une chanson pour piger ta main.':pendingChoice?.type==='duo'?'Choisis le deuxième spectateur, différent du premier.':pendingChoice?.type==='discard'?'Choisis la carte à défausser ci-dessus.':selectedCard?'Choisis un spectateur ou la zone du public.':'Glisse une carte vers le public, ou sélectionne-la puis choisis sa cible.'}</p>${live&&!finished?'<button id="bl-cancel" class="text-button">Interrompre le show</button>':''}${finished?`<button id="bl-return" class="primary">${live?.bandLive.reward?.status==='pending'?(waiting?'Continuer la soirée sans échange →':'Continuer sans échange →'):waiting?'Continuer la soirée →':'Retour au quartier · continuer'}</button>${live?'':'<button id="bl-replay">Rejouer la répétition</button>'}`:''}</div><details class="bl-log"><summary>Déroulement du show · ${game.played} cartes jouées</summary><div>${game.logs.map(line=>`<p>${esc(line)}</p>`).join('')}</div></details></section></div>`;
   }
   function render(){
+    previewMemo=null;
     const previousViewport=root.querySelector('.bl-viewport'),previousAudience=root.querySelector('.bl-audience-viewport');
     const scroll=previousViewport?{x:previousViewport.scrollLeft,y:previousAudience?.scrollTop||0}:null;
     hideTip();root.innerHTML=game&&!preparing?showHTML():setupHTML();
@@ -173,10 +174,12 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function announce(message){const help=root.querySelector('#bl-help');if(help)help.textContent=message;}
   function clearDrag(){
+    previewMemo=null;
     activeCard=null;dragPointer=null;dragPoint=null;if(dragFrame!==null)cancelAnimationFrame(dragFrame);dragFrame=null;ghost?.remove();ghost=null;root.classList.remove('bl-dragging');inspection.hide();clearPreview();root.querySelectorAll('.bl-drop-active,.bl-drop-valid').forEach(el=>el.classList.remove('bl-drop-active','bl-drop-valid'));
   }
   function startDrag(id){
     if(!game||!canPlay(game,id)||animation||stage.editing)return false;
+    previewMemo=null;
     activeCard=id;hideTip();inspection.pin(id);root.classList.add('bl-dragging');const c=cardDefinition(cardById(game,id));
     root.querySelectorAll(c.target==='single'?'.bl-fan:not(.bl-conquered)':'.bl-audience').forEach(el=>el.classList.add('bl-drop-valid'));
     return true;
@@ -209,6 +212,9 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     showDragFeedback(ghost,{outcome,pointer:dragPoint,target:targetRect,obstacles,bounds:{left:Math.max(8,r.left+8),right:Math.min(innerWidth-8,r.right-8),top:Math.max(8,r.top+8),bottom:Math.min(innerHeight-8,r.bottom-8)}});
   }
   function highlightDrop(target){
+    const current=activeCard||selectedCard;
+    if(target?.dataset.blFan&&previewMemo?.card===current&&previewMemo.target===target&&previewMemo.game===game&&previewMemo.events===game.events.length&&previewMemo.choice===pendingChoice)return;
+    previewMemo=target?.dataset.blFan?{card:current,target,game,events:game.events.length,choice:pendingChoice}:null;
     root.querySelectorAll('.bl-drop-active').forEach(el=>el.classList.remove('bl-drop-active'));
     clearPreview();
     const id=activeCard||selectedCard;
@@ -255,10 +261,11 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
       const step=Math.min(32,now-previous)*.6;previous=now;
       const velocity=(point,start,end)=>point<start+35?-Math.max(0,1-(point-start)/35):point>end-35?Math.max(0,1-(end-point)/35):0;
       if(x>=left&&x<=right&&y>=top&&y<=bottom){
-        viewport.scrollLeft+=velocity(x,left,right)*step;
+        const beforeX=viewport.scrollLeft,beforeY=audience.scrollTop;
+        const vx=velocity(x,left,right);if(vx)viewport.scrollLeft+=vx*step;
         const audienceTop=Math.max(top,a.top),audienceBottom=Math.min(bottom,a.bottom);
-        if(y>=audienceTop&&y<=audienceBottom)audience.scrollTop+=velocity(y,audienceTop,audienceBottom)*step;
-        highlightDrop(dropAtPoint(x,y));
+        if(y>=audienceTop&&y<=audienceBottom){const vy=velocity(y,audienceTop,audienceBottom);if(vy)audience.scrollTop+=vy*step;}
+        if(beforeX!==viewport.scrollLeft||beforeY!==audience.scrollTop){previewMemo=null;highlightDrop(dropAtPoint(x,y));}
       }
       dragFrame=requestAnimationFrame(scrollFrame);
     }
@@ -415,6 +422,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     onOpen();
   });
   const hideOnScroll=()=>{
+    previewMemo=null;
     hideTip();if(!activeCard)clearPreview();
     const focused=document.activeElement;
     if(!activeCard&&root.contains(focused)&&focused.matches('[data-bl-fan],[data-bl-actor],[data-bl-style]')){

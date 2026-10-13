@@ -1,6 +1,10 @@
-# BandLive · moteur de spectacle — 0.8.0
+# BandLive · moteur de spectacle — 0.8.1
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
+
+## Fluidité du rendu
+
+La version 0.8.1 mesure les positions au changement de mise en page, puis anime directement la scène. La danse décorative est limitée à 30 images par seconde; les commandes et les effets ont leur propre cadence. La résolution suit la taille affichée et le dessin s’arrête en mode mouvements réduits, lorsque la vue est masquée ou lorsque la scène est entièrement hors écran. Une preview est recalculée au changement de carte, de cible ou d’état du show, puis réutilisée sur la même cible. Les règles, cartes et sauvegardes sont conservées. Le test navigateur `npm run test:performance` surveille les lectures de géométrie, les duplications de preview, la suspension du rendu et le résultat exact de la carte; il est inclus dans le smoke obligatoire.
 
 ## Interface et lecture du public
 

@@ -1,3 +1,7 @@
+# V0.8.1 — 13 octobre 2026
+
+BandLive plus fluide. [Notes complètes](./versions.md#v081).
+
 # V0.8.0 — 12 octobre 2026
 
 BandLive, conquêtes et progression individuelle. Composition centrée selon la maquette, bouton de tour en bas à droite et programmation sous le premier écran. Pratique à 4 XP par heure jouée, choix d’amélioration de deck directement accessible, lancement local et notes de version corrigés. [Notes complètes](./versions.md#v080).
