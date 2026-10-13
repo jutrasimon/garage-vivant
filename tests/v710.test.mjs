@@ -11,7 +11,7 @@ test('Starting bands vary reproducibly, fit the population and survive serializa
  const s=createWorld(seed,8,{setup:'varied'});counts.add(s.groups.length);assert(s.groups.length>=1&&s.groups.length<=4);
  assert.equal(new Set(s.groups.flatMap(g=>g.members)).size,s.groups.flatMap(g=>g.members).length);
  assert(s.groups.every(g=>g.members.length>=2&&g.development>=35&&g.development<=50&&g.origin==='départ'));
- assert.equal(s.songs.length,0);assert.deepEqual(restore(s),s);assert.deepEqual(createWorld(seed,8,{setup:'varied'}),s);
+ assert(s.songs.length===(s.groups.length===1?2:3)||s.groups.length>1&&s.songs.length===4);assert.deepEqual(restore(s),s);assert.deepEqual(createWorld(seed,8,{setup:'varied'}),s);
  }assert.equal(counts.size,2);
  for(const count of [2,3,4,8,24])for(const setup of ['none','large','medium','small','varied'])assert.doesNotThrow(()=>restore(createWorld(761,count,{setup})));
  assert.equal(createWorld(1,8,{setup:'none'}).groups.length,0);

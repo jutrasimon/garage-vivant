@@ -1,9 +1,10 @@
-import {rule} from './design-rules.mjs?v=0.7.21';
-import { followingConcertPerformance,beginBandLiveConcert,skipBandLiveExchange } from './bandlive-concert.mjs?v=0.7.21';
-import { initializeGroupState, proposeMembership, requestRehearsal, adoptSong, refreshGroup, groupsMinute, leaveGroup, dissolveGroup, activeGroup } from './groups.mjs?v=0.7.21';
-import { plateauGain, decadenceCount, availableMusicName, musicName } from "./v71.mjs?v=0.7.21";
-import { editTokens } from "./v7.mjs?v=0.7.21";
-import { initializeV6Person } from "./social.mjs?v=0.7.21";
+import {grantXp} from './progression.mjs?v=0.8.12';
+import {rule} from './design-rules.mjs?v=0.8.12';
+import { followingConcertPerformance,beginBandLiveConcert,skipBandLiveExchange } from './bandlive-concert.mjs?v=0.8.12';
+import { initializeGroupState, proposeMembership, requestRehearsal, adoptSong, refreshGroup, groupsMinute, leaveGroup, dissolveGroup, activeGroup } from './groups.mjs?v=0.8.12';
+import { plateauGain, decadenceCount, availableMusicName, musicName } from "./v71.mjs?v=0.8.12";
+import { editTokens } from "./v7.mjs?v=0.8.12";
+import { initializeV6Person } from "./social.mjs?v=0.8.12";
 import {
   initializeCalendar,
   upgradeCalendar,
@@ -15,7 +16,7 @@ import {
   morale,
   moraleEffect,
   validateCalendar,
-} from "./calendar.mjs?v=0.7.21";
+} from "./calendar.mjs?v=0.8.12";
 import {
   clamp,
   round,
@@ -33,7 +34,7 @@ import {
   ACTIONS,
   step,
   refreshReputation,
-} from "./engine.mjs?v=0.7.21";
+} from "./engine.mjs?v=0.8.12";
 import {
   CARDS,
   CURSES,
@@ -43,7 +44,7 @@ import {
   createPerformance,
   advancePerformance,
   validatePerformance,
-} from "./stage.mjs?v=0.7.21";
+} from "./stage.mjs?v=0.8.12";
 
 export function initializePerson(p) {
   initializeV6Person(p);
@@ -188,9 +189,11 @@ export function groupRehearsal(s, j, present) {
   const row=g?.repertoire.find(r=>r.songId===j.songId);
   if(!g||!row||row.active===false||present.length<2||present.some(p=>!g.members.includes(p.id)))return;
   g.lastWorked=s.time;
-  // Group progression belongs to shows; rehearsals train individual musicians.
-  if (j.elapsed % 15 === 0) {
+  // One group gain per completed collective cycle, never during travel or waiting.
+  if (j.elapsed > 0 && j.elapsed % 15 === 0 && g.lastRehearsalCycle!==s.time) {
+    g.lastRehearsalCycle=s.time;
     if (row) row.rehearsals++;
+    g.development=clamp(g.development+1);
     g.moments.unshift({
       time: s.time,
       type: "rehearsal",
@@ -707,7 +710,9 @@ export function completePerformance(s) {
     g = s.groups.find((g) => g.id === show.groupId),
     o = eventById(s, show.opportunityId),
     r = show.result;
+  const firstShow=!!g&&!g.shows.length;
   const record = {
+    firstShow,
     trace: JSON.parse(JSON.stringify(show)),
     id: show.id,
     time: s.time,
@@ -796,6 +801,9 @@ export function completePerformance(s) {
         actor.energyLoss -
         (show.energyLossByActor?.[actor.id] || 0),
     );
+    const xp=10+Math.round(r.score/5)+(firstShow?20:0)+(r.conquered===r.total?15:0);
+    const gain=grantXp(p,xp);record.individualXp??=[];record.individualXp.push(gain);
+    if(gain.levelAfter>gain.levelBefore)log(s,'music',`${p.name} atteint le niveau ${gain.levelAfter} ! Spectacle · +${xp} XP.`,[p.id],{xp:gain});
     p.showFame = clamp(p.showFame + r.score * 0.055, 0, 25);
     feel(s, p, r.score >= 45 ? { exaltation: 22 } : { distress: 14 }, event);
     if (show.intention === "wild")
@@ -880,6 +888,7 @@ export function playTicks(s, ticks) {
   completePerformance(s);
 }
 export function nextSlot(s, previous = s.performance) {
+  if(previous?.bandLive&&s.performance?.id===previous.id&&s.performance.status==='playing')return false;
   // Every exit route carries the full venue audience, including Shows and interruptions.
   const old = followingConcertPerformance(previous);
   if (!old || old.preview) {
@@ -964,6 +973,7 @@ export function nextBandLiveSlot(s,previous=s.performance,enabled=true){
 }
 
 export function skipShow(s, all = false) {
+  if(s.performance?.bandLive&&s.performance.status==='playing')return;
   let guard = 0;
   do {
     while (s.performance?.status === "playing" && guard++ < 100)

@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.7.21
+# Garage vivant · v0.8.12
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v075) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0812) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 
@@ -30,18 +30,33 @@ Les dates se renouvellent continuellement. Un gros événement revient toutes le
 
 **Essayer maintenant** est une répétition générale sans récompense. Un replay reproduit le tirage et n’ajoute aucune conséquence; les douze dernières prestations gardent la trace de leur dernière chanson. **Interrompre** un vrai show ne donne pas de récompense et coûte de l’énergie.
 
-## BandLive · module optionnel
+## BandLive · moteur de tous les nouveaux shows
 
-Les nouveaux shows BandLive donnent à chaque spectateur un bonus de conquête visible : Onde de choc, Vague d’enthousiasme, Percée dans la foule, Sous les projecteurs ou Chœur du public. Le public garde quatre colonnes maximum sur tous les écrans ; le preview inclut les réactions en chaîne. [Effets et durées](docs/BANDLIVE.md#bonus-de-conquête-0715).
+Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde un gros bouton de fin de tour en bas à droite. La programmation et les outils avancés sont sous le premier écran. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
 
+Les mains sont abaissées et les musiciens légèrement remontés pour montrer leurs instruments. La scène réserve cet espace tout en gardant les cartes lisibles et le public visible; le test de composition couvre les huit instruments et les mains de cinq cartes jusqu’au 1280 × 720.
 
-Activer **BandLive** dans **Réglages**. Dans **Shows**, réserver un créneau avec deux à six musiciens et une ou deux compositions, puis **Avancer jusqu’au show** et **Jouer avec BandLive** avant la première chanson. Choisir deux passages dans le répertoire actif du groupe, de 3 à 5 tours selon les compositions (3 pour les anciens morceaux) ; une chanson unique est reprise. Le lieu fixe huit, dix ou douze spectateurs et leurs styles. Le bilan applique les conséquences classiques et s’enregistre une seule fois. **Continuer la soirée** conserve le groupe suivant ; **Retour au quartier · continuer** reprend la même partie après le dernier show.
+Les arcs roses indiquent la conquête et les arcs jaunes de tempo suivent le curseur ou le doigt. Le ciblage collectif utilise une lueur et des ondes autour du public, avec des halos pour les cibles individuelles. L’énergie conserve son vert menthe. La prévision des effets suit le curseur en laissant visible la cible; son contenu et l’arc sont réutilisés pendant les petits déplacements. `npm run test:targeting`, inclus dans le smoke obligatoire, vérifie couleurs, suivi souris/tactile, effets réduits, cartes mixtes, cibles invalides et annulation sans dépense.
 
-**Jouer avec BandLive** depuis Groupes et **Essayer BandLive** restent des répétitions sans récompense, avec trois à douze spectateurs au choix. Cartes sous leur musicien, glisser-déposer souris/toucher, cinq cartes et trois points d’énergie par tour, infobulles et tempo consommé par la guitare et le saxophone.
+Si le pouvoir du spectateur va se déclencher, la prévision le met au premier plan dans un encadré rose lumineux : nom en gros, effet, voisins touchés et chaînes de conquêtes. Son animation d’apparition respecte les effets réduits et ne recommence pas pendant les petits mouvements. `npm run test:conquest-preview`, inclus dans le smoke, vérifie les trois pouvoirs et les annonces au curseur, au doigt et après sélection de carte.
 
-Le module est désactivé par défaut. Une désactivation conserve le show interactif en cours jusqu’à sa fin ou son interruption. La répétition reste sauvegardée séparément ; les vrais shows voyagent avec l’export du quartier. Le replay d’un show historique ne redonne aucun gain. Les anciennes sauvegardes et les spectacles classiques restent utilisables. [Règles, cartes et sauvegardes](docs/BANDLIVE.md) · [4 200 simulations d’équilibrage](docs/BANDLIVE_BALANCE.md).
+Les fans conquis ont un halo rose permanent et une pastille « ♥ ✓ CONQUIS » à la place de leur barre. Leur intention et leur badge de pouvoir disparaissent de la salle. Le même test vérifie ces états après de vraies conquêtes et chaînes, leur stabilité au survol et leur conservation au rechargement.
+
+Énergie et tempo sont regroupés en bas à gauche, avec de gros chiffres et des segments lumineux. Gains, dépenses et recharge du tour affichent leur variation réelle et font réagir la jauge; le mode d’effets réduits garde l’information sans mouvement. `npm run test:resources`, inclus dans le smoke obligatoire, vérifie les valeurs jouées, le rechargement et cinq tailles d’écran.
+
+Trois pouvoirs de conquête : Onde de choc 2–5, Projecteur 1–3 et Chœur du public 1–2. Rythme et voisinage déclenchent immédiatement leurs gains; les réactions consommées disparaissent jusqu’au prochain tour. Animations et rétroaction couvrent chaque effet, le tempo, les soutiens et la finale.
+
+La pratique solo et collective donne 1 XP individuelle par 15 minutes réellement jouées; la pratique collective augmente aussi la coordination. Les shows et les grands moments du groupe donnent de l’XP. Les premiers niveaux arrivent plus rapidement et **les récompenses de niveau remplacent l’échange systématique de fin de show**. Les récompenses en attente sont conservées dans les fiches et accessibles avec « Améliorer le deck » depuis les membres du groupe.
+
+La grande notification de niveau attend la fin de la soirée et le retour dans le quartier : aucun popup pendant le show, son bilan, les groupes suivants ou une répétition. Les récompenses restent en attente et l’ouverture manuelle d’une amélioration est bloquée pendant une prestation active.
+
+Nouvelles parties : musiciens et ordre variés, deux chansons avec un seul band, trois à quatre réparties entre plusieurs bands. Les parties existantes sont conservées. [Règles et progression](docs/BANDLIVE.md).
+
+Pour les essais entre amis : `npm run bandlive:test-file` crée un HTML autonome dans `BandLive-test/`, avec ses sauvegardes séparées. `npm run test:refonte` vérifie la nouvelle interface.
 
 ## Quartier V7.2
+
+Le panneau des fiches à droite garde sa position de défilement quand on change de musicien, y compris au retour sur une fiche déjà consultée. Une fiche plus courte s’arrête à son propre bas. `npm run test:profile`, inclus dans le smoke obligatoire, vérifie ce comportement et la stabilité des champs pendant les mises à jour.
 
 Six actions d’éveil : Détente, Socialiser, Pratiquer, Jam, Composer et Déchéance. Le jeton est défaussé dès la pige ; aucun remboursement après refus ou interruption. Les acquisitions arrivent dans le sac ; les retraits se font depuis la défausse, en attendant la pige des exemplaires encore dans le sac. Fourchettes personnelles et cycles remplacent les durées fixes. Le sommeil reste quotidien et hors sac.
 
@@ -85,7 +100,7 @@ npx playwright install --with-deps chromium
 npm run test:browser
 ```
 
-Pour jouer localement : `python3 -m http.server 8000 --directory dist`, puis `http://localhost:8000/`. `npm run docs:build` puis `npm run bandlive:test-file` créent `BandLive-test/LANCER-BandLive.html`, un essai autonome à ouvrir dans Chrome avec ses sauvegardes séparées.
+Pour jouer localement : `npm start`, puis `http://localhost:8000/`. `npm run docs:build` puis `npm run bandlive:test-file` créent `BandLive-test/LANCER-BandLive.html`, un essai autonome à ouvrir dans Chrome avec ses sauvegardes séparées.
 
 `npm run audit:groups` rejoue les 20 graines sur 30 jours, dont trois prolongées à 90 jours, et produit `docs/BALANCE_V7_10.json`, tailles et stabilité comprises. Le build crée la documentation et son index de recherche. Les fichiers de tests moteur/interface/doc couvrent les règles V7.5 et BandLive, imports réels V1–V7, déterminisme, compositions, engagements, setlists, skip/replay, récompenses uniques, 100 jours de calendrier et cohérence documentaire. Chromium couvre ordinateur et tactile, rendu, recherche VitePress et parcours de jeu. Le viewport tactile ne remplace pas un test sur appareil réel.
 

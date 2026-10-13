@@ -1,3 +1,55 @@
+# V0.8.12 — 13 octobre 2026
+
+Des fans conquis reconnaissables au premier regard. [Notes complètes](./versions.md#v0812).
+
+# V0.8.11 — 13 octobre 2026
+
+Les pouvoirs de conquête prennent le devant de la scène. [Notes complètes](./versions.md#v0811).
+
+# V0.8.10 — 13 octobre 2026
+
+Les instruments retrouvent leur place sur scène. [Notes complètes](./versions.md#v0810).
+
+# V0.8.9 — 13 octobre 2026
+
+Tempo doré au curseur et ciblage vibrant. [Notes complètes](./versions.md#v089).
+
+# V0.8.8 — 13 octobre 2026
+
+Aucun popup de niveau pendant le show. [Notes complètes](./versions.md#v088).
+
+# V0.8.7 — 13 octobre 2026
+
+Arc vert de tempo et prévision près du curseur. [Notes complètes](./versions.md#v087).
+
+# V0.8.6 — 13 octobre 2026
+
+Énergie et tempo à gauche, avec du juice. [Notes complètes](./versions.md#v086).
+
+# V0.8.5 — 13 octobre 2026
+
+La fiche garde sa position entre les musiciens. [Notes complètes](./versions.md#v085).
+
+# V0.8.4 — 13 octobre 2026
+
+Des niveaux visibles et une vraie célébration. [Notes complètes](./versions.md#v084).
+
+# V0.8.3 — 13 octobre 2026
+
+La prévision sur le côté, la salle dégagée. [Notes complètes](./versions.md#v083).
+
+# V0.8.2 — 13 octobre 2026
+
+Des cartes lisibles et mieux proportionnées. [Notes complètes](./versions.md#v082).
+
+# V0.8.1 — 13 octobre 2026
+
+BandLive plus fluide. [Notes complètes](./versions.md#v081).
+
+# V0.8.0 — 12 octobre 2026
+
+BandLive, conquêtes et progression individuelle. Composition centrée selon la maquette, bouton de tour en bas à droite et programmation sous le premier écran. Pratique à 4 XP par heure jouée, choix d’amélioration de deck directement accessible, lancement local et notes de version corrigés. [Notes complètes](./versions.md#v080).
+
 # V0.7.21 — 12 octobre 2026
 
 Réglages après un spectacle terminé. [Notes complètes](./versions.md#v0721).

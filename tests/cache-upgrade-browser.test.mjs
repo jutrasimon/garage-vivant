@@ -36,10 +36,10 @@ try{
   await page.goto(url+'/__prime.html');await page.locator('body[data-ready="true"]').waitFor();
   assert.equal(primedRequests,staleURLs.length,'Every previous module URL was actually cached');priming=false;
   await page.goto(url+'/');await page.locator('#profile .profile-head').waitFor({state:'attached'});
-  assert(await page.locator('#bandlive-nav').isHidden(),'Updating still boots with BandLive disabled');
+  assert(await page.locator('#bandlive-nav').isVisible(),'BandLive is available by default after upgrade');
   await page.locator('#speed').fill('0');await page.locator('[data-view="settings"]').click();await page.locator('#bandlive-enabled').check();
   await page.locator('#bandlive-nav').click();assert(await page.locator('#bandlive-view').isVisible(),'The same upgraded module graph enables BandLive');
   await page.reload();await page.locator('#profile .profile-head').waitFor({state:'attached'});assert.deepEqual(errors,[]);
   await mkdir('test-results',{recursive:true});await page.screenshot({path:'test-results/bandlive-cached-upgrade.png'});
-  console.log(`Cached upgrade passed: ${staleURLs.length} old module URLs primed, default-off boot, enable and reload.`);
+  console.log(`Cached upgrade passed: ${staleURLs.length} old module URLs primed, default-on boot and reload.`);
 }finally{await browser.close();server.close();}

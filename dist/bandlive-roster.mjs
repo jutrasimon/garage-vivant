@@ -1,6 +1,6 @@
-import {activeGroup} from './groups.mjs?v=0.7.21';
-import {eligibleSongs} from './life.mjs?v=0.7.21';
-import {RULES,createBandLive} from './bandlive.mjs?v=0.7.21';
+import {activeGroup} from './groups.mjs?v=0.8.12';
+import {eligibleSongs} from './life.mjs?v=0.8.12';
+import {RULES,createBandLive} from './bandlive.mjs?v=0.8.12';
 
 // Resolve only the module's draft. Group membership, canonical songs, mastery
 // and the world's RNG are read without being changed.
@@ -21,7 +21,8 @@ export function resolveBandLivePlan(world,draft,{canStart=true}={}) {
     authors:[...song.authors],authorNames:song.authors.map(id=>song.authorNames?.[id]||world.people.find(p=>p.id===id)?.name||id),
     quality:song.quality,...(song.turns!==undefined?{turns:song.turns}:{}),mastery:group.repertoire.find(r=>r.songId===song.id).mastery,
   })):[];
-  const reason=!group?'Crée un groupe dans le quartier pour jouer avec BandLive.':members.length<RULES.minMembers?'Choisis au moins deux musiciens du groupe.':members.length>RULES.maxMembers?'Choisis six musiciens maximum pour BandLive.':!songs.length?'Adopte une composition dans le répertoire du groupe pour prendre la scène.':!canStart?'Termine le spectacle en cours avant de prendre la scène avec BandLive.':'';
+  if(group&&!songs.length)songs.push({id:'jam-'+group.id,sourceSongId:null,title:'Jam libre',style:group.genre,quality:40,mastery:0,turns:3,authors:[...group.members],authorNames:people.map(p=>p.name)});
+  const reason=!group?'Crée un groupe dans le quartier pour jouer avec BandLive.':members.length<RULES.minMembers?'Choisis au moins deux musiciens du groupe.':members.length>RULES.maxMembers?'Choisis vingt-quatre musiciens maximum pour BandLive.':!songs.length?'Adopte une composition dans le répertoire du groupe pour prendre la scène.':!canStart?'Termine le spectacle en cours avant de prendre la scène avec BandLive.':'';
   return {groups,group,people,members,songs,ready:!reason,reason};
 }
 

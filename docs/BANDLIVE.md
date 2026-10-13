@@ -1,4 +1,75 @@
-# BandLive · module optionnel de spectacle
+# BandLive · moteur de spectacle — 0.8.12
+
+Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
+
+## Niveaux visibles et notification
+
+La liste des voisins affiche le niveau et une barre d’XP pour chaque musicien. Une amélioration disponible ajoute une mise en évidence dorée et un bouton d’accès direct. À une montée de niveau, une grande notification montre le portrait, le nom et le nouveau niveau. Elle reste jusqu’au choix d’amélioration ou à « Plus tard ». Reporter une notification ne dépense pas la récompense; le bouton reste dans la liste et sur la fiche, et le report est conservé au rechargement. Plusieurs niveaux du même musicien sont regroupés, puis les autres musiciens sont présentés à la suite. La notification reste masquée tant que la soirée est ouverte ou que la vue du show est affichée, même au bilan, entre deux groupes, après rechargement ou pendant une répétition. Elle apparaît après la fin de la soirée, au retour dans le quartier. Le blocage conserve les récompenses sans les acquitter. Le bouton ouvre le menu du personnage et suspend le quartier pendant son choix; l’ouverture manuelle est refusée pendant une prestation active. Niveau, XP et récompenses de la fiche sont actualisés pendant la pratique. Validation : `npm run test:levels`, inclus dans le smoke obligatoire.
+
+## Fluidité du rendu
+
+La version 0.8.1 mesure les positions au changement de mise en page, puis anime directement la scène. La danse décorative est limitée à 30 images par seconde; les commandes et les effets ont leur propre cadence. La résolution suit la taille affichée et le dessin s’arrête en mode mouvements réduits, lorsque la vue est masquée ou lorsque la scène est entièrement hors écran. Une preview est recalculée au changement de carte, de cible ou d’état du show, puis réutilisée sur la même cible. Les règles, cartes et sauvegardes sont conservées. Le test navigateur `npm run test:performance` surveille les lectures de géométrie, les duplications de preview, la suspension du rendu et le résultat exact de la carte; il est inclus dans le smoke obligatoire.
+
+## Interface et lecture du public
+
+Les cartes partagent un format 5:7 : coût dans le coin, icône en haut, titre centré, nom du musicien, description complète et cible en pied de carte. La version 0.8.2 agrandit les cartes en main de 32 % et augmente leur typographie. Les mains par défaut compensent en partie la réduction de la salle sur les écrans plus petits; les tailles choisies manuellement restent conservées. Les descriptions longues gardent tout leur texte, y compris dans les decks, aperçus et améliorations. Le test de composition vérifie la lisibilité à la taille affichée et l’absence de texte coupé pour toutes les cartes.
+
+La version 0.8.10 abaisse les mains et remonte légèrement les musiciens pour dégager leurs instruments. L’espace de scène augmente et les mains par défaut compensent davantage la réduction de la salle. Les cartes restent au même ratio et ne recouvrent pas la première rangée du public. Le test de composition vérifie les huit instruments, une main complète de cinq cartes, le 1280 × 720 et les anciennes grilles à trois rangées. Les décalages et tailles de mains choisis manuellement restent conservés.
+
+La composition reprend les proportions de la maquette : scène centrée de 1 120 unités maximum, fond de salle continu et bandeau compact avec chansons au centre, tour et conquêtes à droite. Les nouveaux shows utilisent deux rangées : quatre colonnes jusqu’à huit spectateurs, cinq pour neuf ou dix, six pour onze ou douze. Les anciennes sauvegardes sans nombre de colonnes gardent leur grille à quatre colonnes. Les effets spatiaux utilisent toujours les voisins de la grille affichée. Sur ordinateur, la scène est ajustée à la hauteur disponible pour montrer le public entier. Sur petit écran, la scène conserve un défilement horizontal. Le gros bouton **Fin du tour** reste en bas à droite. La programmation de la soirée, les outils avancés et le déroulement commencent sous le premier écran de jeu. Une carte gratuite reste jouable à zéro énergie.
+
+L’énergie et le tempo sont regroupés en bas à gauche : gros chiffres, trois segments vert menthe pour l’énergie, dix segments dorés pour le tempo. Chaque gain ou dépense anime brièvement la jauge et les segments concernés et affiche la variation réelle. Le tempo plein brille davantage et la recharge d’énergie du tour suivant est visible. Les effets réduits gardent les indications sans mouvement; il n’y a aucune animation continue des ressources. L’espace du bas est réservé pour conserver le public dégagé. Sur les écrans de moins de 360 pixels, le bloc de ressources passe au-dessus du bouton. `npm run test:resources`, inclus dans le smoke obligatoire, vérifie cinq tailles d’écran, gains plafonnés, dépenses, recharge, rechargement et effets réduits.
+
+Le choix des tounes se fait dans un overlay avec les styles favoris, leurs effectifs, les réactions du public et le nombre de fans correspondant à chaque chanson. Les cartes utilisent partout le même composant au ratio 5:7 : main, preview, pioche, fiche et récompenses.
+
+La fiche d’un fan montre son portrait, sa barre de conquête, son style, sa réaction et son pouvoir. Pendant le ciblage, le preview explique aussi sa condition, son effet de conquête et les déclenchements prévus. Il utilise une copie du vrai moteur, sans dépenser de ressources. En glisser-déposer, une seule prévision suit le curseur, décalée pour laisser visible le spectateur visé et rester dans l’écran, y compris lorsque la cible est invalide. Le déplacement utilise des dimensions en cache; la simulation n’est recalculée que si carte, cible, état du show ou choix en cours changent. La marge réservée à l’ancien panneau fixe de visée est retirée. Les arcs roses rejoignent les spectateurs touchés; les arcs jaunes de tempo suivent le curseur ou le doigt, même sur une même cible. Les cartes mixtes montrent les deux avec des courbes distinctes. Une lueur et des ondes remplacent le rectangle de ciblage collectif; les cibles individuelles ont un halo. Le tempo utilise le doré dans le tooltip, les indications de gain ou dépense et l’éclairage de la salle. Le vert reste associé aux actions et à l’énergie. La géométrie des personnages reste stable pendant la visée, l’arc déjà créé est réutilisé, et les pulsations s’arrêtent en mode effets réduits. `npm run test:targeting` et `npm run test:performance`, inclus dans le smoke obligatoire, vérifient ces interactions et leur coût de rendu.
+
+## Trois pouvoirs à la conquête
+
+Une fois conquis, le spectateur perd sa bulle d’intention et son badge de pouvoir sur la grille. Sa barre devient une pastille rose « ♥ ✓ CONQUIS »; un halo rose permanent et de petites étincelles le distinguent du public restant. Ce repère est statique, y compris avec les effets réduits. La zone de survol et la position du personnage restent stables. La barre accessible conserve sa valeur complète et annonce « Conquis ». Le parcours `npm run test:conquest-preview` vérifie ces changements après des cartes réellement jouées et des chaînes, à la souris et au tactile, puis après rechargement sans répéter les pouvoirs.
+
+Quand la simulation prévoit le déclenchement du pouvoir du spectateur visé, un encadré rose lumineux le présente avant les règles ordinaires : « VA SE DÉCLENCHER ! », icône, grand nom, description et noms des voisins réellement affectés. Une chaîne prévue affiche le nombre d’effets de conquête. L’annonce est commune au glisser-déposer, au tactile et à la carte sélectionnée; elle n’apparaît pas sur une cible survivante ou déjà conquise. Son apparition est animée une fois par changement d’effet, sans boucle ni nouvelle simulation aux petits mouvements; les effets réduits gardent une annonce statique. Sur téléphone, elle peut utiliser l’espace du haut pour ne pas recouvrir la cible. `npm run test:conquest-preview`, inclus dans le smoke, vérifie ces cas et l’annulation sans dépense.
+
+Après sélection d’une carte, l’annonce d’un pouvoir imminent passe avant sa grande fiche, pour rester à l’écran même avec une faible hauteur disponible ou des polices différentes. Le format de la carte reste inchangé. Ce cas est vérifié jusqu’au 1024 × 600.
+
+Chaque nouveau spectateur reçoit un pouvoir et sa valeur, déterminés par la graine :
+
+| Pouvoir | Effet |
+|---|---|
+| Onde de choc 2–5 | Transmet cette puissance à chaque voisin immédiat. |
+| Projecteur 1–3 | Les voisins immédiats reçoivent ce bonus par carte jusqu’à la fin du tour. La plus forte valeur reste, sans addition. |
+| Chœur du public 1–2 | Ce nombre de voisins non conquis adopte le style de la chanson jusqu’à sa fin. Priorité aux styles différents; sélection stable dans l’ordre de la grille. |
+
+Les voisins sont gauche, droite, devant et derrière, sans diagonales. Vague d’enthousiasme et Percée restent uniquement dans les anciens snapshots.
+
+## Réactions immédiates
+
+Six réactions sont conservées. **Ennui 3** perd trois conquête en fin de tour. **Attentif +3** et **Distrait −3** modifient la prochaine carte de puissance. **Attend du rythme** reçoit immédiatement trois conquête dès que trois tempo réels sont gagnés ce tour. **Veut de la variété** ajoute trois puissance à la carte du deuxième musicien différent. **Se laisse entraîner** reçoit immédiatement trois conquête lorsqu’un voisin est conquis.
+
+Une réaction consommée disparaît, ne se redéclenche plus pendant ce tour et se renouvelle au suivant. Une réaction non déclenchée reste. Le rythme compte le gain réel, limité par le plafond de dix; le tempo peut ensuite être consommé. Les chaînes de conquête marquent chaque réaction avant propagation pour éviter les doubles activations.
+
+Tous les gains, pertes, conquêtes, réactions, pouvoirs, finales et soutiens ont une rétroaction. La propagation est présentée successivement. Le tempo affiche gain et consommation, pulse dans le compteur et éclaire la salle; les mouvements sont atténués en mode effets réduits.
+
+## XP, niveaux et récompenses
+
+Un seul compteur individuel est conservé. Pratique solo et collective : **1 XP par 15 minutes réellement jouées**; trajet et attente ne donnent rien. Les minutes partielles sont conservées entre les séances et les rechargements (4 XP pour une heure de pratique). Une pratique collective ajoute également **1 coordination par cycle de 15 minutes**, une fois pour le groupe, avec au moins deux membres présents.
+
+Les grands moments donnent : formation d’un nouveau band **10 XP par fondateur**, chanson ou recomposition terminée **20 XP par auteur**, show terminé **10 + accueil/5 arrondi par participant**, avec **20 XP au premier show du band** et **15 XP supplémentaires si tout le public est conquis**. Les groupes et chansons de départ n’accordent pas rétroactivement ces bonus.
+
+Les seuils cumulés des niveaux 2 à 6 sont **80, 180, 360, 650 et 1 100 XP**. Ensuite, chaque palier demande 40 % de plus que le précédent. Cible de rythme : première montée autour de quatre jours et un show, niveau 3 autour du show suivant, puis espacement croissant. Sur douze graines de trois musiciens autonomes, les médianes sont 81 XP à quatre jours, 183 à huit jours et 348 à seize jours; les activités et dates de show font varier ce rythme. Les sauvegardes des premiers essais conservent leur niveau, leurs récompenses et leur progression proportionnelle dans le niveau. Niveau, barre et améliorations disponibles sont visibles dans les fiches.
+
+**Une montée de niveau donne un échange de carte à ce musicien**, lié à son instrument au moment du niveau : remplacer une des cinq cartes par une spéciale. Ce système remplace l’échange automatique après chaque show. Le bouton « Améliorer le deck » des fiches et membres du groupe ouvre le choix, puis montre la carte remplacée et celle obtenue. Le quartier attend pendant ce choix. Les niveaux déjà gagnés sont conservés. Les récompenses gagnées en pratique restent disponibles dans la fiche; celles gagnées en show apparaissent au bilan de ce show. Une récompense de pratique ne doit pas attendre un spectacle. Les choix sont conservés à l’export et au rechargement. Répétitions BandLive, replays et interruptions ne donnent pas d’XP de show. Les anciens shows qui possédaient déjà un échange gardent leur récompense historique.
+
+## Début de partie et essai entre amis
+
+Une nouvelle partie propose une graine différente par défaut; la même graine reproduit exactement les musiciens et leur ordre. Un band commence avec deux chansons. Plusieurs bands partagent trois à quatre chansons, avec au moins une par groupe. L’option sans band commence sans répertoire de groupe.
+
+`npm run bandlive:test-file` produit un HTML autonome à partager, avec sa sauvegarde de test séparée du site principal. Les vérifications ciblées sont `npm run test:refonte` et `node --test tests/bandlive-refonte.test.mjs`.
+
+## Historique des règles jusqu’à 0.7.21
+
+Les sections suivantes décrivent les versions précédentes; les règles courantes sont celles exposées ci-dessus.
+
 
 BandLive relie les musiciens du quartier au spectacle jouable d’ENCORE. Activer **BandLive** dans **Réglages** fait apparaître son onglet et **Essayer BandLive** dans la préparation des Shows. L’option est désactivée par défaut et peut être retirée à tout moment.
 
@@ -99,7 +170,7 @@ Le format BandLive 4 accepte deux passages de trois à cinq tours. Les formats 1
 
 La scène Three.js utilise la DA Minuit : sol, speakers, instruments, spots au plafond et lumières arrière. Les huit instruments utilisent des modèles simples, et les personnages conservent leur couleur, accessoires et petits corps. Musiciens et foule dansent à des rythmes individuels. Le renderer est chargé lorsque la scène est ouverte et réutilisé entre les cartes. Sans WebGL, les portraits et commandes restent disponibles.
 
-Les cinq cartes réellement présentes dans la main sont regroupées par musicien, en éventail. Le grand aperçu à droite conserve leur description pendant le drag. Un petit jeton et un popup prune/menthe affichent près du curseur le résultat exact calculé par le moteur, sans cacher le spectateur ciblé. Les effets directs, les chaînes et les statuts sont également détaillés dans l’aperçu. Les arcs partent des musiciens ; les projectiles passent au-dessus des cartes. Au téléphone, l’aperçu est compact et la scène peut se déplacer horizontalement.
+Les cinq cartes réellement présentes dans la main sont regroupées par musicien, en éventail. Le simple survol ouvre le détail de la carte sur le côté. Pendant le drag, un seul popup affiche près du curseur le résultat exact calculé par le moteur, sans cacher le spectateur ciblé, avec des accents dorés pour le tempo. Les effets directs, les chaînes et les statuts sont également détaillés. Les arcs partent des musiciens : rose vers les spectateurs pour la conquête, jaune vers le curseur ou le doigt pour le tempo. Au téléphone, l’aperçu est compact et la scène peut se déplacer horizontalement.
 
 **Disposition** permet de placer un musicien et sa main séparément, régler la taille complète de la main et son éventail, annuler et restaurer le placement initial. Ces réglages sont des préférences locales de présentation ; ils ne créent aucune carte et ne changent pas le show. Les mains n’ont aucun collider. Les spectateurs conservent une protection de 86 × 112 et restent dans leurs places logiques, visibles en mode Disposition. De petits décalages et une danse individuelle gardent la foule organique ; rangées, colonnes et voisins restent ceux du moteur, sans modifier les bonus de conquête.
 
@@ -184,7 +255,7 @@ Validation : `tests/bandlive-reactions.test.mjs`, cartes, conquête, sauvegardes
 
 ## Commandes et simulation — 0.7.20
 
-Fin du tour, Son, Voir les cartes et Simuler le show sont regroupés en haut à droite des informations du groupe et du morceau. L’en-tête reste visible au défilement. Sur téléphone, les commandes occupent la ligne juste sous ces informations. Les deux emplacements « Chanson 1/2 » et « Chanson 2/2 » affichent les tours de leur propre chanson ; une durée inconnue reste « À choisir », sans inventer un total.
+Son, Voir les cartes et Simuler le show sont regroupés en haut à droite des informations du groupe et du morceau. Fin du tour reste en bas à droite; énergie et tempo sont en bas à gauche. Sur téléphone, les commandes du haut occupent la ligne juste sous les informations du show. Les deux emplacements « Chanson 1/2 » et « Chanson 2/2 » affichent les tours de leur propre chanson ; une durée inconnue reste « À choisir », sans inventer un total.
 
 Pour un vrai show dont le répertoire dépasse six chansons actives, les six propositions sont sélectionnées par durée décroissante, puis par nombre de spectateurs du lieu aimant leur style. Les égalités restantes gardent l’ordre du répertoire. Le joueur choisit toujours les deux passages parmi ces propositions. Les groupes de six chansons ou moins gardent tout leur choix.
 

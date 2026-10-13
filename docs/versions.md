@@ -1,5 +1,172 @@
 # Notes de version
 
+## V0.8.12 — Des fans conquis reconnaissables au premier regard {#v0812}
+
+13 octobre 2026.
+
+Les spectateurs conquis ont maintenant un état nettement distinct du public encore à convaincre.
+
+- Leur intention et leur badge de pouvoir disparaissent de la salle.
+- La barre pleine est remplacée au même endroit par une pastille rose **♥ ✓ CONQUIS**.
+- Un halo rose permanent, accompagné de petites étincelles, entoure le personnage. Il reste visible avec les effets réduits et n’ajoute aucune animation continue.
+- La position et la zone de survol du personnage restent stables. Les états conquis sont conservés au rechargement, sans redéclencher leurs pouvoirs.
+- Après sélection d’une carte, les effets de conquête imminents passent au-dessus de sa grande fiche : ils restent visibles sur les écrans courts et avec les différentes polices du navigateur.
+
+## V0.8.11 — Les pouvoirs de conquête prennent le devant de la scène {#v0811}
+
+13 octobre 2026.
+
+Lorsqu’une carte va déclencher le pouvoir du spectateur visé, sa prévision affiche maintenant un **grand encadré rose lumineux**, placé avant les règles ordinaires.
+
+- Mention « VA SE DÉCLENCHER ! », icône et nom du pouvoir en gros, description et noms des voisins réellement touchés.
+- Annonce visible des chaînes de conquêtes prévues par le moteur.
+- Une brève animation souligne l’apparition de l’effet; elle ne recommence pas aux petits mouvements du curseur et respecte les effets réduits.
+- Même annonce dans la prévision au curseur, au doigt et après sélection d’une carte. Sur mobile, le popup utilise au besoin l’espace du haut pour laisser le spectateur visible.
+- Sans déclenchement prévu, la règle reste discrète. Viser et annuler conserve intégralement le show et ses ressources.
+
+## V0.8.10 — Les instruments retrouvent leur place sur scène {#v0810}
+
+13 octobre 2026.
+
+- Plus de place pour les musiciens sur scène : les cartes sont abaissées et les personnages légèrement remontés, pour laisser leurs instruments visibles.
+- La hauteur de la scène et la compensation des mains sont ajustées ensemble : cartes au même ratio, textes lisibles et public entier à l’écran.
+- Vérification des huit instruments, des mains de cinq cartes, des anciennes grilles à trois rangées et du format 1280 × 720.
+- Les parties et les réglages manuels de disposition sont conservés.
+
+## V0.8.9 — Tempo doré au curseur et ciblage vibrant {#v089}
+
+13 octobre 2026.
+
+L’**arc de tempo suit maintenant le curseur**, à l’endroit où tu vises, plutôt que de rejoindre la jauge. Il est **jaune doré**; le vert reste associé aux actions et à l’énergie, le rose à la conquête.
+
+- La pointe suit les petits mouvements sur une même cible, à la souris comme au doigt. Les cartes mixtes gardent un arc rose vers le spectateur et un arc jaune vers le point visé.
+- Le grand rectangle de ciblage collectif est remplacé par une **lueur et des ondes lumineuses autour du public**. Les cibles individuelles ont un halo, avec leurs personnages et leurs barres toujours lisibles.
+- Le tooltip de tempo, les indications de gain ou de dépense et l’éclairage de la salle utilisent la même teinte dorée. L’énergie conserve son vert menthe.
+- Le suivi réutilise l’arc et la prévision déjà calculés. Déplacer le curseur ne relance pas la simulation du show.
+- Les pulsations restent limitées à la visée et s’arrêtent en mode effets réduits. Annuler la visée ne dépense aucune ressource.
+
+Les règles, les coûts et les sauvegardes sont inchangés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.9**.
+
+## V0.8.8 — Aucun popup de niveau pendant le show {#v088}
+
+13 octobre 2026.
+
+La grande notification **Niveau supérieur !** ne s’ouvre plus pendant la vue du show, **y compris au bilan et entre deux groupes**. Elle attend la fin de la soirée et le retour dans le quartier.
+
+- Une prestation marquée « terminée » ne suffit plus à débloquer le popup si la soirée est encore ouverte.
+- Le blocage reste actif après rechargement et si tu consultes le quartier avant la fin de la soirée. Il couvre aussi les répétitions et leur écran de résultat.
+- L’XP et les améliorations gagnées sont conservées. Masquer le popup pendant le show ne consomme ni ne reporte définitivement les récompenses; elles sont annoncées ensuite.
+- L’ouverture manuelle d’une amélioration reste bloquée pendant une prestation active.
+
+Le problème venait d’un contrôle limité au statut de la prestation, sans vérifier la soirée ni la vue encore affichée. Les gains d’XP, les niveaux, les decks et les sauvegardes restent inchangés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.8**.
+
+## V0.8.7 — Arc vert de tempo et prévision près du curseur {#v087}
+
+13 octobre 2026.
+
+La visée montre maintenant un **arc vert vers la jauge de tempo** pour les cartes qui en donnent. L’arc rose reste destiné à la conquête des spectateurs. Une carte qui combine puissance et tempo affiche les deux.
+
+- Les cartes de tempo et de soutien comme Pulsation ou Roulement ont un arc même lorsqu’elles ne touchent directement aucun spectateur.
+- L’arc de tempo peut rejoindre la jauge en bas à gauche, en dehors de la scène. Les cibles invalides ont la couleur d’avertissement prévue.
+- La prévision des effets revient **près du curseur**, décalée pour laisser visible le personnage visé et rester dans l’écran. Elle suit les mouvements sans attendre un changement de cible.
+- Le contenu de la prévision reste en cache tant que carte, cible et état du show sont identiques; déplacer la boîte ne relance pas la simulation.
+- La scène n’a plus de marge réservée pour l’ancien panneau fixe de visée. Les détails d’une carte au simple survol et l’inspection au clavier restent accessibles sur le côté.
+
+Le panneau fixe de prévision avait été introduit en v0.8.3; l’absence d’arc sur les cartes de tempo venait d’une visée fondée seulement sur les spectateurs directement touchés. Les règles et les sauvegardes restent inchangées. Recharge le serveur local avec **Ctrl+F5** pour afficher **v0.8.7**.
+
+## V0.8.6 — Énergie et tempo à gauche, avec du juice {#v086}
+
+13 octobre 2026.
+
+L’**énergie et le tempo sont maintenant regroupés en bas à gauche** du show, avec de gros chiffres, des segments lumineux et leurs propres couleurs : vert menthe pour l’énergie, doré pour le tempo. Le gros bouton **Fin du tour** reste en bas à droite.
+
+- Chaque gain et dépense fait réagir la jauge, ses chiffres et les segments concernés. Un **+ / −** visible indique la variation réelle, y compris près du maximum de tempo.
+- Le tempo plein brille davantage; les segments s’éteignent quand il est consommé. L’énergie se recharge visiblement au début du tour suivant.
+- Le haut est allégé : énergie et tempo ne sont plus répétés dans l’en-tête.
+- L’espace nécessaire est réservé sous le public. Les deux blocs restent séparés sur mobile; sur les écrans les plus étroits, les ressources passent au-dessus du bouton.
+- Les animations sont brèves et se déclenchent seulement quand les valeurs changent. Les effets réduits conservent les chiffres et les indications de gain ou dépense sans mouvement.
+
+Les règles, les coûts et les sauvegardes sont conservés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.6**.
+
+## V0.8.5 — La fiche garde sa position entre les musiciens {#v085}
+
+13 octobre 2026.
+
+Le panneau de droite **conserve sa position de défilement quand tu changes de musicien**. Tu peux comparer leurs fiches sans revenir en haut ni retrouver une ancienne position propre à chaque personnage.
+
+- La position courante est gardée à la première ouverture d’un autre musicien comme lorsque tu reviens sur une fiche déjà consultée.
+- Si la nouvelle fiche est plus courte, le défilement s’arrête naturellement en bas de cette fiche.
+- Les mises à jour du quartier continuent de stabiliser les champs en cours de modification. Le comportement est aussi vérifié à la réouverture de la fiche sur mobile.
+
+Aucun changement aux personnages, à l’XP ou aux sauvegardes. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.5**.
+
+## V0.8.4 — Des niveaux visibles et une vraie célébration {#v084}
+
+13 octobre 2026.
+
+Le niveau des musiciens est désormais visible directement dans la liste du quartier, avec une petite barre d’XP. Une **grande notification de montée de niveau** affiche leur portrait, leur nom et leur nouveau niveau.
+
+- La notification reste affichée jusqu’à ce que tu choisisses l’amélioration ou que tu la reportes. Elle ne disparaît pas comme un message temporaire.
+- Le bouton **Choisir l’amélioration** ouvre directement le menu du musicien. Le quartier attend pendant ton choix.
+- Les musiciens ayant une amélioration disponible sont mis en évidence dans la liste, avec un bouton d’accès direct. Fermer la notification conserve leurs choix.
+- Plusieurs niveaux du même musicien sont regroupés. Quand plusieurs musiciens progressent, leurs notifications passent à la suite.
+- Les notifications reportées restent fermées après un rechargement. Elles ne couvrent pas un show en cours; les niveaux gagnés au spectacle sont annoncés au bilan.
+- Le niveau, l’XP et l’accès aux améliorations de la fiche se mettent maintenant à jour pendant la pratique, sans devoir rouvrir le personnage.
+
+Présentation vérifiée sur ordinateur et mobile, avec une vraie montée de niveau en pratique et une montée de niveau en show. Les gains d’XP, les seuils et les récompenses restent inchangés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.4**.
+
+## V0.8.3 — La prévision sur le côté, la salle dégagée {#v083}
+
+13 octobre 2026.
+
+La boîte de prévision des cartes reste désormais **sur le côté droit de la salle**. Elle ne se place plus autour de la souris ou devant les spectateurs.
+
+- La position reste fixe lorsque tu passes d’un spectateur à un autre, que la cible soit valide ou invalide.
+- Un seul panneau apparaît pendant le glisser-déposer : l’aperçu de carte en double est masqué.
+- Sur ordinateur, la salle utilise ses marges ou prévoit un espace latéral avant de commencer à viser. Le panneau ne recouvre pas les musiciens, les cartes ou le public dans les formats testés de 1024 à 1920 px.
+- La boîte prend la hauteur réelle de son contenu. Les indications restent disponibles pour les effets qui ciblent tout le public.
+
+Les règles, les sauvegardes et les calculs de prévision sont conservés. Recharge le jeu local avec **Ctrl+F5** pour afficher **v0.8.3**.
+
+## V0.8.2 — Des cartes lisibles et mieux proportionnées {#v082}
+
+13 octobre 2026.
+
+Les cartes du show sont plus grandes et leur texte retrouve une place lisible : coût dans le coin, icône en haut, titre centré, règles agrandies et cible au bas de la carte. Le même format 5:7 est utilisé en main, en aperçu, dans les decks et dans les choix d’amélioration.
+
+- La taille de base des cartes en main augmente de 32 %. Les mains par défaut s’adaptent aussi lorsque la salle est réduite pour faire entrer le public.
+- Les descriptions longues sont conservées intégralement. Les couleurs du texte secondaire sont plus contrastées et l’ancienne petite bande d’illustration disparaît.
+- Le placement des musiciens, des mains et des rangées réserve la place des cartes et des barres de conquête. Les anciens spectacles à trois rangées gardent leurs voisins et leurs règles.
+- Les vérifications de composition contrôlent désormais la taille réelle du texte, les titres et descriptions des cartes de départ et améliorées, ainsi que les barres du public, notamment en 1280 × 720.
+
+Les sauvegardes et les règles de jeu sont conservées. Sur le serveur local, recharge le jeu avec **Ctrl+F5** pour afficher la version **0.8.2**.
+
+## V0.8.1 — BandLive plus fluide {#v081}
+
+13 octobre 2026.
+
+- BandLive plus fluide : les positions des personnages sont mesurées au changement de mise en page, puis animées directement dans la scène sans recalculer le document à chaque image.
+- La preview de carte est réutilisée tant que la carte, la cible et l’état du show restent identiques. Elle est recalculée immédiatement au changement de cible; les règles et les résultats sont conservés.
+- La danse décorative utilise au plus 30 images par seconde. Les commandes et les effets gardent leur propre cadence. La résolution du rendu suit la taille réellement affichée; la scène cesse de dessiner quand elle est masquée, hors écran ou en mode mouvements réduits.
+- Les panneaux du quartier et l’ancienne scène ne sont plus recalculés pendant BandLive.
+- Nouveau numéro et nouvelles adresses de fichiers pour charger ensemble les corrections de fluidité et la composition récente : scène centrée, bouton de fin de tour en bas à droite et programmation sous le premier écran.
+- Sauvegardes, niveaux, decks, récompenses et spectacles en cours conservés. Recharger la page pour prendre cette version en compte.
+
+## V0.8.0 — BandLive, conquêtes et progression individuelle {#v080}
+
+12 octobre 2026.
+
+- BandLive devient le moteur de tous les nouveaux shows et essais : jams, longues réservations et formations jusqu’à 24 musiciens sont acceptées. Les anciens shows gardent leurs snapshots.
+- Scène centrée et adaptée à la hauteur, choix des tounes en overlay avec aperçu du public, cartes communes au ratio 5:7, fiches et portraits réutilisés, gros bouton de fin de tour avec énergie en bas à droite.
+- Composition rapprochée de la maquette : largeur de scène maîtrisée, bandeau resserré et programmation sous le premier écran. Les nouveaux shows affichent jusqu’à six colonnes sur deux rangées; les shows commencés conservent leur grille.
+- Les personnages dansent sans déplacer leur zone de survol. La preview d’effet reste ancrée tant que la cible reste la même; elle se replace lors d’un changement de cible, d’un scroll ou de la taille de fenêtre.
+- Trois pouvoirs de conquête paramétrés : Onde de choc, Projecteur et Chœur du public. Réactions immédiates, consommées jusqu’au tour suivant; preview des conditions et des chaînes. Rétroaction sur les conquêtes, réactions, pouvoirs, tempo, soutiens et finale.
+- Musiciens et ordre variés par graine, nouvelle graine proposée par défaut, deux chansons pour un band initial ou trois à quatre réparties entre plusieurs bands.
+- Pratique solo et collective : 1 XP par 15 minutes jouées. Pratique collective : +1 coordination par cycle de 15 minutes à deux ou plus. L’XP des shows est attribuée aux participants; formation, chanson terminée, premier show et public entièrement conquis donnent aussi de l’XP.
+- Niveaux plus rapides au départ (80, 180, 360, 650, 1 100 XP cumulés). Chaque niveau donne un échange de carte persistant, accessible avec « Améliorer le deck » dans la fiche, le groupe ou au bilan. Un niveau gagné en pratique se choisit immédiatement depuis le perso; le bilan propose seulement les niveaux gagnés dans ce show. Le choix affiche les cartes avant/après; le quartier attend pendant ce choix. Ce système remplace l’échange automatique de fin de show; les anciennes récompenses restent disponibles.
+- Le lancement local utilise `npm start`, avec les bons types JavaScript sous Windows. Les notes de version restent accessibles pendant BandLive.
+- Un HTML autonome permet les essais entre amis avec des sauvegardes séparées. Le rythme de progression et l’équilibrage des nouveaux pouvoirs restent à éprouver pendant ces essais. Aucun bonus de compétence supplémentaire n’est accordé automatiquement par le niveau.
+
 ## V0.7.21 — Réglages après un spectacle terminé {#v0721}
 
 12 octobre 2026.

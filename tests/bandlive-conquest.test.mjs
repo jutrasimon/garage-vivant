@@ -6,7 +6,7 @@ import {createConcertReplay,beginBandLiveConcert,commitBandLiveConcert} from '..
 import {completePerformance} from '../dist/life.mjs';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
 function fixture(count=12,instrument='guitar'){
- const world=createWorld(301,4),g=createBandLive({persistentReactions:false,people:world.people.map(p=>({...p,instrument})),songs:[{id:'punk',title:'Le rappel',style:'Punk',turns:3}],seed:9,audienceSize:count});
+ const world=createWorld(301,4),g=createBandLive({rulesVersion:1,persistentReactions:false,people:world.people.map(p=>({...p,instrument})),songs:[{id:'punk',title:'Le rappel',style:'Punk',turns:3}],seed:9,audienceSize:count});
  chooseSong(g,'punk');for(const f of g.fans){f.max=f.hp=100;f.favorite='Punk';f.effect='spotlight';}return g;
 }
 function note(g,instrument){
@@ -18,13 +18,13 @@ function kill(g,index,effect){g.fans[index].effect=effect;g.fans[index].hp=1;ret
 
 test('Every new spectator has exactly one seeded effect; distribution is balanced without changing card RNG',()=>{
  const w=createWorld(302,4),options={people:w.people,songs:[{id:'x',title:'X',style:'Punk'}],seed:12},before=structuredClone(w);
- const legacy=createBandLive({persistentReactions:false,...options,conquestEffects:false});
+ const legacy=createBandLive({rulesVersion:1,persistentReactions:false,...options,conquestEffects:false});
  for(const audienceSize of [3,5,8,10,12]){
-  const g=createBandLive({persistentReactions:false,...options,audienceSize});assert.equal(g.conquestVersion,1);assert(g.fans.every(f=>Object.hasOwn(CONQUEST_EFFECTS,f.effect)));
-  assert.deepEqual(g.deck,legacy.deck);assert.equal(g.rng,legacy.rng);assert.deepEqual(g,createBandLive({persistentReactions:false,...options,audienceSize}));assert.deepEqual(restoreBandLive(g),g);
+  const g=createBandLive({rulesVersion:1,persistentReactions:false,...options,audienceSize});assert.equal(g.conquestVersion,1);assert(g.fans.every(f=>Object.hasOwn(CONQUEST_EFFECTS,f.effect)));
+  assert.deepEqual(g.deck,legacy.deck);assert.equal(g.rng,legacy.rng);assert.deepEqual(g,createBandLive({rulesVersion:1,persistentReactions:false,...options,audienceSize}));assert.deepEqual(restoreBandLive(g),g);
   const counts=Object.keys(CONQUEST_EFFECTS).map(k=>g.fans.filter(f=>f.effect===k).length);assert(Math.max(...counts)-Math.min(...counts)<=1);
  }assert.deepEqual(w,before);
- const types=new Set();for(let seed=1;seed<30;seed++)createBandLive({persistentReactions:false,...options,seed:seed*7919}).fans.forEach(f=>types.add(f.effect));assert.equal(types.size,5);
+ const types=new Set();for(let seed=1;seed<30;seed++)createBandLive({rulesVersion:1,persistentReactions:false,...options,seed:seed*7919}).fans.forEach(f=>types.add(f.effect));assert.equal(types.size,5);
 });
 test('Shock is orthogonal without row wrapping, and wave touches only its own row',()=>{
  const g=fixture();assert.equal(audienceColumns(g),4);g.fans[3].effect='shock';assert.deepEqual(conquestTargets(g,g.fans[3]).map(f=>f.id),['f2','f7']);
@@ -54,7 +54,7 @@ test('Chorus uses the ordinary style bonus once and expires between passages, ev
 test('Collective card snapshots all its hits before conquest bonuses; raw area damage ignores card buffs',()=>{
  const g=fixture(12,'voice');g.fans[0].hp=1;g.fans[0].effect='spotlight';const r=playCard(g,note(g,'voice'),'audience');assert(r.ok);assert.equal(g.fans[1].hp,93);assert.equal(g.fans[1].spotlight,true);
  const h=fixture();h.boost=5;h.tempo=10;h.fans[1].spotlight=true;h.fans[1].chorusStyle='Punk';kill(h,0,'shock');assert.equal(h.fans[1].hp,97);assert.equal(h.boost,0);
- const all=fixture(12,'voice');all.fans.forEach(f=>{f.hp=1;f.effect='shock';});const done=playCard(all,note(all,'voice'),'audience');assert.equal(done.effects.length,12);assert.equal(all.phase,'won');
+ const all=fixture(12,'voice');all.fans.forEach(f=>{f.hp=1;f.effect='shock';f.effectValue=3;});const done=playCard(all,note(all,'voice'),'audience');assert.equal(done.effects.length,12);assert.equal(all.phase,'won');
 });
 test('Finale triggers area chains before boredom; preview matches execution including chained hits',()=>{
  const g=fixture();endTurn(g);endTurn(g);g.fans[0].hp=3;g.fans[0].effect='shock';g.fans[1].hp=6;g.fans[1].effect='wave';endTurn(g);assert.equal(g.fans[1].hp,0);assert(g.events.some(e=>e.type==='conquest'&&e.fanId==='f1'));
@@ -67,6 +67,6 @@ test('Legacy shows and replays keep their original rules; new effects and status
  kill(h,0,'spotlight');const copy=restoreBandLive(h);const id=note(h),id2=note(copy);playCard(h,id,'f1');playCard(copy,id2,'f1');assert.deepEqual(copy,h);
 });
 test('Calendar victory by a chain applies the real concert result once and exports correctly',()=>{
- const {world}=preparedConcert(),{game:g}=beginBandLiveConcert(world);chooseSong(g,'song-1');g.fans.forEach(f=>{f.hp=1;f.effect='wave';});g.fans[0].effect='shock';g.fans[4].effect='shock';
+ const {world}=preparedConcert(),{game:g}=beginBandLiveConcert(world);chooseSong(g,'song-1');g.fans.forEach(f=>{f.hp=1;f.effect='shock';f.effectValue=3;});g.fans[0].effect='shock';g.fans[4].effect='shock';
  playCard(g,note(g),'f0');assert.equal(g.phase,'won');assert(commitBandLiveConcert(world,completePerformance));assert.equal(world.showHistory.length,1);assert.deepEqual(restore(world),world);assert(!commitBandLiveConcert(world,completePerformance));
 });
