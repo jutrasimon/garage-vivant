@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.8.13
+# Garage vivant · v0.8.14
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0813) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0814) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 

@@ -1,0 +1,58 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {mkdir,readFile} from 'node:fs/promises';
+import {chromium} from 'playwright';
+import {preparedConcert} from './bandlive-concert-helpers.mjs';
+import {RELEASE_VERSION} from '../dist/release.mjs';
+const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});let browser;
+try{
+ const url=await new Promise((resolve,reject)=>{let output='';const timer=setTimeout(()=>reject(Error('Serveur indisponible')),5000);child.on('error',reject);child.stdout.on('data',chunk=>{output+=chunk;const m=output.match(/http:\/\/127\.0\.0\.1:\d+\//);if(m){clearTimeout(timer);resolve(m[0]);}});});
+ browser=await chromium.launch();await mkdir('test-results',{recursive:true});
+ for(const [width,height] of [[1898,900],[390,844]]){
+  const page=await browser.newPage({viewport:{width,height},hasTouch:width<500}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(world=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(world));window.copiedLayout='';Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedLayout=text;}}});},preparedConcert({large:true,instruments:['drums','keys','percussion','guitar','sax','voice']}).world);
+  await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
+  const saved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game),before=await saved();
+  if(width>500){
+   const signature='scene-v2/'+before.actors.map(a=>a.id+':'+a.instrument).join('|')+'/'+before.fans.length+'/'+before.gridColumns;
+   const profile={actors:{},fans:{f0:{dx:5,dy:0}},hands:{[before.actors[0].id]:{scale:.85,fan:33,dx:8,dy:0}}};
+   await page.evaluate(({signature,profile})=>localStorage.setItem('garage-vivant-bandlive-disposition-v1',JSON.stringify({[signature]:profile})),{signature,profile});await page.reload();await page.locator('.bl-render-ready').waitFor();await page.locator('#bl-layout').click();await page.locator('#bl-layout-hand').selectOption(before.actors[0].id);assert.equal(await page.locator('#bl-layout-scale').inputValue(),'85','Old per-hand settings remain usable without a sizes field');await page.locator('#bl-layout-export').click();assert.deepEqual(JSON.parse(await page.locator('#bl-layout-code').inputValue()).profile,profile,'Export preserves legacy positions and hand settings');await page.locator('#bl-layout-reset').click();await page.locator('#bl-layout-close').click();
+  }
+  await page.locator('#bl-layout').click();const panel=page.locator('.bl-layout-tools');assert(await panel.isVisible());assert.equal(await page.locator('#main').evaluate(el=>el.scrollTop),0,'Opening the floating editor returns to the scene');
+  const set=async(selector,value,commit=true)=>{await page.locator(selector).evaluate((el,value)=>{el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));},String(value));if(commit)await page.locator(selector).dispatchEvent('change');};
+  const normalized=selector=>page.locator(selector).first().evaluate(el=>el.getBoundingClientRect().width/Number(el.closest('.bl-world').dataset.scale));
+  const musician='[data-bl-layout-size="musicians"]';
+  if(width<500){const slider=await page.locator(musician).boundingBox();await page.touchscreen.tap(slider.x+slider.width*.25,slider.y+slider.height/2);assert.notEqual(await page.locator(musician).inputValue(),'100','The mobile slider reacts to a real finger tap');await page.locator('#bl-layout-undo').click();}
+  await set(musician,110,false);await set(musician,120,false);assert(Math.abs(await normalized('[data-bl-actor]')-132.5*1.2)<.1,'Musician size changes immediately before releasing its slider');await page.locator(musician).dispatchEvent('change');
+  await page.locator('#bl-layout-undo').click();assert.equal(await page.locator(musician).inputValue(),'100','One undo restores the whole slider gesture');
+  await set(musician,120);await set('[data-bl-layout-size="instruments"]',130);await set('[data-bl-layout-size="spectators"]',125);await set('#bl-layout-scale',90);await set('#bl-layout-fan',34);
+  const actors=before.actors;await page.locator('#bl-layout-hand').selectOption(actors[1].id);await set('#bl-layout-scale',110);await page.locator('#bl-layout-hand').selectOption('');assert(await page.locator('#bl-layout-mixed').isVisible());
+  assert(Math.abs(await normalized('[data-bl-fan]')-86*1.25)<.1,'Spectators have scaled hitboxes');assert.equal(await page.locator('[data-bl-actor]').first().getAttribute('data-bl-instrument-scale'),'1.56','Instrument size multiplies the musician size for the 3D renderer');
+  const slots=await page.locator('[data-bl-fan]').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect(),slot=el.closest('.bl-fan-wrap').getBoundingClientRect();return r.left>=slot.left&&r.right<=slot.right&&r.top>=slot.top&&r.bottom<=slot.bottom;}));assert(slots.every(Boolean),'Resized spectators keep their protected neighbour slots');
+  const labels=await page.locator('[data-bl-fan]').evaluateAll(els=>els.map(el=>{const top=el.querySelector('.bl-intent').getBoundingClientRect(),bar=el.querySelector('.bl-resistance').getBoundingClientRect(),slot=el.closest('.bl-fan-wrap').getBoundingClientRect();return top.top>=slot.top-1&&bar.bottom<=slot.bottom+1;}));assert(labels.every(Boolean),'Resized intentions and health bars stay clear of the next row and the bottom of the scene');
+  if(width>500){
+   const hand=await page.locator('.bl-hand:has([data-bl-card])').first().boundingBox();await page.mouse.move(hand.x+hand.width/2,hand.y+35);await page.mouse.down();await page.mouse.move(hand.x+hand.width/2-25,hand.y+45,{steps:4});await page.mouse.up();
+   const fan=await page.locator('[data-bl-fan]').first().boundingBox();await page.mouse.move(fan.x+fan.width/2,fan.y+fan.height/2);await page.mouse.down();await page.mouse.move(fan.x+fan.width/2+10,fan.y+fan.height/2,{steps:4});await page.mouse.up();
+  }
+  await page.locator('#bl-layout-export').click();const code=page.locator('#bl-layout-code'),exported=JSON.parse(await code.inputValue());
+  assert.equal(exported.format,'garage-vivant-bandlive-layout');assert.equal(exported.release,RELEASE_VERSION);assert.deepEqual(exported.viewport,{width,height});assert.deepEqual(exported.sizes,{musicians:1.2,instruments:1.3,spectators:1.25});assert.equal(exported.musicians[1].hand.scale,1.1);assert.equal(exported.musicians[0].hand.scale,.9);assert.equal(exported.musicians[0].hand.fan,34);assert.equal(exported.spectators.length,12);assert(exported.spectators.every((f,i)=>f.id===before.fans[i].id&&f.row===Math.floor(i/6)&&f.column===i%6),'Export keeps the real neighbour order');
+  if(width>500){assert(exported.profile.fans.f0.dx>0,'Export includes the moved spectator');assert(Object.values(exported.profile.hands).some(h=>h.dx<0),'Export includes the moved card pack');}
+  await panel.evaluate(el=>el.scrollTop=0);await page.mouse.move(5,5);await page.screenshot({path:`test-results/bandlive-layout-editor-${width}.png`});
+  await page.locator('#bl-layout-copy').click();assert.deepEqual(JSON.parse(await page.evaluate(()=>window.copiedLayout)),exported,'Clipboard contains the complete current code');
+  const downloadPromise=page.waitForEvent('download');await page.locator('#bl-layout-download').click();const download=await downloadPromise;assert.equal(download.suggestedFilename(),'BandLive-disposition.json');assert.deepEqual(JSON.parse(await readFile(await download.path(),'utf8')),exported,'Downloaded JSON matches copied code');
+  await page.evaluate(()=>{navigator.clipboard.writeText=async()=>{throw Error('Clipboard denied');};});await page.locator('#bl-layout-copy').click();assert.equal(await code.evaluate(el=>el.selectionEnd-el.selectionStart),(await code.inputValue()).length,'Manual-copy fallback selects the full code');
+  await page.locator('#bl-layout-close').click();await page.mouse.move(5,5);await page.screenshot({path:`test-results/bandlive-layout-custom-${width}.png`});assert.deepEqual(await saved(),before,'Editing and exporting spend no card, energy, tempo or reward');
+  if(width>500){
+   const fronts=await page.locator('.bl-hand [data-bl-card]:last-child').evaluateAll(els=>els.map(el=>el.dataset.blCard)),id=fronts.find(id=>before.cards.some(c=>c.id===id&&c.kind==='note'));assert(id);
+   const source=await page.locator(`[data-bl-card="${id}"]`).boundingBox(),fan=await page.locator('[data-bl-fan="f0"]').boundingBox();await page.mouse.move(source.x+source.width/2,source.y+source.height/2);await page.mouse.down();await page.mouse.move(source.x+source.width/2,source.y+source.height/2+25,{steps:3});await page.mouse.move(fan.x+fan.width/2,fan.y+fan.height/2,{steps:5});await page.locator('.drag-card-feedback.has-target').waitFor();
+   const tip=await page.locator('.drag-card-feedback').boundingBox();assert(tip.x+tip.width<=fan.x||tip.x>=fan.x+fan.width||tip.y+tip.height<=fan.y||tip.y>=fan.y+fan.height,'The effect preview protects the resized target');assert.equal(await page.locator('.bl-aim.visible').count(),1,'Aiming still uses the resized scene');await page.mouse.move(5,5);await page.mouse.up();assert.deepEqual(await saved(),before,'Cancelling with custom sizes changes no game state');
+  }
+  await page.reload();await page.locator('.bl-render-ready').waitFor();await page.locator('#bl-layout').click();assert.equal(await page.locator(musician).inputValue(),'120');await page.locator('#bl-layout-export').click();assert.deepEqual(JSON.parse(await code.inputValue()).profile,exported.profile,'Sizes and per-hand overrides survive reload');assert.deepEqual(await saved(),before);
+  // Exercise the extremes: every card pack and enlarged fan stays in its area.
+  await page.locator('#bl-layout-reset').click();
+  await set(musician,140);await set('[data-bl-layout-size="instruments"]',160);await set('[data-bl-layout-size="spectators"]',140);await set('#bl-layout-scale',165);await set('#bl-layout-fan',60);
+  const geometry=await page.locator('.bl-world').evaluate(world=>{const r=world.getBoundingClientRect(),hands=[...world.querySelectorAll('.bl-hand:has([data-bl-card])')].map(el=>el.getBoundingClientRect()),fans=[...world.querySelectorAll('[data-bl-fan]')].map(el=>el.getBoundingClientRect());return {handsInside:hands.every(h=>h.left>=r.left&&h.right<=r.right+1),gap:Math.min(...fans.map(f=>f.top))-Math.max(...hands.map(h=>h.bottom)),separate:hands.every((h,i)=>hands.slice(i+1).every(q=>h.right<=q.left||q.right<=h.left||h.bottom<=q.top||q.bottom<=h.top))};});assert(geometry.handsInside&&geometry.separate&&geometry.gap>=0,'Extreme size settings still separate the complete hands from each other and the public: '+JSON.stringify(geometry));
+  await page.locator('#bl-layout-reset').click();assert.equal(await page.locator(musician).inputValue(),'100');assert.equal(await page.locator('[data-bl-layout-size="spectators"]').inputValue(),'100');assert.deepEqual(await saved(),before);assert.deepEqual(errors,[]);await page.close();
+ }
+ console.log('Layout editor passed: immediate sizes, whole-gesture undo, shared/per-hand sizes, protected fan slots, clipboard/download/fallback, complete export, reload, unchanged concert, extreme sizes and mobile panel.');
+}finally{await browser?.close();child.kill();}

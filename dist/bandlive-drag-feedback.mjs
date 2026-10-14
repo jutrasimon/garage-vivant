@@ -1,4 +1,4 @@
-import {conquestPreviewHTML,updateConquestPreview} from './bandlive-conquest-preview.mjs?v=0.8.13';
+import {conquestPreviewHTML,updateConquestPreview} from './bandlive-conquest-preview.mjs?v=0.8.14';
 // Follow the pointer while protecting the character being aimed at.
 export function placeDragFeedback({pointer,width,height,bounds,target,preferredSide}) {
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));

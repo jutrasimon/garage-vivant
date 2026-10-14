@@ -1,3 +1,7 @@
+# V0.8.14 — 13 octobre 2026
+
+Ta disposition, tes tailles, ton code à partager. [Notes complètes](./versions.md#v0814).
+
 # V0.8.13 — 13 octobre 2026
 
 Des mains séparées et du tempo en musique. [Notes complètes](./versions.md#v0813).
