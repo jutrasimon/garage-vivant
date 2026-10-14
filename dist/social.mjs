@@ -1,7 +1,7 @@
 // Legacy V6 migration only. Live V7 rules are in v7.mjs.
-import { ACTIONS } from "./engine.mjs?v=0.8.14";
-import { upgradeCalendar } from "./calendar.mjs?v=0.8.14";
-import { editTokens, coolRelationV7 } from "./v7.mjs?v=0.8.14";
+import { ACTIONS } from "./engine.mjs?v=0.8.15";
+import { upgradeCalendar } from "./calendar.mjs?v=0.8.15";
+import { editTokens, coolRelationV7 } from "./v7.mjs?v=0.8.15";
 export function initializeV6Person(p) {
   p.bag = null;
   p.memoryArchive = [];

@@ -1,3 +1,7 @@
+# V0.8.15 — 13 octobre 2026
+
+Ciblage et réactions cohérents. [Notes complètes](./versions.md#v0815).
+
 # V0.8.14 — 13 octobre 2026
 
 Ta disposition, tes tailles, ton code à partager. [Notes complètes](./versions.md#v0814).
