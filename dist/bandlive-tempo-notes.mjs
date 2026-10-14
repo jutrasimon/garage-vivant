@@ -1,4 +1,4 @@
-import {TEMPO_ICON_PATH} from './bandlive-resources.mjs?v=0.8.13';
+import {TEMPO_ICON_PATH} from './bandlive-resources.mjs?v=0.8.14';
 
 // One bounded decorative layer per render; pointer movement only toggles its class.
 export function tempoNotesHTML() {

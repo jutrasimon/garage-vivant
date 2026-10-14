@@ -1,5 +1,5 @@
-import * as T from './bandlive-three.mjs?v=0.8.13';
-import {spotlightVertices} from './bandlive-spotlight-geometry.mjs?v=0.8.13';
+import * as T from './bandlive-three.mjs?v=0.8.14';
+import {spotlightVertices} from './bandlive-spotlight-geometry.mjs?v=0.8.14';
 
 export function createMinuitRenderer({getReducedEffects}){
   const canvas=document.createElement('canvas');canvas.className='bl-scene-canvas';canvas.setAttribute('aria-hidden','true');
@@ -59,7 +59,7 @@ export function createMinuitRenderer({getReducedEffects}){
     const area=width,unit=width/(camera.right-camera.left),edge=floorPoint(area/2,275,.44);stage.position.set(edge.x,0,edge.z+1.79);stage.scale.x=(area-60)/(17*unit);
     const left=floorPoint(40,20,4.18),right=floorPoint(area-40,20,4.18);rail.position.copy(left).lerp(right,.5);rail.scale.x=right.x-left.x;
     bulbs.forEach((b,i)=>b.position.copy(floorPoint(50+(area-100)*i/11,46,3.5)));
-    lamps.forEach((l,i)=>{const x=parseFloat(l.entry.element.style.left)||area/2;l.anchor=floorPoint(x,22+Math.floor(i/6)*300,4.1);l.fixture.position.copy(l.anchor);});
+    lamps.forEach((l,i)=>{const x=parseFloat(l.entry.element.style.left)||area/2;l.anchor=floorPoint(x,22+Math.floor(i/6)*Number(host.dataset.rowStride||300),4.1);l.fixture.position.copy(l.anchor);});
     // Read geometry once after layout; animation never writes to or reads the DOM.
     const rect=host.getBoundingClientRect(),crowd=host.querySelector('.bl-audience-viewport').getBoundingClientRect();
     const measurements=entries.map(p=>p.image.getBoundingClientRect());
@@ -68,6 +68,7 @@ export function createMinuitRenderer({getReducedEffects}){
       p.base=floorPoint(x,y,plane);p.foot=floorPoint(x,y+r.height/scale*.34,p.actor?.6:0);p.foot.y-=.035;
       p.axisX=floorPoint(x+1,y,plane).sub(p.base);p.axisY=floorPoint(x,y+1,plane).sub(p.base);
       p.sprite.scale.set(r.width/scale/unit,r.height/scale/unit,1);p.shadow.scale.setScalar(r.width/scale/unit*.30);
+      if(p.instrument)p.instrument.scale.setScalar(1.25*Number(p.element.dataset.blInstrumentScale||1));
       p.sprite.visible=p.shadow.visible=p.actor||r.top+r.height/2>crowd.top+10&&r.top+r.height/2<crowd.bottom-10;
     }
     lastPaint=-Infinity;

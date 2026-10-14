@@ -1,5 +1,16 @@
 # Notes de version
 
+## V0.8.14 — Ta disposition, tes tailles, ton code à partager {#v0814}
+
+13 octobre 2026.
+
+- L’outil **Disposition** ouvre maintenant un panneau latéral : règle les tailles des **musiciens**, des **instruments** et des **spectateurs** avec un aperçu immédiat.
+- Pour les cartes, choisis **Tout le groupe** ou une main précise, puis ajuste sa taille et son éventail. Les pourcentages affichent les réglages réellement appliqués.
+- **Exporter ma disposition** affiche un code JSON complet. Utilise **Copier le code** pour le coller dans une conversation ou **Télécharger .json** pour transmettre le fichier.
+- L’export contient les tailles, les positions, les réglages des mains et les dimensions de l’écran, sans exporter la sauvegarde de la partie.
+- Les réglages restent dans le navigateur et les anciens placements sont conservés. **Annuler** revient avant le dernier déplacement ou réglage; **Réinitialiser** retrouve les tailles et positions par défaut.
+- La scène adapte son espace aux grandes tailles. Les cases du public conservent leur ordre et la place nécessaire aux intentions et aux barres de conquête. Aucun changement aux cartes jouées, aux ressources, à l’XP ou aux récompenses.
+
 ## V0.8.13 — Des mains séparées et du tempo en musique {#v0813}
 
 13 octobre 2026.

@@ -1,24 +1,25 @@
-import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.13';
-import {cardFace} from './card-view.mjs?v=0.8.13';
-import {personCard} from './person-card.mjs?v=0.8.13';
-import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.13';
-import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.13';
-import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.13';
-import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.13';
-import {tempoNotesHTML} from './bandlive-tempo-notes.mjs?v=0.8.13';
-import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.13';
-import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.13';
-import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.13';
-import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.13';
-import {drawMicroBody} from './character-view.mjs?v=0.8.13';
-import {songTurns} from './song-rules.mjs?v=0.8.13';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.13';
-import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.13';
-import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.13';
-import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.13';
-import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.13';
-import {instrumentArt} from './show-view.mjs?v=0.8.13';
-import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.13';
+import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.14';
+import {cardFace} from './card-view.mjs?v=0.8.14';
+import {personCard} from './person-card.mjs?v=0.8.14';
+import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.14';
+import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.14';
+import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.14';
+import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.14';
+import {tempoNotesHTML} from './bandlive-tempo-notes.mjs?v=0.8.14';
+import {SIZE_CONTROLS} from './bandlive-layout-profile.mjs?v=0.8.14';
+import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.14';
+import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.14';
+import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.14';
+import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.14';
+import {drawMicroBody} from './character-view.mjs?v=0.8.14';
+import {songTurns} from './song-rules.mjs?v=0.8.14';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.14';
+import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.14';
+import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.14';
+import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.14';
+import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.14';
+import {instrumentArt} from './show-view.mjs?v=0.8.14';
+import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.14';
 
 const CARD_GLYPHS={guitar:'♬',bass:'↑',drums:'◉',keys:'≋',voice:'♫',sax:'♪',trumpet:'♩',percussion:'◉'};
 const STORAGE='garage-vivant-bandlive-v1';
@@ -67,7 +68,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   const root=document.querySelector('#bandlive-view'),nav=document.querySelector('#bandlive-nav'),toggle=document.querySelector('#bandlive-enabled');
   let enabled=true,game=null,preparing=false,draft={groupId:'',memberIds:null,seed:2040,audienceSize:RULES.minAudience},selectedCard=null,activeCard=null,dragPointer=null,dragPoint=null,dragFrame=null,ghost=null,animation=null,sound=false,storageProblem=false;
   try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){enabled=true;if(saved.draft)draft=saved.draft;if(saved.game)game=restoreBandLive(saved.game);}}catch{notify('La répétition BandLive enregistrée ne peut pas être reprise. Le quartier est disponible.');}
-  const stage=createBandLiveStage({root,getReducedEffects});
+  const stage=createBandLiveStage({root,getReducedEffects,onLayout:syncLayoutTools});
   const aim=createBandLiveAim();
   let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null,previewMemo=null;
   const liveShow=()=>{const s=getWorld().performance;return liveId&&s?.id===liveId&&s.bandLive&&getWorld().showEventId?s:null;};
@@ -161,7 +162,23 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function layoutToolsHTML(){
     if(game.phase!=='play')return '';
-    return `<button id="bl-layout" aria-pressed="${stage.editing}" ${animation?'disabled':''}>${stage.editing?'✓ Terminer la disposition':'✥ Disposition'}</button><div class="bl-layout-tools" ${stage.editing?'':'hidden'}><span>Les cases conservent les voisins.</span><label>Main <select id="bl-layout-hand">${game.actors.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select></label><label>Taille <input id="bl-layout-scale" type="range" min="55" max="165" value="${Math.round((stage.settings(game.actors[0].id).scale??.82)*100)}"></label><label>Éventail <input id="bl-layout-fan" type="range" min="0" max="60" value="${stage.settings(game.actors[0].id).fan??26}"></label><button id="bl-layout-undo">Annuler</button><button id="bl-layout-reset">Placement initial</button></div>`;
+    return `<button id="bl-layout" aria-pressed="${stage.editing}" ${animation?'disabled':''}>${stage.editing?'✓ Terminer la disposition':'✥ Disposition'}</button><section class="bl-layout-tools" aria-label="Disposition de la scène" ${stage.editing?'':'hidden'}>
+      <div class="bl-layout-heading"><strong>✥ Disposition</strong><button id="bl-layout-close" aria-label="Fermer la disposition">✕</button></div>
+      <p>Déplace les personnages et les mains. Ajuste les tailles en direct.</p>
+      <fieldset><legend>Personnages</legend>${Object.entries(SIZE_CONTROLS).map(([key,{label,min,max}])=>`<label>${label}<output data-bl-size-output="${key}">100 %</output><input data-bl-layout-size="${key}" type="range" min="${min}" max="${max}" step="5" value="100"></label>`).join('')}</fieldset>
+      <fieldset><legend>Cartes</legend><label class="bl-layout-hand-choice">Main<select id="bl-layout-hand"><option value="">Tout le groupe</option>${game.actors.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select></label><small id="bl-layout-mixed" hidden>Tailles ou éventails différents · le prochain réglage s’applique à toutes les mains.</small><label>Taille<output id="bl-layout-scale-value"></output><input id="bl-layout-scale" type="range" min="55" max="165" step="1" value="100"></label><label>Éventail<output id="bl-layout-fan-value"></output><input id="bl-layout-fan" type="range" min="0" max="60" value="26"></label></fieldset>
+      <div class="bl-layout-actions"><button id="bl-layout-undo">Annuler</button><button id="bl-layout-reset">Réinitialiser</button></div>
+      <p>Les cases conservent les voisins. Tes réglages restent dans ce navigateur.</p>
+      <button id="bl-layout-export" class="primary">Exporter ma disposition ↗</button><div id="bl-layout-export-panel" hidden><label>Code à me transmettre<textarea id="bl-layout-code" readonly spellcheck="false" aria-label="Code de la disposition"></textarea></label><div class="bl-layout-actions"><button id="bl-layout-copy">Copier le code</button><button id="bl-layout-download">Télécharger .json</button></div></div>
+    </section>`;
+  }
+  function syncLayoutTools(){
+    const panel=root.querySelector('.bl-layout-tools');if(!panel)return;
+    const sizes=stage.sizeSettings();for(const input of panel.querySelectorAll('[data-bl-layout-size]')){const key=input.dataset.blLayoutSize;input.value=Math.round(sizes[key]*100);panel.querySelector(`[data-bl-size-output="${key}"]`).textContent=input.value+' %';}
+    const hand=stage.settings(panel.querySelector('#bl-layout-hand').value);
+    for(const [key,factor,suffix] of [['scale',100,' %'],['fan',1,'°']]){const input=panel.querySelector('#bl-layout-'+key);input.value=Math.round(hand[key]*factor);panel.querySelector('#bl-layout-'+key+'-value').textContent=input.value+suffix;}
+    panel.querySelector('#bl-layout-mixed').hidden=!hand.mixed;
+    if(!panel.querySelector('#bl-layout-export-panel').hidden)panel.querySelector('#bl-layout-code').value=stage.exportCode({commit:false});
   }
   function showHTML(){
     const song=currentSong(game),won=game.phase==='won',lost=game.phase==='lost',finished=won||lost,choosing=game.phase==='choose'&&!animation,live=liveShow();
@@ -183,7 +200,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     previewLayer.replaceChildren(...root.querySelectorAll('[data-bl-preview]'));
     const viewport=root.querySelector('.bl-viewport'),audience=root.querySelector('.bl-audience-viewport');
     if(game&&!preparing){for(const canvas of root.querySelectorAll('[data-bl-cube]')){const actor=canvas.dataset.blCubeType==='actor'?game.actors.find(a=>a.id===canvas.dataset.blCube):game.fans.find(f=>f.id===canvas.dataset.blCube);drawCube(canvas,actor,actor.hp===0);}stage.mount(root.querySelector('.bl-world'),game);aim.attach(root.querySelector('.bl-world'));if(selectedCard)inspection.pin(selectedCard);drawEffects();}
-    if(viewport&&scroll){viewport.scrollLeft=scroll.x;if(audience)audience.scrollTop=scroll.y;}
+    syncLayoutTools();if(viewport&&scroll){viewport.scrollLeft=scroll.x;if(audience)audience.scrollTop=scroll.y;}
     drawEffects();
     if(!game||preparing){stage.mount(null,game);inspection.hide();}
     if(liveShow()&&['won','lost'].includes(game.phase)&&!animation&&lastReport!==game){root.querySelector('.bl-concert-result')?.scrollIntoView({block:'start'});lastReport=game;}
@@ -393,9 +410,12 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   root.addEventListener('click',async event=>{
     if(event.target.closest('[data-bl-style]')&&!selectedCard)return;
     const target=event.target.closest('button,[data-bl-target]');if(!target)return;
-    if(target.id==='bl-layout'){clearDrag();selectedCard=null;pendingChoice=null;stage.toggle();}
-    else if(target.id==='bl-layout-undo')stage.undo();
-    else if(target.id==='bl-layout-reset')stage.reset();
+    if(target.id==='bl-layout'||target.id==='bl-layout-close'){clearDrag();selectedCard=null;pendingChoice=null;stage.toggle();syncLayoutTools();if(stage.editing)root.closest('main')?.scrollTo({top:0});}
+    else if(target.id==='bl-layout-undo'){stage.undo();syncLayoutTools();}
+    else if(target.id==='bl-layout-reset'){stage.reset();syncLayoutTools();}
+    else if(target.id==='bl-layout-export'){stage.commitEdit();root.querySelector('#bl-layout-export-panel').hidden=false;root.querySelector('#bl-layout-code').value=stage.exportCode();}
+    else if(target.id==='bl-layout-copy'){const code=root.querySelector('#bl-layout-code');code.value=stage.exportCode();try{await navigator.clipboard.writeText(code.value);notify('Code de disposition copié. Tu peux me le coller ici.');}catch{code.focus();code.select();notify('Code sélectionné : Ctrl+C pour le copier.');}}
+    else if(target.id==='bl-layout-download'){const code=stage.exportCode(),url=URL.createObjectURL(new Blob([code],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='BandLive-disposition.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
     else if(stage.editing&&target.dataset.blCard)return;
     else if(target.dataset.blRewardActor){rewardChoice.actorId=target.dataset.blRewardActor;delete rewardChoice.slot;delete rewardChoice.kind;render();}
     else if(target.dataset.blRewardSlot!==undefined){rewardChoice.slot=Number(target.dataset.blRewardSlot);render();}
@@ -425,9 +445,16 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     }
     else if(target.id==='bl-sound'){sound=!sound&&await enableAudio();render();}
   });
+  function tuneLayout(input){
+    if(input.dataset.blLayoutSize)stage.tuneSizes({[input.dataset.blLayoutSize]:Number(input.value)/100});
+    else if(input.id==='bl-layout-scale'||input.id==='bl-layout-fan')stage.tune(root.querySelector('#bl-layout-hand').value,{[input.id==='bl-layout-scale'?'scale':'fan']:Number(input.value)/(input.id==='bl-layout-scale'?100:1)});
+    else return false;
+    syncLayoutTools();return true;
+  }
+  root.addEventListener('input',event=>tuneLayout(event.target));
   root.addEventListener('change',event=>{
-    if(event.target.id==='bl-layout-hand'){const h=stage.settings(event.target.value);root.querySelector('#bl-layout-scale').value=Math.round((h.scale??.82)*100);root.querySelector('#bl-layout-fan').value=h.fan??26;}
-    else if(event.target.id==='bl-layout-scale'||event.target.id==='bl-layout-fan')stage.tune(root.querySelector('#bl-layout-hand').value,{[event.target.id==='bl-layout-scale'?'scale':'fan']:Number(event.target.value)/(event.target.id==='bl-layout-scale'?100:1)});
+    if(event.target.id==='bl-layout-hand'){stage.commitEdit();syncLayoutTools();}
+    else if(tuneLayout(event.target))stage.commitEdit();
     else if(event.target.id==='bl-group'){draft.groupId=event.target.value;draft.memberIds=null;initializeDraft();persist();render();}
     else if(event.target.dataset.blMember){const id=event.target.dataset.blMember;draft.memberIds=draft.memberIds.filter(member=>member!==id);if(event.target.checked){if(draft.memberIds.length>=RULES.maxMembers){event.target.checked=false;notify('Vingt-quatre musiciens maximum pour BandLive.');}else draft.memberIds.push(id);}persist();render();}
     else if(event.target.id==='bl-seed'){const seed=Number(event.target.value);if(Number.isInteger(seed)&&seed>=0&&seed<=4294967295)draft.seed=seed;else event.target.value=draft.seed;persist();}
