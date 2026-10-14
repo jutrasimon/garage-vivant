@@ -1,25 +1,25 @@
-import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.14';
-import {cardFace} from './card-view.mjs?v=0.8.14';
-import {personCard} from './person-card.mjs?v=0.8.14';
-import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.14';
-import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.14';
-import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.14';
-import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.14';
-import {tempoNotesHTML} from './bandlive-tempo-notes.mjs?v=0.8.14';
-import {SIZE_CONTROLS} from './bandlive-layout-profile.mjs?v=0.8.14';
-import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.14';
-import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.14';
-import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.14';
-import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.14';
-import {drawMicroBody} from './character-view.mjs?v=0.8.14';
-import {songTurns} from './song-rules.mjs?v=0.8.14';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.14';
-import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.14';
-import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.14';
-import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.14';
-import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.14';
-import {instrumentArt} from './show-view.mjs?v=0.8.14';
-import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.14';
+import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.15';
+import {cardFace} from './card-view.mjs?v=0.8.15';
+import {personCard} from './person-card.mjs?v=0.8.15';
+import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.15';
+import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.15';
+import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.15';
+import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.15';
+import {tempoNotesHTML} from './bandlive-tempo-notes.mjs?v=0.8.15';
+import {SIZE_CONTROLS} from './bandlive-layout-profile.mjs?v=0.8.15';
+import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.15';
+import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.15';
+import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.15';
+import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.15';
+import {drawMicroBody} from './character-view.mjs?v=0.8.15';
+import {songTurns} from './song-rules.mjs?v=0.8.15';
+import {groupLinkHTML} from './group-link.mjs?v=0.8.15';
+import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.15';
+import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.15';
+import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.15';
+import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.15';
+import {instrumentArt} from './show-view.mjs?v=0.8.15';
+import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.15';
 
 const CARD_GLYPHS={guitar:'♬',bass:'↑',drums:'◉',keys:'≋',voice:'♫',sax:'♪',trumpet:'♩',percussion:'◉'};
 const STORAGE='garage-vivant-bandlive-v1';
@@ -235,8 +235,8 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     }
     if(fan){
       outcome.reaction=fan.reactionUsed?'Réaction consommée ce tour':reactionText(game,fan)+' : '+(REACTIONS[fan.intent]?.description||'');outcome.conquest=conquestLabel(game,fan)+' : '+conquestDescription(game,fan);outcome.trigger=valid&&preview.game.fans.find(f=>f.id===fan.id).reactionUsed&&!fan.reactionUsed?'✦ Réaction déclenchée par cette carte':'';
-      const effect=valid&&preview.effects.find(event=>event.fanId===fan.id);
-      if(effect)outcome.conquestReady={sourceId:fan.id,icon:CONQUEST_EFFECTS[effect.effect].icon,name:effect.name,description:conquestDescription(game,fan),targets:effect.targets.map(id=>game.fans.find(f=>f.id===id).name),chainCount:preview.effects.length};
+      const conquestEffects=valid?preview.effects.filter(event=>event.type==='conquest'):[],effect=conquestEffects.find(event=>event.fanId===fan.id);
+      if(effect)outcome.conquestReady={sourceId:fan.id,icon:CONQUEST_EFFECTS[effect.effect].icon,name:effect.name,description:conquestDescription(game,fan),targets:effect.targets.map(id=>game.fans.find(f=>f.id===id).name),chainCount:conquestEffects.length};
     }
     if(ghost)inspection.hide();else{inspection.pin(id);inspection.outcome(outcome);}
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`);

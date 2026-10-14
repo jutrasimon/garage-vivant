@@ -1,8 +1,8 @@
-import {audienceColumns} from './bandlive.mjs?v=0.8.14';
-import {fanGeometry,spaceHandPacks} from './bandlive-hand-geometry.mjs?v=0.8.14';
-import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.14';
-import {layoutSizes,layoutMetrics} from './bandlive-layout-profile.mjs?v=0.8.14';
-import {RELEASE_VERSION} from './release.mjs?v=0.8.14';
+import {audienceColumns} from './bandlive.mjs?v=0.8.15';
+import {fanGeometry,spaceHandPacks} from './bandlive-hand-geometry.mjs?v=0.8.15';
+import {stageLayout,FAN_BODY,ACTOR_BODY,clampSlot,defaultFanPosition,settlePlacement} from './bandlive-layout.mjs?v=0.8.15';
+import {layoutSizes,layoutMetrics} from './bandlive-layout-profile.mjs?v=0.8.15';
+import {RELEASE_VERSION} from './release.mjs?v=0.8.15';
 
 export function createBandLiveStage({root,getReducedEffects,onLayout=()=>{}}){
   let host=null,game=null,renderer=null,loading=null,layoutFrame=null,editing=false,held=null,history=[],prefs={},bodies=[],geometry=null,metrics=null,editSnapshot=null;
@@ -90,7 +90,7 @@ export function createBandLiveStage({root,getReducedEffects,onLayout=()=>{}}){
     fit();layout();
     // Opening/restoring the view also compacts the outer navigation after mount.
     scheduleLayout();
-    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.14').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
+    if(!renderer&&!loading){loading=import('./bandlive-minuit-renderer.mjs?v=0.8.15').then(m=>{renderer=m.createMinuitRenderer({getReducedEffects});renderer.attach(host,game);}).catch(()=>{host?.classList.add('bl-render-fallback');}).finally(()=>loading=null);}
     const button=root.querySelector('#bl-layout');if(button){button.setAttribute('aria-pressed',editing);button.textContent=editing?'✓ Terminer la disposition':'✥ Disposition';}
     const tools=root.querySelector('.bl-layout-tools');if(tools)tools.hidden=!editing;
   }

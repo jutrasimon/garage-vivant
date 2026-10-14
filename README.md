@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.8.14
+# Garage vivant · v0.8.15
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0814) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0815) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 
@@ -31,6 +31,8 @@ Les dates se renouvellent continuellement. Un gros événement revient toutes le
 **Essayer maintenant** est une répétition générale sans récompense. Un replay reproduit le tirage et n’ajoute aucune conséquence; les douze dernières prestations gardent la trace de leur dernière chanson. **Interrompre** un vrai show ne donne pas de récompense et coûte de l’énergie.
 
 ## BandLive · moteur de tous les nouveaux shows
+
+Depuis 0.8.15, les réactions des spectateurs ne bloquent plus l’aperçu de ciblage. L’annonce de conquête présente seulement les véritables pouvoirs, même lorsqu’une réaction se déclenche avec eux; le compteur de chaîne exclut les réactions. `npm run test:targeting` couvre ces déclenchements à la souris, au tactile et avec une carte sélectionnée.
 
 Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde un gros bouton de fin de tour en bas à droite. La programmation et les outils avancés sont sous le premier écran. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
 

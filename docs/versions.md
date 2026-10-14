@@ -1,5 +1,13 @@
 # Notes de version
 
+## V0.8.15 — Ciblage et réactions cohérents {#v0815}
+
+13 octobre 2026.
+
+- **Ciblage des spectateurs corrigé :** une réaction comme Distrait, Attentif, variété, rythme ou entraînement pouvait bloquer l’aperçu sur « Relâche sur une cible valide », alors que la carte se jouait au relâchement. L’aperçu distingue maintenant les réactions des pouvoirs de conquête et garde la cible et les arcs visibles.
+- **Annonce de conquête cohérente :** lorsqu’une réaction et un pouvoir se déclenchent sur le même spectateur, le véritable pouvoir reste annoncé. Le compteur de chaîne inclut uniquement les pouvoirs de conquête.
+- Vérifié à la souris, au tactile et avec une carte sélectionnée, y compris l’annulation sans dépense et le résultat réel de la carte. Les règles et les sauvegardes restent compatibles; aucune option à activer.
+
 ## V0.8.14 — Ta disposition, tes tailles, ton code à partager {#v0814}
 
 13 octobre 2026.
