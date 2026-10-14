@@ -1,25 +1,29 @@
-import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.8.15';
-import {cardFace} from './card-view.mjs?v=0.8.15';
-import {personCard} from './person-card.mjs?v=0.8.15';
-import {simulateBandLive} from './bandlive-auto.mjs?v=0.8.15';
-import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.8.15';
-import {createBandLiveStage} from './bandlive-stage.mjs?v=0.8.15';
-import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.8.15';
-import {tempoNotesHTML} from './bandlive-tempo-notes.mjs?v=0.8.15';
-import {SIZE_CONTROLS} from './bandlive-layout-profile.mjs?v=0.8.15';
-import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.8.15';
-import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.8.15';
-import {createBandLiveAim} from './bandlive-aim.mjs?v=0.8.15';
-import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.8.15';
-import {drawMicroBody} from './character-view.mjs?v=0.8.15';
-import {songTurns} from './song-rules.mjs?v=0.8.15';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.15';
-import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.8.15';
-import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.8.15';
-import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.8.15';
-import {NEEDS,PERSONALITY} from './engine.mjs?v=0.8.15';
-import {instrumentArt} from './show-view.mjs?v=0.8.15';
-import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.8.15';
+import {createCardEditor} from './bandlive-card-editor.mjs?v=0.9.0';
+import {createCatalog,compileCard,catalogCard} from './bandlive-catalog.mjs?v=0.9.0';
+import {initializeCrowd,physicsSettings,simulateImpulse,inRadius} from './bandlive-crowd.mjs?v=0.9.0';
+import {createBandLive} from './bandlive.mjs?v=0.9.0';
+import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.9.0';
+import {cardFace} from './card-view.mjs?v=0.9.0';
+import {personCard} from './person-card.mjs?v=0.9.0';
+import {simulateBandLive} from './bandlive-auto.mjs?v=0.9.0';
+import {REACTIONS,reactionText} from './bandlive-reactions.mjs?v=0.9.0';
+import {createBandLiveStage} from './bandlive-stage.mjs?v=0.9.0';
+import {resourceDockHTML,readResourceValues,animateResourceChanges} from './bandlive-resources.mjs?v=0.9.0';
+import {tempoNotesHTML} from './bandlive-tempo-notes.mjs?v=0.9.0';
+import {SIZE_CONTROLS} from './bandlive-layout-profile.mjs?v=0.9.0';
+import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.9.0';
+import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.9.0';
+import {createBandLiveAim} from './bandlive-aim.mjs?v=0.9.0';
+import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.9.0';
+import {drawMicroBody} from './character-view.mjs?v=0.9.0';
+import {songTurns} from './song-rules.mjs?v=0.9.0';
+import {groupLinkHTML} from './group-link.mjs?v=0.9.0';
+import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.9.0';
+import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.9.0';
+import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.9.0';
+import {NEEDS,PERSONALITY} from './engine.mjs?v=0.9.0';
+import {instrumentArt} from './show-view.mjs?v=0.9.0';
+import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.9.0';
 
 const CARD_GLYPHS={guitar:'♬',bass:'↑',drums:'◉',keys:'≋',voice:'♫',sax:'♪',trumpet:'♩',percussion:'◉'};
 const STORAGE='garage-vivant-bandlive-v1';
@@ -51,11 +55,12 @@ function fanTooltip(game,fan){
  return `<div class="bl-fan-profile"><div class="bl-fan-portrait" style="--fan-color:${esc(fan.color)}">${cubeHTML(fan,'fan')}</div><div><strong>${esc(fan.name)}</strong><span>${styleIcon(favoriteStyle(fan))} ${esc(favoriteStyle(fan))}</span></div></div><div class="bl-profile-meter"><i style="width:${100*(1-fan.hp/fan.max)}%"></i><b>♥ ${fan.max-fan.hp}/${fan.max} · ${fan.conquered?'Conquis':'Conquête'}</b></div><div class="bl-fan-rule"><b>${fan.reactionUsed?'Ce tour : réaction consommée':esc(reactionText(game,fan))}</b><p>${fan.conquered?'Le public est avec toi.':fan.reactionUsed?'Une nouvelle réaction au prochain tour.':esc(REACTIONS[fan.intent]?.description||'')}</p></div>${effect?`<div class="bl-fan-rule"><b>${effect.icon} ${esc(conquestLabel(game,fan))} · ${fan.conquered?'déclenché':'à la conquête'}</b><p>${esc(conquestDescription(game,fan))}</p></div>`:''}${fanStatus(fan)?`<p>${esc(fanStatus(fan))}</p>`:''}`;
 }
 function conquestBadge(game,fan){const effect=CONQUEST_EFFECTS[fan.effect];return effect?`<span class="bl-conquest-bonus" title="${esc(conquestDescription(game,fan))}" aria-label="${esc(conquestLabel(game,fan))}"><b><span class="bl-effect-icon">${effect.icon}</span><span class="bl-effect-name">${esc(conquestLabel(game,fan))}</span></b><em>${game.conquestVersion>=2?fan.effectValue:''}</em></span>`:'';}
+function compactIntent(fan){return fan.intent==='bored'?'☾ −3':fan.intent==='attentive'?'⌕ +3':fan.intent==='distracted'?'⌖ −3':fan.intent==='rhythm'?'♫ '+fan.reactionTempo+'/3':fan.intent==='variety'?'♬ '+Math.min(1,fan.reactionActors.length)+'/2':'↗ +3';}
 
 function fanHTML(game,fan){
   const conquered=fan.hp===0,amount=fan.max-fan.hp;
   return `<div class="bl-fan-wrap"><button class="bl-fan ${conquered?'bl-conquered bl-reaction-'+reaction(fan):''}" data-bl-fan="${esc(fan.id)}" data-bl-target="${esc(fan.id)}" aria-label="${esc(fan.name)} · ${amount}/${fan.max} · ${conquered?'Conquis':esc(reactionText(game,fan))}">
-    ${conquered?'<span class="bl-conquered-glow" aria-hidden="true"></span>':`<span class="bl-intent">${esc(reactionText(game,fan))}</span>`}
+    ${conquered?'<span class="bl-conquered-glow" aria-hidden="true"></span>':game.spatialVersion&&fan.reactionUsed?'':`<span class="bl-intent">${esc(game.spatialVersion?compactIntent(fan):reactionText(game,fan))}</span>`}
     ${cubeHTML(fan,'fan')}<span class="bl-name"><b>${esc(fan.name)}</b>${styleIcon(favoriteStyle(fan))}</span>
     <span class="bl-resistance" role="progressbar" aria-label="Conquête de ${esc(fan.name)}" aria-valuemin="0" aria-valuemax="${fan.max}" aria-valuenow="${amount}" ${conquered?'aria-valuetext="Conquis"':''}>
       ${conquered?'<span class="bl-conquered-seal" aria-hidden="true"><span class="bl-conquered-heart">♥<i>✓</i></span><b>CONQUIS</b></span>':`<i style="width:${amount/fan.max*100}%"></i>`}
@@ -64,15 +69,20 @@ function fanHTML(game,fan){
   </button></div>`;
 }
 
-export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStart,notify,getReducedEffects=()=>false,getPlan=()=>({}),onConcertStart,onConcertUpdate,onConcertCancel}) {
+export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStart,notify,getReducedEffects=()=>false,getPlan=()=>({}),onConcertStart,onConcertUpdate,onConcertCancel,onCatalogSave=()=>{}}) {
   const root=document.querySelector('#bandlive-view'),nav=document.querySelector('#bandlive-nav'),toggle=document.querySelector('#bandlive-enabled');
+  const versionButton=document.querySelector('#version'),versionHome=versionButton?.parentElement,versionNext=versionButton?.nextSibling;
+  const restoreVersion=()=>{if(versionButton&&versionHome)versionHome.insertBefore(versionButton,versionNext?.parentElement===versionHome?versionNext:null);};
   let enabled=true,game=null,preparing=false,draft={groupId:'',memberIds:null,seed:2040,audienceSize:RULES.minAudience},selectedCard=null,activeCard=null,dragPointer=null,dragPoint=null,dragFrame=null,ghost=null,animation=null,sound=false,storageProblem=false;
   try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){enabled=true;if(saved.draft)draft=saved.draft;if(saved.game)game=restoreBandLive(saved.game);}}catch{notify('La répétition BandLive enregistrée ne peut pas être reprise. Le quartier est disponible.');}
-  const stage=createBandLiveStage({root,getReducedEffects,onLayout:syncLayoutTools});
+  let labOriginal=null,labBaseline=null,labKind='push',labStrength=1,labShoot=false,theme='midnight';
+  const stage=createBandLiveStage({root,getReducedEffects,onLayout:syncLayoutTools,onPositions:()=>{previewMemo=null;persist();}});
+  const cardEditor=createCardEditor({getWorld,onSave:onCatalogSave,onTest:startLab});
   const aim=createBandLiveAim();
   let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null,previewMemo=null;
-  const liveShow=()=>{const s=getWorld().performance;return liveId&&s?.id===liveId&&s.bandLive&&getWorld().showEventId?s:null;};
+  const liveShow=()=>{const s=getWorld().performance;return !labOriginal&&liveId&&s?.id===liveId&&s.bandLive&&getWorld().showEventId?s:null;};
   function syncConcert(){
+    if(labOriginal)return;
     unlockBandLiveRepertoire(getWorld());
     const show=getWorld().performance;
     if(show?.bandLive&&!show.preview&&getWorld().showEventId){if(!liveId)rehearsalGame=game;liveId=show.id;game=show.bandLive.game;preparing=false;}
@@ -85,8 +95,8 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   const inspection=createBandLiveInspection({root,blocked:()=>stage.editing||!!animation||!!activeCard,lookup:id=>{if(!game)return null;const c=cardById(game,id);if(!c)return null;const actor=game.actors.find(a=>a.id===c.actorId);return {card:cardDefinition(c),owner:actor.name,instrument:INSTRUMENTS[c.instrument],instrumentKey:c.instrument};}});
   inspection.targets.append(previewLayer);
   const dragImage=document.createElement('canvas');dragImage.width=dragImage.height=1;dragImage.style.cssText='position:fixed;left:-10px;top:-10px;pointer-events:none';document.body.append(dragImage);
-  function persist(){if(liveShow()&&liveShow().bandLive.game===game)onConcertUpdate?.();else if(!liveId)rehearsalGame=game;try{localStorage.setItem(STORAGE,JSON.stringify({enabled,draft,game:liveId?rehearsalGame:game}));storageProblem=false;}catch{if(!storageProblem)notify('La répétition ne peut pas être enregistrée dans ce navigateur.');storageProblem=true;}}
-  function hideTip(){tooltip.hidden=true;root.querySelectorAll('.bl-conquest-area').forEach(el=>el.classList.remove('bl-conquest-area'));root.querySelectorAll('[aria-describedby="bandlive-tooltip"]').forEach(el=>el.removeAttribute('aria-describedby'));}
+  function persist(){if(labOriginal)return;if(liveShow()&&liveShow().bandLive.game===game)onConcertUpdate?.();else if(!liveId)rehearsalGame=game;try{localStorage.setItem(STORAGE,JSON.stringify({enabled,draft,game:liveId?rehearsalGame:game}));storageProblem=false;}catch{if(!storageProblem)notify('La répétition ne peut pas être enregistrée dans ce navigateur.');storageProblem=true;}}
+  function hideTip(){if(!activeCard&&!selectedCard)root.querySelector('.bl-radius-layer')?.remove();tooltip.hidden=true;root.querySelectorAll('.bl-conquest-area').forEach(el=>el.classList.remove('bl-conquest-area'));root.querySelectorAll('[aria-describedby="bandlive-tooltip"]').forEach(el=>el.removeAttribute('aria-describedby'));}
   function showTip(target){
     const style=target.closest('[data-bl-style]'),actorEl=target.closest('[data-bl-actor]'),fanEl=target.closest('[data-bl-fan]');
     let html,anchor;
@@ -96,7 +106,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     else return hideTip();
     if(activeCard||animation)return hideTip();
     root.querySelectorAll('.bl-conquest-area').forEach(el=>el.classList.remove('bl-conquest-area'));
-    if(fanEl&&game&&!style){const source=game.fans.find(f=>f.id===fanEl.dataset.blFan);if(!source.conquered)for(const fan of conquestTargets(game,source))root.querySelector(`[data-bl-fan="${CSS.escape(fan.id)}"]`)?.classList.add('bl-conquest-area');}
+    if(fanEl&&game&&!style){const source=game.fans.find(f=>f.id===fanEl.dataset.blFan);if(game.spatialVersion&&!source.conquered)showRadius(source.position,1);if(!source.conquered)for(const fan of conquestTargets(game,source))root.querySelector(`[data-bl-fan="${CSS.escape(fan.id)}"]`)?.classList.add('bl-conquest-area');}
     tooltip.innerHTML=html;for(const canvas of tooltip.querySelectorAll('[data-bl-cube]'))drawCube(canvas,game.fans.find(f=>f.id===canvas.dataset.blCube));tooltip.hidden=false;anchor.setAttribute('aria-describedby',tooltip.id);
     const r=anchor.getBoundingClientRect(),w=tooltip.offsetWidth,h=tooltip.offsetHeight;
     tooltip.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';
@@ -133,14 +143,44 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
       return `<span class="bl-song-slot ${current&&!finished?'is-current':''}" title="${song?esc(song.title):'À choisir'}"><small>Chanson ${i+1}/2</small><b>${song?`${count}/${duration} tours`:'À choisir'}</b><em>${song?esc(song.title):'Durée selon la chanson'}</em></span>`;
     }).join('')}</div>`;
   }
+  function startLab(card=null){
+    if(stage.editing)stage.toggle();
+    if(!labOriginal){labOriginal={game,preparing};game=game?structuredClone(game):createBandLive({people:getWorld().people.slice(0,4),songs:[{id:'lab',title:'Essai musical',style:'Jazz',turns:5}],audienceSize:12,spatial:true,catalog:getWorld().cardCatalog});}
+    if(!game.spatialVersion){initializeCrowd(game);game.catalog=createCatalog();for(const a of game.actors)a.bandLiveDeck=game.cards.filter(c=>c.actorId===a.id).map(c=>c.kind);for(const c of game.cards)c.definition=compileCard(catalogCard(game.catalog,c.instrument,c.kind));}
+    if(game.phase==='choose')chooseSong(game,game.songs[0].id);
+    if(['won','lost'].includes(game.phase)){game.phase='play';for(const f of game.fans){f.hp=f.max;f.conquered=false;f.reactionUsed=false;}}
+    game.energy=3;preparing=false;animation=null;clearDrag();selectedCard=null;pendingChoice=null;
+    if(card){const owner=game.actors.find(a=>a.instrument===card.instrument)||game.actors[0],recipe={...structuredClone(card),id:'lab:test',instrument:owner.instrument,starter:0,enabled:true};delete recipe.legacyKind;game.catalog.cards=game.catalog.cards.filter(c=>c.id!=='lab:test');game.catalog.cards.push(recipe);const existing=game.cards.find(c=>c.actorId===owner.id);owner.bandLiveDeck[Number(existing.id.split(':').at(-1))]='lab:test';existing.kind='lab:test';existing.definition=compileCard(recipe);game.hand=[existing.id];game.discard=[];game.deck=game.cards.filter(c=>c.id!==existing.id).map(c=>c.id);}
+    labBaseline=structuredClone(game);labShoot=false;render();
+  }
+  function labControlsHTML(){return `<div class="bl-lab-controls" role="group" aria-label="Laboratoire physique"><strong>LABO · COPIE DU SHOW</strong><label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></div>`;}
+  function physicalPanelHTML(){return `<fieldset><legend>Foule physique</legend><p>Le placement modifie les vrais rayons du show. Le laboratoire travaille sur une copie.</p>${[['force','Force d’impact',30,650,10],['grip','Adhérence au sol',1,12,.5],['rebound','Rebond',0,.85,.05]].map(([key,label,min,max,step])=>`<label>${label}<output data-bl-physics-output="${key}">${game.physics[key]}</output><input data-bl-physics="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${game.physics[key]}"></label>`).join('')}<label>Unité de rayon<output data-bl-radius-output>${game.room.radiusUnit}</output><input id="bl-radius-unit" type="range" min="60" max="240" step="5" value="${game.room.radiusUnit}"></label><button id="bl-lab">Ouvrir le laboratoire ↗</button><button id="bl-cards">Créer et gérer les cartes ↗</button></fieldset>`;}
+  function showRadius(center,radius=1,core=0){
+    const world=root.querySelector('.bl-world');if(!game?.spatialVersion||!world||!center)return;
+    let layer=world.querySelector('.bl-radius-layer');if(!layer){layer=document.createElementNS('http://www.w3.org/2000/svg','svg');layer.classList.add('bl-radius-layer');layer.setAttribute('aria-hidden','true');world.append(layer);}
+    layer.hidden=false;const p=stage.crowdPoint(center),sx=1,unit=game.room.radiusUnit;
+    layer.setAttribute('viewBox',`0 0 ${world.clientWidth} ${world.clientHeight}`);
+    layer.innerHTML=`<ellipse class="bl-radius-outer" cx="${p.x}" cy="${p.y}" rx="${radius*unit*sx}" ry="${radius*unit}"/>${core?`<ellipse class="bl-radius-core" cx="${p.x}" cy="${p.y}" rx="${core*unit*sx}" ry="${core*unit}"/>`:''}<circle class="bl-radius-center" cx="${p.x}" cy="${p.y}" r="5"/>`;
+  }
+  function physicalChrome(){
+    if(!game?.spatialVersion||preparing)return;
+    const arena=root.querySelector('.bl-arena');arena.classList.add('bl-spatial');arena.dataset.theme=theme;
+    const screen=root.querySelector('.bl-show-screen'),footer=document.createElement('div');footer.className='bl-lab-footer';
+    footer.innerHTML=`<div class="bl-footer-tools"><button id="bl-neighborhood">← Quartier</button><button id="bl-cards">Cartes</button><button id="bl-lab">Laboratoire</button></div>${labOriginal?labControlsHTML():''}`;screen.append(footer);
+    const tools=footer.querySelector('.bl-footer-tools');if(versionButton)tools.append(versionButton);if(game.actors.length>6){tools.insertAdjacentHTML('beforeend',`<div class="bl-formation-pages"><button id="bl-page-prev" ${stage.page===0||animation?'disabled':''}>◀</button><span>Musiciens ${stage.page*6+1}–${Math.min(game.actors.length,stage.page*6+6)}/${game.actors.length}</span><button id="bl-page-next" ${stage.page===Math.ceil(game.actors.length/6)-1||animation?'disabled':''}>▶</button></div>`);}
+    for(const el of [root.querySelector('#bl-layout'),root.querySelector('.bl-top-controls')])if(el)tools.append(el);
+    const song=root.querySelector('.bl-song-progress');if(song){const details=document.createElement('details');details.className='bl-song-details';details.innerHTML='<summary>Chansons</summary>';details.append(song);tools.append(details);}
+    const resources=root.querySelector('.bl-resources'),dock=root.querySelector('.bl-resource-dock');if(dock)resources.insertBefore(dock,resources.lastElementChild);
+    root.querySelector('.bl-hud').insertAdjacentHTML('beforeend',`<div class="bl-theme-tabs" role="group" aria-label="Direction artistique">${[['mint','Menthe'],['midnight','Minuit'],['pop','Pop']].map(([id,label])=>`<button data-bl-theme="${id}" aria-pressed="${theme===id}">${label}</button>`).join('')}</div>`);
+  }
   function topControlsHTML(finished,live){
-    return `<div class="bl-top-controls"><button id="bl-sound" aria-pressed="${sound}">Son : ${sound?'ON':'OFF'}</button>${pilesHTML()}${!finished?`<button id="bl-simulate" ${animation?'disabled':''}>Simuler le show</button>`:''}${live?'':'<button id="bl-setup" class="text-button">Changer le band</button>'}</div>`;
+    return `<div class="bl-top-controls">${!game.spatialVersion?'<button id="bl-cards">Cartes</button><button id="bl-lab">Laboratoire</button>':''}<button id="bl-sound" aria-pressed="${sound}">Son : ${sound?'ON':'OFF'}</button>${pilesHTML()}${!finished?`<button id="bl-simulate" ${animation?'disabled':''}>Simuler le show</button>`:''}${live?'':'<button id="bl-setup" class="text-button">Changer le band</button>'}</div>`;
   }
   function rewardHTML(show){
     const reward=show.bandLive.reward;if(!reward){
       const people=showLevelRewards(getWorld(),show);if(!people.length)return '';
       const chosen=people.find(p=>p.id===rewardChoice.actorId)||people[0];
-      return `<section class="bl-reward panel"><h3>✦ Niveaux gagnés pendant ce show</h3><p>Choisis un musicien. Les récompenses restent disponibles dans sa fiche si tu continues la soirée.</p><div class="bl-reward-actors">${people.map(p=>`<button data-bl-reward-actor="${esc(p.id)}" aria-pressed="${p.id===chosen.id}">${personCard(p,{interactive:false})}</button>`).join('')}</div>${levelRewardsHTML(chosen,{limit:1})}</section>`;
+      return `<section class="bl-reward panel"><h3>✦ Niveaux gagnés pendant ce show</h3><p>Choisis un musicien. Les récompenses restent disponibles dans sa fiche si tu continues la soirée.</p><div class="bl-reward-actors">${people.map(p=>`<button data-bl-reward-actor="${esc(p.id)}" aria-pressed="${p.id===chosen.id}">${personCard(p,{interactive:false})}</button>`).join('')}</div>${levelRewardsHTML(chosen,{limit:1,catalog:getWorld().cardCatalog})}</section>`;
     }
     if(reward.status!=='pending')return `<section class="panel bl-reward"><h3>${reward.status==='claimed'?'Deck mis à jour':'Échange passé'}</h3>${reward.status==='claimed'?`<p>${esc(game.actors.find(a=>a.id===reward.actorId)?.name)} · ${INSTRUMENTS[reward.instrument]} : ${esc(definitionFor(reward.instrument,reward.before).name)} → <b>${esc(definitionFor(reward.instrument,reward.after).name)}</b>. Ce deck sera utilisé au prochain spectacle avec cet instrument.</p>`:''}</section>`;
     if(rewardChoice.showId!==show.id)rewardChoice={showId:show.id};
@@ -165,10 +205,10 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     return `<button id="bl-layout" aria-pressed="${stage.editing}" ${animation?'disabled':''}>${stage.editing?'✓ Terminer la disposition':'✥ Disposition'}</button><section class="bl-layout-tools" aria-label="Disposition de la scène" ${stage.editing?'':'hidden'}>
       <div class="bl-layout-heading"><strong>✥ Disposition</strong><button id="bl-layout-close" aria-label="Fermer la disposition">✕</button></div>
       <p>Déplace les personnages et les mains. Ajuste les tailles en direct.</p>
-      <fieldset><legend>Personnages</legend>${Object.entries(SIZE_CONTROLS).map(([key,{label,min,max}])=>`<label>${label}<output data-bl-size-output="${key}">100 %</output><input data-bl-layout-size="${key}" type="range" min="${min}" max="${max}" step="5" value="100"></label>`).join('')}</fieldset>
+      ${game.spatialVersion?physicalPanelHTML():''}<fieldset><legend>Personnages</legend>${Object.entries(SIZE_CONTROLS).map(([key,{label,min,max}])=>`<label>${label}<output data-bl-size-output="${key}">100 %</output><input data-bl-layout-size="${key}" type="range" min="${min}" max="${max}" step="5" value="100"></label>`).join('')}</fieldset>
       <fieldset><legend>Cartes</legend><label class="bl-layout-hand-choice">Main<select id="bl-layout-hand"><option value="">Tout le groupe</option>${game.actors.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select></label><small id="bl-layout-mixed" hidden>Tailles ou éventails différents · le prochain réglage s’applique à toutes les mains.</small><label>Taille<output id="bl-layout-scale-value"></output><input id="bl-layout-scale" type="range" min="55" max="165" step="1" value="100"></label><label>Éventail<output id="bl-layout-fan-value"></output><input id="bl-layout-fan" type="range" min="0" max="60" value="26"></label></fieldset>
       <div class="bl-layout-actions"><button id="bl-layout-undo">Annuler</button><button id="bl-layout-reset">Réinitialiser</button></div>
-      <p>Les cases conservent les voisins. Tes réglages restent dans ce navigateur.</p>
+      <p>${game.spatialVersion?'Les distances déterminent les voisins.':'Les cases conservent les voisins.'} Tes réglages restent dans ce navigateur.</p>
       <button id="bl-layout-export" class="primary">Exporter ma disposition ↗</button><div id="bl-layout-export-panel" hidden><label>Code à me transmettre<textarea id="bl-layout-code" readonly spellcheck="false" aria-label="Code de la disposition"></textarea></label><div class="bl-layout-actions"><button id="bl-layout-copy">Copier le code</button><button id="bl-layout-download">Télécharger .json</button></div></div>
     </section>`;
   }
@@ -182,7 +222,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function showHTML(){
     const song=currentSong(game),won=game.phase==='won',lost=game.phase==='lost',finished=won||lost,choosing=game.phase==='choose'&&!animation,live=liveShow();
-    const eyebrow=live?`BANDLIVE · ${esc(live.role||'Prestation')} · ${esc(live.opportunityName)}`:(game.songOrder||game.freeSetlist)?'BANDLIVE · REPLAY SANS RÉCOMPENSE':'BANDLIVE · RÉPÉTITION';
+    const eyebrow=labOriginal?'BANDLIVE · LABORATOIRE · COPIE DU SHOW':live?`BANDLIVE · ${esc(live.role||'Prestation')} · ${esc(live.opportunityName)}`:(game.songOrder||game.freeSetlist)?'BANDLIVE · REPLAY SANS RÉCOMPENSE':'BANDLIVE · RÉPÉTITION';
     const record=live&&getWorld().showHistory.find(r=>r.id===live.id);
     const effect=(label,key)=>{const e=record?.effects;return e?`<span><b>${Math.round(e.before[key])} → ${Math.round(e.after[key])}</b> ${label}</span>`:'';};
     const report=finished&&live?`<section class="bl-concert-result panel"><span class="eyebrow">BILAN DU SPECTACLE</span><h3>${won?'Tout le public est conquis !':'Le show est terminé.'}</h3><div class="bl-result-values"><span><b>${live.result.score}/100</b> Accueil du public</span><span><b>${live.sourceOpportunity.organizer?.exigence||30}/100</b> Attentes de la scène</span>${effect('Réputation','reputation')}${effect('Moral','morale')}${effect('Coordination','development')}</div><ul>${(record?.musicianEffects||[]).map(p=>`<li>${esc(p.name)} · énergie ${Math.round(p.energyBefore)} → ${Math.round(p.energyAfter)}</li>`).join('')}</ul><p>Le bilan dépend de l’accueil du public et des attentes de cette scène. Ce résultat compte dans la partie et reste dans l’historique du groupe.</p></section>`:'';
@@ -194,7 +234,8 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     const previousResources=readResourceValues(root);
     const previousViewport=root.querySelector('.bl-viewport'),previousAudience=root.querySelector('.bl-audience-viewport');
     const scroll=previousViewport?{x:previousViewport.scrollLeft,y:previousAudience?.scrollTop||0}:null;
-    hideTip();root.innerHTML=game&&!preparing?showHTML():setupHTML();
+    restoreVersion();hideTip();root.innerHTML=game&&!preparing?showHTML():setupHTML();
+    physicalChrome();if(preparing)root.querySelector('.bl-setup')?.insertAdjacentHTML('beforeend','<button id="bl-cards">Atelier de cartes ↗</button>');
     root.querySelector('.bl-audience')?.insertAdjacentHTML('afterbegin',tempoNotesHTML());
     animateResourceChanges(root,previousResources,getReducedEffects()||matchMedia('(prefers-reduced-motion: reduce)').matches);
     previewLayer.replaceChildren(...root.querySelectorAll('[data-bl-preview]'));
@@ -217,7 +258,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     root.querySelectorAll(c.target==='single'?'.bl-fan:not(.bl-conquered)':'.bl-audience').forEach(el=>el.classList.add('bl-drop-valid'));
     return true;
   }
-  function clearPreview(){aim.hide();root.querySelectorAll('.bl-forecast').forEach(el=>{el.classList.remove('bl-forecast');el.style.removeProperty('--bl-forecast');});previewLayer.querySelectorAll('[data-bl-preview]').forEach(el=>{el.hidden=true;el.textContent='';});}
+  function clearPreview(){root.querySelector('.bl-radius-layer')?.remove();aim.hide();root.querySelectorAll('.bl-forecast').forEach(el=>{el.classList.remove('bl-forecast');el.style.removeProperty('--bl-forecast');});previewLayer.querySelectorAll('[data-bl-preview]').forEach(el=>{el.hidden=true;el.textContent='';});}
   function makeDragGhost(id){
     const card=cardById(game,id),actor=game.actors.find(a=>a.id===card.actorId);
     const el=createDragFeedback({card:cardDefinition(card),owner:actor.name,icon:CARD_GLYPHS[card.instrument],accent:actor.color});el.classList.add('bl-ghost');el.setAttribute('aria-hidden','true');return el;
@@ -230,7 +271,8 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
       const resources=['Énergie '+game.energy+' → '+next.energy];if(game.tempo!==next.tempo)resources.push('Tempo '+game.tempo+' → '+next.tempo);if(game.boost!==next.boost)resources.push('Bonus '+game.boost+' → '+next.boost);
       if(c.target==='audience'||preview.effects.length)resources.push('Total +'+total+' ♥');if(conquests)resources.push(conquests+' conquis');
       const meter=after?(fan.max-fan.hp)+'/'+fan.max+' → '+(after.max-after.hp)+'/'+after.max:'';
-      const main=Object.hasOwn(c,'power')?(after?meter+' (+'+(fan.hp-after.hp)+' ♥)':'+'+total+' ♥ sur le public'):c.tempo?'Tempo '+game.tempo+' → '+next.tempo:c.boost?'Bonus '+game.boost+' → '+next.boost:c.turnStyle?'Style '+currentSong(game).style:'Main '+game.hand.length+' → '+next.hand.length;
+      const movement=preview.effects.filter(e=>e.type==='motion').reduce((n,e)=>n+e.targets.length,0);
+      const main=Object.hasOwn(c,'power')?(after?meter+' (+'+(fan.hp-after.hp)+' ♥)':'+'+total+' ♥ sur le public'):c.tempo?'Tempo '+game.tempo+' → '+next.tempo:c.boost?'Bonus '+game.boost+' → '+next.boost:c.turnStyle?'Style '+currentSong(game).style:movement?movement+' déplacements prévus':game.energy!==next.energy+c.cost?'Énergie '+game.energy+' → '+next.energy:'Main '+game.hand.length+' → '+next.hand.length;
       outcome={name:fan?.name||(c.target==='audience'?'Tout le public':'Effet de la carte'),main,meta:resources.join(' · '),valid:true,gain:after&&Object.hasOwn(c,'power')?fan.hp-after.hp:null,meter,conquered:after&&fan.hp>0&&after.hp===0};
     }
     if(fan){
@@ -244,6 +286,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     if(pendingChoice?.type==='duo'&&!targetIds.includes(pendingChoice.targetId))targetIds.push(pendingChoice.targetId);
     const ends=targetIds.map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`)).filter(Boolean);
     if(c.tempo){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
+    if(game.spatialVersion){const center=c.target==='point'?(dragPoint?stage.point(dragPoint.x,dragPoint.y):fan?.position||{x:game.room.width/2,y:game.room.height/2}):fan?.position;if(c.radius&&center)showRadius(center,c.radius,c.coreRadius);if(outcome.conquestReady&&fan){const after=preview.game.fans.find(f=>f.id===fan.id).position;if(!c.radius)showRadius(after,1);else{const p=stage.crowdPoint(after),sx=1;root.querySelector('.bl-radius-layer')?.insertAdjacentHTML('beforeend',`<ellipse class="bl-radius-chain" cx="${p.x}" cy="${p.y}" rx="${game.room.radiusUnit*sx}" ry="${game.room.radiusUnit}"/>`);}}if(c.target==='point'&&center)ends.push(stage.crowdPoint(center));}
     aim.draw(origin,ends,valid||!!c.twoTargets);
     if(!ghost||!dragPoint)return;
     const r=root.querySelector('.bl-viewport').getBoundingClientRect(),expand=!!outcome.conquestReady&&innerWidth<=650;
@@ -252,8 +295,9 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function highlightDrop(target){
     const current=activeCard||selectedCard;
-    if(previewMemo?.card===current&&previewMemo.target===target&&previewMemo.game===game&&previewMemo.events===game.events.length&&previewMemo.choice===pendingChoice)return;
-    previewMemo=current?{card:current,target,game,events:game.events.length,choice:pendingChoice}:null;
+    const definition=current&&cardDefinition(cardById(game,current)),spot=definition?.target==='point'?(dragPoint?stage.point(dragPoint.x,dragPoint.y):game.fans.find(f=>f.id===target?.dataset.blTarget)?.position||{x:game.room.width/2,y:game.room.height/2}):null,spotKey=spot?spot.x+':'+spot.y:'';
+    if(previewMemo?.spotKey===spotKey&&previewMemo?.card===current&&previewMemo.target===target&&previewMemo.game===game&&previewMemo.events===game.events.length&&previewMemo.choice===pendingChoice)return;
+    previewMemo=current?{spotKey,card:current,target,game,events:game.events.length,choice:pendingChoice}:null;
     root.querySelectorAll('.bl-drop-active,.bl-tempo-target').forEach(el=>el.classList.remove('bl-drop-active','bl-tempo-target'));
     clearPreview();
     const id=activeCard||selectedCard;
@@ -262,7 +306,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     const card=cardById(game,id),c=cardDefinition(card);
     if(c.target==='single'&&(target.dataset.blTarget==='audience'||target.classList.contains('bl-conquered'))){updateDragPreview(id,target,null);return;}
     const dropZone=c.target==='single'?target:root.querySelector('.bl-audience');dropZone?.classList.add('bl-drop-active');if(c.tempo&&c.target==='audience')dropZone?.classList.add('bl-tempo-target');
-    const preview=pendingChoice?.type==='duo'?previewCard(game,id,pendingChoice.targetId,{secondTargetId:target.dataset.blTarget}):previewCard(game,id,target.dataset.blTarget);updateDragPreview(id,target,preview);if(!preview.ok)return;
+    const preview=pendingChoice?.type==='duo'?previewCard(game,id,pendingChoice.targetId,{secondTargetId:target.dataset.blTarget}):previewCard(game,id,target.dataset.blTarget,spot?{point:spot}:{});updateDragPreview(id,target,preview);if(!preview.ok)return;
     const hits=[...preview.event.hits,...preview.effects.flatMap(e=>e.hits)];
     for(const fan of game.fans.filter(f=>hits.some(h=>h.id===f.id)||fanStatus(f)!==fanStatus(preview.game.fans.find(n=>n.id===f.id)))){
       const after=preview.game.fans.find(f=>f.id===fan.id);const node=root.querySelector('[data-bl-fan="'+fan.id+'"]');node?.classList.add('bl-forecast');node?.style.setProperty('--bl-forecast',(1-after.hp/fan.max)*100+'%');const power=hits.filter(h=>h.id===fan.id).reduce((n,h)=>n+h.power,0),out=previewLayer.querySelector('[data-bl-preview="'+fan.id+'"]'),anchor=root.querySelector('[data-bl-fan="'+fan.id+'"]');
@@ -328,13 +372,14 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
       else {if(!game.fans.some(f=>f.id===targetId&&f.hp>0))return false;clearDrag();selectedCard=id;pendingChoice={type:'duo',id,targetId};render();announce('Choisis un deuxième spectateur distinct.');return false;}
     }
     if(c.discard&&!options.discardId){clearDrag();selectedCard=id;pendingChoice={type:'discard',id};render();root.querySelector('.bl-card-choice')?.scrollIntoView({block:'nearest'});return false;}
+    if(c.target==='point'&&!options.point)options.point=dragPoint?stage.point(dragPoint.x,dragPoint.y):game.fans.find(f=>f.id===targetId)?.position||{x:game.room.width/2,y:game.room.height/2};
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`),r=playCard(game,id,targetId,options);
     clearDrag();
     if(!r.ok){announce(r.message);return false;}
     selectedCard=null;pendingChoice=null;
-    animation={started:performance.now(),origin,events:[r.event,...r.effects],cued:new Set(),duration:(1+r.effects.length)*420+500};
+    animation={motions:r.motions,started:performance.now(),origin,events:[r.event,...r.effects],cued:new Set(),duration:(1+r.effects.length)*420+500};
     if(sound)playSound({type:'card',instrument:card.instrument});
-    persist();render();requestAnimationFrame(animate);return true;
+    persist();render();if(r.motions?.length)stage.showMotion(r.motions,0);requestAnimationFrame(animate);return true;
   }
 
   function juice(events,origin=null){
@@ -374,7 +419,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     }
   }
   function animate(){
-    if(!animation)return;drawEffects();
+    if(!animation)return;if(animation.motions?.length&&!getReducedEffects()&&!matchMedia('(prefers-reduced-motion: reduce)').matches)stage.showMotion(animation.motions,Math.min(1,(performance.now()-animation.started)/Math.min(1800,animation.duration)));drawEffects();
     if(performance.now()-animation.started<animation.duration)requestAnimationFrame(animate);else{animation=null;render();}
   }
   root.addEventListener('dragstart',event=>{const card=event.target.closest('[data-bl-card]');if(!card||!startDrag(card.dataset.blCard))return event.preventDefault();event.dataTransfer.setData('application/x-bandlive-card',activeCard);event.dataTransfer.effectAllowed='move';event.dataTransfer.setDragImage(dragImage,0,0);ghost=makeDragGhost(activeCard);document.body.append(ghost);moveDrag(event.clientX,event.clientY);});
@@ -391,6 +436,8 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     event.preventDefault();dragPointer=event.pointerId;root.setPointerCapture(event.pointerId);ghost=makeDragGhost(activeCard);document.body.append(ghost);moveDrag(event.clientX,event.clientY);
   });
   root.addEventListener('pointermove',event=>{
+    if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};highlightDrop(dropAtPoint(event.clientX,event.clientY));}
+    if(labOriginal&&labShoot&&!stage.editing){const spot=stage.point(event.clientX,event.clientY);if(spot&&spot.y>=0&&spot.y<=game.room.height)showRadius(spot,1,.4);}
     if(dragPointer!==event.pointerId)return;
     event.preventDefault();moveDrag(event.clientX,event.clientY);
   });
@@ -410,6 +457,17 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   root.addEventListener('click',async event=>{
     if(event.target.closest('[data-bl-style]')&&!selectedCard)return;
     const target=event.target.closest('button,[data-bl-target]');if(!target)return;
+    if(target.id==='bl-page-prev'||target.id==='bl-page-next'){stage.setPage(stage.page+(target.id==='bl-page-next'?1:-1));clearDrag();selectedCard=null;render();return;}
+    if(target.id==='bl-cards'){clearDrag();cardEditor.open();return;}
+    if(target.id==='bl-neighborhood'){if(labOriginal){animation=null;clearDrag();const original=labOriginal;labOriginal=null;game=original.game;preparing=original.preparing;labShoot=false;}onReturn();return;}
+    if(target.dataset.blTheme){theme=target.dataset.blTheme;render();return;}
+    if(target.id==='bl-lab'){startLab();return;}
+    if(target.id==='bl-lab-close'){animation=null;clearDrag();const original=labOriginal;labOriginal=null;game=original.game;preparing=original.preparing;labShoot=false;render();return;}
+    if(target.id==='bl-lab-reset'){animation=null;clearDrag();game=structuredClone(labBaseline);labShoot=false;render();return;}
+    if(target.id==='bl-lab-shoot'){if(stage.editing)stage.toggle();labShoot=!labShoot;render();return;}
+    if(target.id==='bl-lab-import'){root.querySelector('#bl-lab-file').click();return;}
+    if(target.id==='bl-lab-export'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({format:'garage-vivant-bandlive-lab',version:1,initial:labBaseline,current:game,layout:JSON.parse(stage.exportCode())},null,2)],{type:'application/json'}));a.href=url;a.download='BandLive-scenario.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
+    if(labOriginal&&labShoot&&target.dataset.blTarget&&!animation){const point=stage.point(event.clientX,event.clientY);if(point&&point.y>=game.room.margin&&point.y<=game.room.height-game.room.margin){const motion=simulateImpulse(game,{center:point,targets:inRadius(game,point,1,{alive:false}).map(f=>f.id),strengthById:Object.fromEntries(game.fans.map(f=>[f.id,Math.hypot(f.position.x-point.x,f.position.y-point.y)>.4*game.room.radiusUnit?.5:1])),kind:labKind,strength:labStrength});animation={started:performance.now(),events:[],motions:[motion],duration:1600,cued:new Set()};render();requestAnimationFrame(animate);}return;}
     if(target.id==='bl-layout'||target.id==='bl-layout-close'){clearDrag();selectedCard=null;pendingChoice=null;stage.toggle();syncLayoutTools();if(stage.editing)root.closest('main')?.scrollTo({top:0});}
     else if(target.id==='bl-layout-undo'){stage.undo();syncLayoutTools();}
     else if(target.id==='bl-layout-reset'){stage.reset();syncLayoutTools();}
@@ -425,10 +483,10 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     else if(target.id==='bl-cancel-choice'){pendingChoice=null;selectedCard=null;pendingChoice=null;render();}
     else if(target.dataset.blSong){chooseSong(game,target.dataset.blSong);persist();render();}
     else if(target.dataset.blCard){pendingChoice=null;selectedCard=selectedCard===target.dataset.blCard?null:target.dataset.blCard;render();root.querySelector(`[data-bl-card="${CSS.escape(target.dataset.blCard)}"]`)?.focus({preventScroll:true});}
-    else if(target.dataset.blTarget&&selectedCard)perform(selectedCard,target.dataset.blTarget);
+    else if(target.dataset.blTarget&&selectedCard)perform(selectedCard,target.dataset.blTarget,{point:stage.point(event.clientX,event.clientY)});
     else if(target.id==='bl-start'){
       const plan=initializeDraft();if(!plan.ready){notify(plan.reason);return render();}
-      game=createBandLiveFromWorld(getWorld(),draft);preparing=false;persist();render();
+      game=createBandLiveFromWorld(getWorld(),draft);getWorld().cardCatalog??=structuredClone(game.catalog);onCatalogSave();preparing=false;persist();render();
     }else if(target.id==='bl-simulate'&&!animation){clearDrag();selectedCard=null;pendingChoice=null;simulateBandLive(game,()=>persist());render();}
     else if(target.id==='bl-end'&&!animation){const start=game.events.length;endTurn(game);selectedCard=null;pendingChoice=null;persist();juice(game.events.slice(start));}
     else if(target.id==='bl-cancel'&&liveShow()){onConcertCancel?.();syncConcert();render();}
@@ -451,8 +509,11 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     else return false;
     syncLayoutTools();return true;
   }
-  root.addEventListener('input',event=>tuneLayout(event.target));
-  root.addEventListener('change',event=>{
+  root.addEventListener('input',event=>{const input=event.target;if(game?.spatialVersion&&input.dataset.blPhysics){stage.tunePhysics({[input.dataset.blPhysics]:Number(input.value)});root.querySelector(`[data-bl-physics-output="${input.dataset.blPhysics}"]`).textContent=input.value;persist();return;}if(game?.spatialVersion&&input.id==='bl-radius-unit'){stage.tuneRadius(Number(input.value));root.querySelector('[data-bl-radius-output]').textContent=input.value;persist();return;}tuneLayout(input);});
+  root.addEventListener('change',async event=>{
+    if(event.target.id==='bl-lab-file'){try{const data=JSON.parse(await event.target.files[0].text());if(data.format!=='garage-vivant-bandlive-lab'||data.version!==1)throw Error('Scénario inconnu.');const initial=restoreBandLive(data.initial),current=restoreBandLive(data.current);if(!current.spatialVersion)throw Error('Ce scénario ne contient pas de foule physique.');animation=null;clearDrag();labBaseline=initial;game=current;render();if(data.layout?.profile)stage.importProfile(data.layout.profile);}catch(error){notify(error.message);}return;}
+    if(event.target.dataset.blPhysics||event.target.id==='bl-radius-unit'){stage.commitEdit();return;}
+    if(event.target.id==='bl-lab-kind'){labKind=event.target.value;return;}if(event.target.id==='bl-lab-strength'){labStrength=Number(event.target.value);return;}
     if(event.target.id==='bl-layout-hand'){stage.commitEdit();syncLayoutTools();}
     else if(tuneLayout(event.target))stage.commitEdit();
     else if(event.target.id==='bl-group'){draft.groupId=event.target.value;draft.memberIds=null;initializeDraft();persist();render();}
@@ -492,7 +553,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     refresh(){syncConcert();lastReport=null;initializeDraft();render();},
     replayConcert(snapshot){if(!enabled||!canStart()){notify(!enabled?'Active BandLive dans Réglages pour revoir ce show.':'Termine la soirée avant de revoir un show.');return false;}animation=null;clearDrag();selectedCard=null;pendingChoice=null;liveId=null;game=createConcertReplay(snapshot);rehearsalGame=game;preparing=false;persist();onOpen();return true;},
     concertEntryHTML(show){if(show?.bandLive&&getWorld().showEventId)return '<div class="panel bl-entry"><b>Ce spectacle se joue avec BandLive.</b><button data-bandlive-open class="primary">Reprendre BandLive ↗</button></div>';if(!enabled||!show||show.preview||show.status!=='playing')return '';const plan=resolveBandLiveConcert(getWorld());return `<div class="panel bl-entry"><div><b>Jouer ce spectacle avec BandLive</b><p id="bandlive-eligibility" role="status">${plan.ready?`${plan.profile.label} · ${plan.profile.audienceSize} spectateurs · ${plan.songs.length} chansons au choix · ${esc(show.role||'Prestation')} · le résultat compte dans la partie.`:esc(plan.reason)}</p></div><button data-bandlive-concert aria-describedby="bandlive-eligibility" title="${esc(plan.reason||'Commencer ce spectacle avec BandLive')}" class="primary" ${plan.ready?'':'disabled'}>Jouer avec BandLive ↗</button></div>${eveningHTML(show)}`;},
-    leave(){hideTip();clearDrag();inspection.hide();stage.leave();},
+    leave(){restoreVersion();hideTip();clearDrag();inspection.hide();stage.leave();},
     entryHTML(){return enabled?'<div class="panel bl-entry"><div><b>BandLive · le show jouable</b><p>Réserve un show avec deux à vingt-quatre musiciens et un répertoire ou une jam libre. BandLive commence automatiquement à l’arrivée sur scène. Les répétitions restent sans récompense.</p></div><button data-bandlive-open class="primary">Essayer BandLive ↗</button></div>':'';},
   };
 }

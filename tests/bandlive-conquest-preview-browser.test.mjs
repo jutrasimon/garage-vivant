@@ -11,7 +11,7 @@ try{
  const url=await new Promise((resolve,reject)=>{let out='';const timer=setTimeout(()=>reject(Error('Serveur indisponible')),5000);child.on('error',reject);child.stdout.on('data',b=>{out+=b;const m=out.match(/http:\/\/127\.0\.0\.1:\d+\//);if(m){clearTimeout(timer);resolve(m[0]);}});});
  browser=await chromium.launch();await mkdir('test-results',{recursive:true});
  for(const scenario of [{effect:'shock',width:1440,height:900,chain:true},{effect:'spotlight',width:1440,height:900},{effect:'chorus',width:1440,height:900},{effect:'chorus',width:1024,height:768,reduced:true},{effect:'chorus',width:1024,height:600,reduced:true},{effect:'chorus',width:390,height:844,touch:true}]){
-  const world=preparedConcert({instruments:['guitar','drums','keys']}).world;beginBandLiveConcert(world);const game=world.performance.bandLive.game;chooseSong(game,game.songs[0].id);
+  const world=preparedConcert({legacyBandLive:true,instruments:['guitar','drums','keys']}).world;beginBandLiveConcert(world);const game=world.performance.bandLive.game;chooseSong(game,game.songs[0].id);
   for(const fan of game.fans)Object.assign(fan,{hp:100,max:100,intent:'bored',favorite:'Pop',reactionUsed:false,conquered:false});
   Object.assign(game.fans[0],{hp:1,max:16,effect:scenario.effect,effectValue:scenario.effect==='chorus'?2:3});
   if(scenario.chain)Object.assign(game.fans[1],{hp:3,effect:'shock',effectValue:3});

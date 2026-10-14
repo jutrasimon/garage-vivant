@@ -1,3 +1,7 @@
+# V0.9.0 — 14 octobre 2026
+
+Foule physique et atelier de cartes. [Notes complètes](./versions.md#v090).
+
 # V0.8.15 — 13 octobre 2026
 
 Ciblage et réactions cohérents. [Notes complètes](./versions.md#v0815).

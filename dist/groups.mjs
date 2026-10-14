@@ -1,4 +1,4 @@
-import {rule} from './design-rules.mjs?v=0.8.15';
+import {rule} from './design-rules.mjs?v=0.9.0';
 const duration=n=>n%60===0?`${n/60} h`:`${n} min`;
 const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const mean=xs=>xs.length?xs.reduce((n,x)=>n+x,0)/xs.length:0;

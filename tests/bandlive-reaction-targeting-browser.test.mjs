@@ -14,7 +14,7 @@ try{
   {reaction:'rhythm',kind:'special'}, {reaction:'following',instrument:'voice',kind:'special'},
   {reaction:'attentive',chain:true}, {reaction:'distracted',touch:true}, {reaction:'attentive',chain:true,touch:true}
  ]){
-  const world=preparedConcert({instruments:['drums','guitar','voice']}).world;beginBandLiveConcert(world);
+  const world=preparedConcert({legacyBandLive:true,instruments:['drums','guitar','voice']}).world;beginBandLiveConcert(world);
   const game=world.performance.bandLive.game;chooseSong(game,game.songs[0].id);
   for(const fan of game.fans)Object.assign(fan,{hp:100,max:100,intent:'bored',reactionUsed:false,conquered:false});
   const fan=game.fans[0],card=game.cards.find(c=>c.instrument===(scenario.instrument||'drums')&&c.kind===(scenario.kind||'note'));

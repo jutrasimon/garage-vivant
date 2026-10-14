@@ -1,5 +1,17 @@
 # Notes de version
 
+## V0.9.0 — Foule physique et atelier de cartes {#v090}
+
+14 octobre 2026.
+
+- **Une vraie foule pour les nouveaux shows :** placement organique, positions sauvegardées, voisins et anciennes rangées remplacés par des rayons. Les cartes peuvent viser un spectateur ou un endroit au sol, avec un cœur et une couronne à deux couleurs.
+- **Musique physique :** poussée, attraction, tourbillon, bond et retour élastique. Les collisions transmettent le mouvement; la conquête par collision est un effet explicite. Force, adhérence, rebond et unité de rayon se règlent dans Disposition.
+- **Atelier de cartes :** catalogue par instrument et catégorie Neutre, création, duplication, retrait avec restauration, effets ordonnés, paramètres filtrés, coût, rareté, niveau minimal et quantités de départ. Les decks gardent cinq cartes; les récompenses utilisent les cartes admissibles et leur rareté.
+- **Laboratoire sur une copie :** impacts faible/moyen/fort, cartes de test, remise à zéro, export et import de scénarios complets. Le show réel conserve ses cartes, son énergie et son XP.
+- **Composition inspirée du Visual Lab :** bandeau compact, énergie et tempo en haut, commandes dans la barre inférieure, intentions compactes et détails au survol. Les formations de plus de six musiciens utilisent des pages pour préserver la taille des cartes et de la foule.
+- **Compatibilité :** les shows déjà commencés gardent leurs règles. Leur bouton Laboratoire permet d’essayer la nouvelle foule. Un catalogue modifié ne réécrit jamais un show en cours; une carte retirée reste utilisable dans les decks qui la possèdent.
+- Pour essayer : ouvrir un nouveau show ou une répétition, puis **Cartes**, **Disposition** ou **Laboratoire**. [Guide de la foule et de l’atelier](./BANDLIVE_PHYSIQUE.md).
+
 ## V0.8.15 — Ciblage et réactions cohérents {#v0815}
 
 13 octobre 2026.

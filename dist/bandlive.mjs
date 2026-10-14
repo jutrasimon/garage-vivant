@@ -1,10 +1,13 @@
-import {REACTIONS,initializeReactions,clearReactionProgress,rerollReaction,reactionPower,hitReaction} from './bandlive-reactions.mjs?v=0.8.15';
-import {songTurns} from './song-rules.mjs?v=0.8.15';
+import {REACTIONS,initializeReactions,clearReactionProgress,rerollReaction,reactionPower,hitReaction} from './bandlive-reactions.mjs?v=0.9.0';
+import {songTurns} from './song-rules.mjs?v=0.9.0';
+import {initializeCrowd,validateCrowd,inRadius,nearby} from './bandlive-crowd.mjs?v=0.9.0';
+import {createCatalog,validateCatalog,catalogCard,compileCard} from './bandlive-catalog.mjs?v=0.9.0';
+import {playProgram} from './bandlive-program.mjs?v=0.9.0';
 // BandLive keeps its own RNG and decks. Concert outcomes are connected separately.
 export const RULES = Object.freeze({minMembers:2,maxMembers:24,minAudience:3,maxAudience:12,energy:3,hand:5,turns:6,songTurns:3,tempoMax:10,finale:3,boredom:3,styleBonus:2,soloBonus:3});
 export const STYLES = Object.freeze(['Indie','Punk','Folk','Métal','Jazz','Électro','Ska','Pop']);
-import {INSTRUMENTS,SPECIALS,NOTE,definitionFor,musicianDeck,validateDeck} from './bandlive-cards.mjs?v=0.8.15';
-export {INSTRUMENTS,SPECIALS,NOTE} from './bandlive-cards.mjs?v=0.8.15';
+import {INSTRUMENTS,SPECIALS,NOTE,definitionFor,musicianDeck,validateDeck} from './bandlive-cards.mjs?v=0.9.0';
+export {INSTRUMENTS,SPECIALS,NOTE} from './bandlive-cards.mjs?v=0.9.0';
 
 export const CONQUEST_EFFECTS = Object.freeze({
   shock:{name:'Onde de choc',icon:'✺',description:'3 puissance aux voisins immédiats (gauche, droite, devant et derrière).'},
@@ -15,6 +18,11 @@ export const CONQUEST_EFFECTS = Object.freeze({
 });
 export function conquestLabel(game,fan){const e=CONQUEST_EFFECTS[fan.effect];return e?(game.conquestVersion>=2?`${fan.effect==='spotlight'?'Projecteur':e.name} ${fan.effectValue}`:e.name):'';}
 export function conquestDescription(game,fan){
+  if(game.spatialVersion){
+    if(!CONQUEST_EFFECTS[fan.effect])return '';
+    if(['shock','wave','pierce'].includes(fan.effect))return `${fan.effectValue||{shock:3,wave:2,pierce:4}[fan.effect]} puissance dans un rayon 1 autour de lui.`;
+    return fan.effect==='spotlight'?`Rayon 1 : +${fan.effectValue||2} puissance jusqu’à la fin du tour (valeur la plus forte).`:`${fan.effectValue?`Jusqu’à ${fan.effectValue} spectateurs proches`:'Les spectateurs proches'} dans un rayon 1 adoptent le style jusqu’à la fin de la chanson.`;
+  }
   if(game.conquestVersion!==2)return CONQUEST_EFFECTS[fan.effect]?.description||'';
   return fan.effect==='shock'?`${fan.effectValue} puissance à chaque voisin immédiat.`:fan.effect==='spotlight'?`Voisins immédiats : +${fan.effectValue} puissance par carte jusqu’à la fin du tour. Non cumulable; la valeur la plus forte reste.`:`${fan.effectValue} voisin(s) adoptent le style de la toune jusqu’à sa fin. Priorité aux voisins non conquis d’un autre style, dans l’ordre de la grille.`;
 }
@@ -23,6 +31,7 @@ export const favoriteStyle=fan=>fan.turnStyle||fan.chorusStyle||fan.favorite;
 // Board positions are independent of screen size and never collapse after a conquest.
 export function conquestTargets(game,fan){
   if(!game.conquestVersion)return [];
+  if(game.spatialVersion){const targets=inRadius(game,fan.position,1,{exclude:fan.id});return fan.effect==='chorus'?targets.filter(f=>favoriteStyle(f)!==currentSong(game)?.style).slice(0,fan.effectValue):targets;}
   const index=game.fans.indexOf(fan),cols=audienceColumns(game),row=Math.floor(index/cols),col=index%cols;
   if(index<0)return [];
   if(game.conquestVersion>=2){
@@ -53,7 +62,7 @@ function shuffle(game,items) {
   return items;
 }
 function log(game,message){game.logs.push(message);}
-export function cardDefinition(card){return definitionFor(card.instrument,card.kind);}
+export function cardDefinition(card){return card.definition||definitionFor(card.instrument,card.kind);}
 export function cardById(game,id){return game.cards.find(card=>card.id===id);}
 
 const AUDIENCE=[
@@ -71,15 +80,16 @@ function createAudience(songs,count,rules=null){
 }
 
 export function createBandLive(options) { return createGame(options,RULES.maxMembers); }
-function createGame({people,groupId=null,groupName='Le band du quartier',songs,seed=2040,audienceSize=RULES.minAudience,audienceRules=null,songOrder=null,conquestEffects=true,freeSetlist=false,persistentReactions=true,rulesVersion=2},memberLimit) {
+function createGame({people,groupId=null,groupName='Le band du quartier',songs,seed=2040,audienceSize=RULES.minAudience,audienceRules=null,songOrder=null,conquestEffects=true,freeSetlist=false,persistentReactions=true,rulesVersion=2,spatial=false,catalog=null},memberLimit) {
+  if(spatial){catalog=structuredClone(catalog||createCatalog());validateCatalog(catalog);}
   if(!Array.isArray(people)||people.length<RULES.minMembers||people.length>memberLimit||people.some(p=>!p||typeof p.id!=='string'||!p.id||typeof p.name!=='string'||!SPECIALS[p.instrument])||new Set(people.map(p=>p.id)).size!==people.length)throw Error('Choisis de deux à vingt-quatre musiciens du groupe.');
   if(!Array.isArray(songs)||!songs.length||new Set(songs.map(s=>s.id)).size!==songs.length||songs.some(s=>!s||!s.id||!s.title||!s.style||s.turns!==undefined&&![3,4,5].includes(s.turns)))throw Error('Choisis une chanson du répertoire.');
   if(groupId!==null&&(typeof groupId!=='string'||!groupId))throw Error('Groupe invalide.');
   if(!Number.isInteger(audienceSize)||audienceSize<RULES.minAudience||audienceSize>RULES.maxAudience)throw Error('Choisis de trois à douze spectateurs.');
   if(audienceRules&&(!Array.isArray(audienceRules.styles)||!audienceRules.styles.length||new Set(audienceRules.styles).size!==audienceRules.styles.length||audienceRules.styles.some(s=>!STYLES.includes(s))||!Number.isInteger(audienceRules.resistancePercent)||audienceRules.resistancePercent<20||audienceRules.resistancePercent>200))throw Error('Public BandLive invalide.');
   if(songOrder&&(!Array.isArray(songOrder)||songOrder.length!==2||songOrder.some(id=>!songs.some(s=>s.id===id))))throw Error('La setlist BandLive doit prévoir deux passages.');
-  const actors=people.map(p=>({id:p.id,name:p.name,instrument:p.instrument,bandLiveDeck:[...validateDeck(p.bandLiveDeck||musicianDeck(p))],genre:p.genre,color:p.color,identity:structuredClone(p.identity||{}),personality:structuredClone(p.personality||{}),skill:p.skills?.[p.instrument]??p.skill??0,...(p.xp!==undefined?{xp:p.xp}:{}),needs:structuredClone(p.needs||{}),exaltation:p.exaltation??p.emotions?.exaltation??0,distress:p.distress??p.emotions?.distress??0}));
-  const cards=actors.flatMap(actor=>actor.bandLiveDeck.map((kind,i)=>({id:`${actor.id}:${i}`,actorId:actor.id,instrument:actor.instrument,kind})));
+  const actors=people.map(p=>({id:p.id,name:p.name,instrument:p.instrument,bandLiveDeck:[...validateDeck(p.bandLiveDeck||musicianDeck(p,p.instrument,catalog))],genre:p.genre,color:p.color,identity:structuredClone(p.identity||{}),personality:structuredClone(p.personality||{}),skill:p.skills?.[p.instrument]??p.skill??0,...(p.xp!==undefined?{xp:p.xp}:{}),needs:structuredClone(p.needs||{}),exaltation:p.exaltation??p.emotions?.exaltation??0,distress:p.distress??p.emotions?.distress??0}));
+  const cards=actors.flatMap(actor=>actor.bandLiveDeck.map((kind,i)=>({id:`${actor.id}:${i}`,actorId:actor.id,instrument:actor.instrument,kind,...(spatial?{definition:compileCard(catalogCard(catalog,actor.instrument,kind))}:{})})));
   const game={version:songs.some(s=>s.turns!==undefined)?4:audienceRules||songOrder?3:2,seed:seed>>>0,rng:seed>>>0,groupId,groupName,actors,cards,songs:structuredClone(songs),usedSongs:[],songId:null,phase:'choose',turn:0,section:0,energy:3,tempo:0,boost:0,hand:[],deck:cards.map(c=>c.id),discard:[],played:0,logs:['Le band prend la scène. Choisis la première chanson.'],events:[],fans:createAudience(songs,audienceSize,audienceRules)};
   if(freeSetlist){if(songOrder)throw Error('Le choix libre ne peut pas imposer un ordre.');game.freeSetlist=true;}
   if(game.version>=3){game.audienceRules=structuredClone(audienceRules);game.songOrder=songOrder&&[...songOrder];}
@@ -89,6 +99,7 @@ function createGame({people,groupId=null,groupName='Le band du quartier',songs,s
   if(conquestEffects)assignConquestEffects(game,rulesVersion);
   if(rulesVersion>=2)game.gridColumns=audienceSize>8?Math.ceil(audienceSize/2):Math.min(4,audienceSize);
   if(persistentReactions)initializeReactions(game,rulesVersion);
+  if(spatial){game.catalog=catalog;initializeCrowd(game);}
   return game;
 }
 export const passageTurns=game=>game.version>=4?songTurns(currentSong(game)):RULES.songTurns;
@@ -127,10 +138,10 @@ export function chooseSong(game,id) {
 }
 export function canPlay(game,id) {
   const card=cardById(game,id);
-  return !!card&&game.phase==='play'&&game.hand.includes(id)&&game.energy>=cardDefinition(card).cost&&(!cardDefinition(card).discard||game.hand.length>1)&&(!cardDefinition(card).twoTargets||game.fans.filter(f=>f.hp>0).length>=2)&&(!cardDefinition(card).oncePerTurn||!game.events.some(e=>e.type==='card'&&e.turn===game.turn&&e.cardId===id));
+  return !!card&&(!game.catalog||game.played<500)&&game.phase==='play'&&game.hand.includes(id)&&game.energy>=cardDefinition(card).cost&&(!cardDefinition(card).discard||game.hand.length>1)&&(!cardDefinition(card).twoTargets||game.fans.filter(f=>f.hp>0).length>=2)&&(!cardDefinition(card).oncePerTurn||!game.events.some(e=>e.type==='card'&&e.turn===game.turn&&e.cardId===id));
 }
 const alternates=(game,card)=>{const prev=game.events.findLast(e=>e.type==='card'&&e.turn===game.turn);return !!prev&&prev.actorId!==card.actorId;};
-function neighboring(game,a,b){const n=audienceColumns(game),i=game.fans.indexOf(a),j=game.fans.indexOf(b);return Math.abs(Math.floor(i/n)-Math.floor(j/n))+Math.abs(i%n-j%n)===1;}
+function neighboring(game,a,b){if(game.spatialVersion)return nearby(game,a,b);const n=audienceColumns(game),i=game.fans.indexOf(a),j=game.fans.indexOf(b);return Math.abs(Math.floor(i/n)-Math.floor(j/n))+Math.abs(i%n-j%n)===1;}
 export function cardTargets(game,card,fan,second){
   const d=cardDefinition(card),alive=game.fans.filter(f=>f.hp>0),i=game.fans.indexOf(fan),cols=audienceColumns(game);
   if(d.target==='audience')return alive;
@@ -182,16 +193,18 @@ function resolveConquests(game,queue){
 }
 // Use the real resolver on a copy so previews include chains and never consume resources.
 export function previewCard(game,id,targetId=null,options={}){
-  const after=structuredClone(game),result=playCard(after,id,targetId,options);
+  const after=structuredClone(game),result=playCard(after,id,targetId,{...options,preview:true});
   return result.ok?{...result,game:after}:result;
 }
 function checkVictory(game) {
   if(game.fans.every(fan=>fan.hp===0)){game.phase='won';log(game,'Tout le public est conquis. Show réussi !');return true;}
   return false;
 }
-export function playCard(game,id,targetId=null,{secondTargetId=null,discardId=null}={}) {
+export function playCard(game,id,targetId=null,options={}) {
+  const {secondTargetId=null,discardId=null}=options;
   if(!canPlay(game,id))return {ok:false,message:'Cette carte ne peut pas être jouée : vérifie ta main et ton énergie.'};
   const card=cardById(game,id),d=cardDefinition(card),fan=game.fans.find(f=>f.id===targetId),second=game.fans.find(f=>f.id===secondTargetId);
+  if(d.program)return playProgram(game,card,targetId,options,{powerAgainst,hitReaction,conquer,triggerReaction,draw,currentSong,resolveConquests,checkVictory});
   if(d.target==='single'&&(!fan||fan.hp===0))return {ok:false,message:'Choisis un spectateur encore à conquérir.'};
   if(d.twoTargets&&(!second||second===fan||second.hp===0))return {ok:false,message:'Choisis deux spectateurs distincts encore à conquérir.'};
   if(d.discard&&(!game.hand.includes(discardId)||discardId===id))return {ok:false,message:'Choisis une autre carte de ta main à défausser.'};
@@ -274,6 +287,7 @@ export function restoreBandLive(input) {
   const fail=()=>{throw Error('Répétition BandLive invalide.');};
   if(!input||![1,2,3,4].includes(input.version)||!['choose','play','won','lost'].includes(input.phase)||!Array.isArray(input.actors)||!Array.isArray(input.songs))fail();
   const game=structuredClone(input);
+  validateCrowd(game);if(game.catalog)validateCatalog(game.catalog);
   if(game.version>=2&&!game.conquestVersion&&!game.reactionVersion&&game.actors.length>6)fail();
   const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
   if(game.actors.some(a=>!a||!object(a.identity)||!object(a.personality)||!object(a.needs)||!Number.isFinite(a.skill)||typeof a.genre!=='string'||typeof a.color!=='string'))fail();
@@ -282,7 +296,7 @@ export function restoreBandLive(input) {
   // playable without permitting oversized new formations.
   if(game.version>=2&&game.groupId!==null&&(typeof game.groupId!=='string'||!game.groupId))fail();
   if(game.version>=3&&(!Object.hasOwn(game,'audienceRules')||!Object.hasOwn(game,'songOrder')))fail();
-  const expected=createGame({people:game.actors,groupId:game.groupId,groupName:game.groupName,songs:game.songs,seed:game.seed,audienceRules:game.audienceRules,songOrder:game.songOrder},game.version===1?24:RULES.maxMembers).cards;
+  const expected=createGame({people:game.actors,groupId:game.groupId,groupName:game.groupName,songs:game.songs,seed:game.seed,audienceRules:game.audienceRules,songOrder:game.songOrder,spatial:!!game.spatialVersion,catalog:game.catalog},game.version===1?24:RULES.maxMembers).cards;
   if(!Number.isInteger(game.seed)||game.seed<0||game.seed>4294967295||!Number.isInteger(game.rng)||game.rng<0||game.rng>4294967295||typeof game.groupName!=='string'||!Number.isInteger(game.played)||game.played<0||game.played>500)fail();
   if(!Number.isInteger(game.turn)||game.turn<0||game.turn>(game.version>=4?10:6)||!Number.isInteger(game.section)||game.section<0||game.section>(game.version>=4?5:3))fail();
   if(!Number.isInteger(game.energy)||game.energy<0||game.energy>3||!Number.isInteger(game.tempo)||game.tempo<0||game.tempo>10||!Number.isInteger(game.boost)||game.boost<0||game.boost>500)fail();
@@ -304,7 +318,7 @@ export function restoreBandLive(input) {
     if(!Number.isInteger(game.reactionRng)||game.reactionRng<0||game.reactionRng>4294967295)fail();
     for(const f of game.fans)if(!Array.isArray(f.reactionActors)||f.reactionActors.length>game.actors.length||new Set(f.reactionActors).size!==f.reactionActors.length||f.reactionActors.some(id=>!game.actors.some(a=>a.id===id))||!Number.isInteger(f.reactionTempo)||f.reactionTempo<0||f.reactionTempo>3||typeof f.reactionNeighbor!=='boolean')fail();
   }
-  if(game.relayBoosts!==undefined&&(!Array.isArray(game.relayBoosts)||game.relayBoosts.length>500||game.relayBoosts.some(b=>!b||!game.actors.some(a=>a.id===b.actorId)||b.power!==4)))fail();
+  if(game.relayBoosts!==undefined&&(!Array.isArray(game.relayBoosts)||game.relayBoosts.length>500||game.relayBoosts.some(b=>!b||!game.actors.some(a=>a.id===b.actorId)||(!game.catalog?b.power!==4:!Number.isInteger(b.power)||b.power<1||b.power>30))))fail();
   if(game.initialFanHp!==undefined&&(!Array.isArray(game.initialFanHp)||game.initialFanHp.length!==game.fans.length||game.initialFanHp.some((hp,i)=>!Number.isInteger(hp)||hp<1||hp>game.fans[i].max)))fail();
   if(game.freeSetlist!==undefined&&(game.freeSetlist!==true||game.songOrder!==null||game.version<3))fail();
   if(game.conquestVersion!==undefined&&![1,2].includes(game.conquestVersion))fail();
@@ -316,6 +330,6 @@ export function restoreBandLive(input) {
   }
   if(game.reactionVersion>=2&&game.fans.some(f=>typeof f.reactionUsed!=='boolean'))fail();
   if(game.conquestVersion>=2&&game.fans.some(f=>!['shock','spotlight','chorus'].includes(f.effect)||!Number.isInteger(f.effectValue)||f.effectValue<1||f.effectValue>(f.effect==='chorus'?2:f.effect==='spotlight'?3:5)))fail();
-  if((game.phase==='won')!==game.fans.every(f=>f.hp===0)||!Array.isArray(game.logs)||game.logs.length>1000||game.logs.some(line=>typeof line!=='string')||!Array.isArray(game.events)||game.events.length>500)fail();
+  if((game.phase==='won')!==game.fans.every(f=>f.hp===0)||!Array.isArray(game.logs)||game.logs.length>(game.catalog?10000:1000)||game.logs.some(line=>typeof line!=='string')||!Array.isArray(game.events)||game.events.length>(game.catalog?7000:500))fail();
   return game;
 }

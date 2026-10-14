@@ -1,5 +1,5 @@
-import * as T from './bandlive-three.mjs?v=0.8.15';
-import {spotlightVertices} from './bandlive-spotlight-geometry.mjs?v=0.8.15';
+import * as T from './bandlive-three.mjs?v=0.9.0';
+import {spotlightVertices} from './bandlive-spotlight-geometry.mjs?v=0.9.0';
 
 export function createMinuitRenderer({getReducedEffects}){
   const canvas=document.createElement('canvas');canvas.className='bl-scene-canvas';canvas.setAttribute('aria-hidden','true');
@@ -39,6 +39,7 @@ export function createMinuitRenderer({getReducedEffects}){
     clear();
     for(const [i,person] of [...game.actors,...game.fans].entries()){
       const actor=i<game.actors.length,element=host.querySelector(actor?'[data-bl-actor="'+CSS.escape(person.id)+'"]':'[data-bl-fan="'+CSS.escape(person.id)+'"]'),image=element.querySelector('.bl-cube');
+      if(element.closest('[hidden]'))continue;
       const texture=new T.CanvasTexture(image);texture.colorSpace=T.SRGBColorSpace;texture.magFilter=T.NearestFilter;
       const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));sprite.renderOrder=4;scene.add(sprite);
       const shadow=disk(scene,0,0,0,.4,0x102e28,.17),model=actor?instrument(person.instrument):null;if(model)scene.add(model);
@@ -56,7 +57,7 @@ export function createMinuitRenderer({getReducedEffects}){
     if(renderer.getPixelRatio()!==dpr)renderer.setPixelRatio(dpr);
     renderer.setSize(width,height,false);
     const aspect=width/height,halfW=Math.max(9.2,5.8*aspect);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();camera.updateMatrixWorld(true);
-    const area=width,unit=width/(camera.right-camera.left),edge=floorPoint(area/2,275,.44);stage.position.set(edge.x,0,edge.z+1.79);stage.scale.x=(area-60)/(17*unit);
+    const area=width,unit=width/(camera.right-camera.left),edge=floorPoint(area/2,game.spatialVersion?350:275,.44);stage.position.set(edge.x,0,edge.z+1.79);stage.scale.x=(area-60)/(17*unit);
     const left=floorPoint(40,20,4.18),right=floorPoint(area-40,20,4.18);rail.position.copy(left).lerp(right,.5);rail.scale.x=right.x-left.x;
     bulbs.forEach((b,i)=>b.position.copy(floorPoint(50+(area-100)*i/11,46,3.5)));
     lamps.forEach((l,i)=>{const x=parseFloat(l.entry.element.style.left)||area/2;l.anchor=floorPoint(x,22+Math.floor(i/6)*Number(host.dataset.rowStride||300),4.1);l.fixture.position.copy(l.anchor);});
@@ -80,12 +81,13 @@ export function createMinuitRenderer({getReducedEffects}){
     for(const p of entries){
       const f=3.15+((p.index*.61803398875)%1)*1.35,movement=p.person.identity?.movement,amplitude=movement==='calm'?.6:movement==='flamboyant'?1.2:1;
       const dx=reduced?0:Math.sin(t*f*.73+p.phase)*amplitude*(p.actor?1.1:1.5),dy=reduced?0:-Math.max(0,Math.sin(t*f*1.73+p.phase))*amplitude*2;
-      p.sprite.position.copy(p.base).addScaledVector(p.axisX,dx).addScaledVector(p.axisY,dy);p.sprite.material.rotation=reduced?0:Math.sin(t*f+p.phase)*.045;
-      p.shadow.position.copy(p.foot).addScaledVector(p.axisX,dx).addScaledVector(p.axisY,dy);
+      const physical=p.physical||{x:0,y:0,angle:0,lift:0};
+      p.sprite.position.copy(p.base).addScaledVector(p.axisX,dx+physical.x).addScaledVector(p.axisY,dy+physical.y-physical.lift);p.sprite.material.rotation=(reduced?0:Math.sin(t*f+p.phase)*.045)+physical.angle;
+      p.shadow.position.copy(p.foot).addScaledVector(p.axisX,dx+physical.x).addScaledVector(p.axisY,dy+physical.y);
       if(p.instrument){p.instrument.position.copy(p.shadow.position);p.instrument.position.y+=.035;}
     }
     for(const l of lamps){const target=l.entry.instrument.position,attribute=l.beam.geometry.getAttribute('position');spotlightVertices(l.anchor,{x:target.x,y:target.y-.034,z:target.z+.2},1.15,attribute.array);attribute.needsUpdate=true;l.pool.position.set(target.x,target.y-.035,target.z+.2);}
     renderer.render(scene,camera);if(!reduced)schedule();
   }
-  return {canvas,attach(next,state){if(!next){this.pause();return;}const changed=next!==host;if(changed&&host)observer.unobserve(host);host=next;game=state;if(canvas.parentElement!==host)host.prepend(canvas);host.classList.add('bl-render-ready');if(changed){visible=true;populate();observer.observe(host);}resize();schedule();},pause(){if(frame!==null)cancelAnimationFrame(frame);frame=null;}};
+  return {canvas,moveCrowd(points){for(const p of entries.filter(p=>!p.actor)){const next=points.find(x=>x.id===p.person.id);if(next)p.physical={x:next.x-(p.person.position.x+(width-game.room.width)/2),y:next.y-p.person.position.y,angle:next.angle,lift:next.lift};}lastPaint=-Infinity;schedule();},attach(next,state){if(!next){this.pause();return;}const changed=next!==host;if(changed&&host)observer.unobserve(host);host=next;game=state;if(canvas.parentElement!==host)host.prepend(canvas);host.classList.add('bl-render-ready');if(changed){visible=true;populate();observer.observe(host);}resize();schedule();},pause(){if(frame!==null)cancelAnimationFrame(frame);frame=null;}};
 }

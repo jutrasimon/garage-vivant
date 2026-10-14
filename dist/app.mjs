@@ -1,20 +1,20 @@
-import {PATCH_NOTES} from './release.mjs?v=0.8.15';
+import {PATCH_NOTES} from './release.mjs?v=0.9.0';
 const freshSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
-import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.8.15';
-import {cardFace} from './card-view.mjs?v=0.8.15';
-import {xpHTML,personCard,levelRewardButton,rosterProgressHTML} from './person-card.mjs?v=0.8.15';
-import {createLevelNotifications} from './level-notifications.mjs?v=0.8.15';
-import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.15';
-import {songQualityHTML} from './song-rules.mjs?v=0.8.15';
-import {groupLinkHTML} from './group-link.mjs?v=0.8.15';
-import {mountDesignDashboard} from './design-dashboard.mjs?v=0.8.15';
-import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.8.15';
-import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.8.15';
+import {levelRewardsHTML,claimLevelReward,rememberLevelChoice} from './level-rewards.mjs?v=0.9.0';
+import {cardFace} from './card-view.mjs?v=0.9.0';
+import {xpHTML,personCard,levelRewardButton,rosterProgressHTML} from './person-card.mjs?v=0.9.0';
+import {createLevelNotifications} from './level-notifications.mjs?v=0.9.0';
+import {changeBandLiveInstrument,musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.9.0';
+import {songQualityHTML} from './song-rules.mjs?v=0.9.0';
+import {groupLinkHTML} from './group-link.mjs?v=0.9.0';
+import {mountDesignDashboard} from './design-dashboard.mjs?v=0.9.0';
+import {characterPortrait,characterName,drawCharacter,ACCESSORIES,MOVEMENTS} from './character-view.mjs?v=0.9.0';
+import {readMapOptions,saveMapOptions,mapOptionsHTML,MAP_DEFAULTS} from './map-options.mjs?v=0.9.0';
 const mapOptions=readMapOptions(localStorage);
-import { placeActivityLabels } from './map-labels.mjs?v=0.8.15';
-import { createBandLiveModule } from './bandlive-view.mjs?v=0.8.15';
-import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.8.15';
-import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.8.15";
+import { placeActivityLabels } from './map-labels.mjs?v=0.9.0';
+import { createBandLiveModule } from './bandlive-view.mjs?v=0.9.0';
+import {beginBandLiveConcert,commitBandLiveConcert} from './bandlive-concert.mjs?v=0.9.0';
+import {compositionCreditHTML,DEFAULT_FILTERS,catalogueControls,catalogueHTML as musicCatalogueHTML,songDetailsHTML} from "./catalogue.mjs?v=0.9.0";
 let catalogueFilters={...DEFAULT_FILTERS};
 import {
   thresholdsHTML,
@@ -23,13 +23,13 @@ import {
   exchangeTrace,
   sessionHTML,
   rapinHTML,
-} from "./v7-view.mjs?v=0.8.15";
+} from "./v7-view.mjs?v=0.9.0";
 import {
   effectiveTraits,
   updateTraits,
   TRAIT_CATALOG,
   BAG_ACTIONS,
-} from "./v7.mjs?v=0.8.15";
+} from "./v7.mjs?v=0.9.0";
 import {
   createShowClock,
   advanceShowClock,
@@ -39,22 +39,22 @@ import {
   songKey,
   stageGeometry,
   showBeat,
-} from "./show-playback.mjs?v=0.8.15";
+} from "./show-playback.mjs?v=0.9.0";
 import {
   showOverlayHTML,
   showResourcesHTML,
   deckInspectionHTML,
   cardInspectionHTML,
-} from "./show-view.mjs?v=0.8.15";
-import { setupDocSearch } from "./doc-search.mjs?v=0.8.15";
-import { calendarHTML } from "./v6-view.mjs?v=0.8.15";
-import { pendingBooking, eventById } from "./calendar.mjs?v=0.8.15";
-import { editBag } from "./social.mjs?v=0.8.15";
+} from "./show-view.mjs?v=0.9.0";
+import { setupDocSearch } from "./doc-search.mjs?v=0.9.0";
+import { calendarHTML } from "./v6-view.mjs?v=0.9.0";
+import { pendingBooking, eventById } from "./calendar.mjs?v=0.9.0";
+import { editBag } from "./social.mjs?v=0.9.0";
 import {
   profileMarkup,
   changeModule,
   resetLayout,
-} from "./profile-layout.mjs?v=0.8.15";
+} from "./profile-layout.mjs?v=0.9.0";
 import {
   VERSION,
   NEEDS,
@@ -93,7 +93,7 @@ import {
   compositionProject,
   journalEntries,
   chemistryKnowledge,
-} from "./engine.mjs?v=0.8.15";
+} from "./engine.mjs?v=0.9.0";
 import {
   command,
   bandStage,
@@ -109,20 +109,20 @@ import {
   nextBandLiveSlot,
   skipShow,
   completePerformance,
-} from "./life.mjs?v=0.8.15";
+} from "./life.mjs?v=0.9.0";
 import {
   CARDS,
   CURSES,
   INTENTIONS,
   SHOW_TICKS,
   createPerformance,
-} from "./stage.mjs?v=0.8.15";
-import { resolveShowPlan } from "./show-planning.mjs?v=0.8.15";
+} from "./stage.mjs?v=0.9.0";
+import { resolveShowPlan } from "./show-planning.mjs?v=0.9.0";
 import {
   reconcile,
   createViewPositions,
   withReadingAnchor,
-} from "./ui-state.mjs?v=0.8.15";
+} from "./ui-state.mjs?v=0.9.0";
 import {
   quickHTML,
   skillHTML,
@@ -137,14 +137,14 @@ import {
   drawStage,
   enableAudio,
   playSound,
-} from "./v5-view.mjs?v=0.8.15";
+} from "./v5-view.mjs?v=0.9.0";
 import {
   createPlayback,
   snapSpeed,
   setPlaybackSpeed,
   advancePlayback,
   updatePositions,
-} from "./runtime.mjs?v=0.8.15";
+} from "./runtime.mjs?v=0.9.0";
 const playback = createPlayback();
 const $ = (q) => document.querySelector(q),
   $$ = (q) => [...document.querySelectorAll(q)],
@@ -245,6 +245,7 @@ try {
 const levelNotices=createLevelNotifications({getWorld:()=>world,getReducedEffects:()=>reducedEffects,isShowVisible:()=>view==='bandlive'||view==='shows'&&showingPerformance});
 const bandLive = createBandLiveModule({
   getWorld: () => world,
+  onCatalogSave: () => save(),
   getPlan: () => showPlan,
   onOpen: () => changeView('bandlive'),
   onReturn: ({concert}={}) => { if(concert)return continueBandLiveConcert();changeView('map');setSpeed(playback.resumeSpeed); },
@@ -1208,7 +1209,7 @@ document.addEventListener("input", (e) => {
   }
   if (el.dataset.identity) {
     const k = el.dataset.identity;
-    if(k==="instrument")changeBandLiveInstrument(p,el.value);
+    if(k==="instrument")changeBandLiveInstrument(p,el.value,world.cardCatalog);
     else if(k!=="name"||el.value.trim())p[k] = k === "age" ? clamp(Number(el.value), 18, 90) : el.value;
     renderPeople();
   }
@@ -2839,7 +2840,7 @@ $('#map-controls').innerHTML=mapOptionsHTML(mapOptions);
 
 function personBandLiveDecks(p){
   const instruments=[p.instrument,...Object.keys(p.bandLiveDecks||{}).filter(i=>i!==p.instrument)];
-  return `<details id="bandlive-person-decks"><summary>DECKS BANDLIVE · ${instruments.length} instrument(s)</summary><p>5 cartes par instrument. Une amélioration de deck à chaque montée de niveau.</p>${instruments.map(i=>`<h4>${SKILLS[i]}${i===p.instrument?' · instrument actuel':''}</h4><ul class="person-deck-cards">${musicianDeck(p,i).map(kind=>{const c=definitionFor(i,kind);return `<li>${cardFace({card:c,owner:p.name,instrument:i})}</li>`;}).join('')}</ul>`).join('')}</details>`;
+  return `<details id="bandlive-person-decks"><summary>DECKS BANDLIVE · ${instruments.length} instrument(s)</summary><p>5 cartes par instrument. Une amélioration de deck à chaque montée de niveau.</p>${instruments.map(i=>`<h4>${SKILLS[i]}${i===p.instrument?' · instrument actuel':''}</h4><ul class="person-deck-cards">${musicianDeck(p,i,world.cardCatalog).map(kind=>{const c=definitionFor(i,kind,world.cardCatalog);return `<li>${cardFace({card:c,owner:p.name,instrument:i})}</li>`;}).join('')}</ul>`).join('')}</details>`;
 }
 
 document.addEventListener('click',event=>{
@@ -2848,7 +2849,7 @@ document.addEventListener('click',event=>{
  const person=world.people.find(p=>p.id===open.dataset.openLevelRewards);if(!person||(person.levelRewards||[]).every(r=>r.status!=='pending'))return;
  select(person.id);
  levelRewardOwner=person.id;
- modal(`<div data-level-modal><h2>Améliorer le deck de ${esc(person.name)}</h2><p>Chaque niveau te donne un changement de carte. Choisis lequel : il sera conservé pour les prochains shows. Le quartier attend pendant ton choix.</p>${levelRewardsHTML(person,{limit:1})}</div>`);
+ modal(`<div data-level-modal><h2>Améliorer le deck de ${esc(person.name)}</h2><p>Chaque niveau te donne un changement de carte. Choisis lequel : il sera conservé pour les prochains shows. Le quartier attend pendant ton choix.</p>${levelRewardsHTML(person,{limit:1,catalog:world.cardCatalog})}</div>`);
  $('#dialog').classList.add('level-reward-dialog');
  levelNotices.acknowledge(person.id);
 });
