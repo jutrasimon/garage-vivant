@@ -5,6 +5,7 @@
 14 octobre 2026.
 
 - **Une vraie foule pour les nouveaux shows :** placement organique, positions sauvegardées, voisins et anciennes rangées remplacés par des rayons. Les cartes peuvent viser un spectateur ou un endroit au sol, avec un cœur et une couronne à deux couleurs.
+- **Portée de conquête lisible :** pendant la visée, un grand cercle montre le véritable rayon du pouvoir du spectateur. La mention « À la conquête » le distingue d’un effet qui va réellement se déclencher; le petit cercle de l’arc reste le marqueur de cible.
 - **Musique physique :** poussée, attraction, tourbillon, bond et retour élastique. Les collisions transmettent le mouvement; la conquête par collision est un effet explicite. Force, adhérence, rebond et unité de rayon se règlent dans Disposition.
 - **Atelier de cartes :** catalogue par instrument et catégorie Neutre, création, duplication, retrait avec restauration, effets ordonnés, paramètres filtrés, coût, rareté, niveau minimal et quantités de départ. Les decks gardent cinq cartes; les récompenses utilisent les cartes admissibles et leur rareté.
 - **Laboratoire sur une copie :** impacts faible/moyen/fort, cartes de test, remise à zéro, export et import de scénarios complets. Le show réel conserve ses cartes, son énergie et son XP.

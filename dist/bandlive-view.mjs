@@ -106,7 +106,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     else return hideTip();
     if(activeCard||animation)return hideTip();
     root.querySelectorAll('.bl-conquest-area').forEach(el=>el.classList.remove('bl-conquest-area'));
-    if(fanEl&&game&&!style){const source=game.fans.find(f=>f.id===fanEl.dataset.blFan);if(game.spatialVersion&&!source.conquered)showRadius(source.position,1);if(!source.conquered)for(const fan of conquestTargets(game,source))root.querySelector(`[data-bl-fan="${CSS.escape(fan.id)}"]`)?.classList.add('bl-conquest-area');}
+    if(fanEl&&game&&!style){const source=game.fans.find(f=>f.id===fanEl.dataset.blFan);if(game.spatialVersion&&!source.conquered&&CONQUEST_EFFECTS[source.effect])showRadius(source.position,1,0,{state:'potential',label:'À la conquête · rayon 1'});if(!source.conquered)for(const fan of conquestTargets(game,source))root.querySelector(`[data-bl-fan="${CSS.escape(fan.id)}"]`)?.classList.add('bl-conquest-area');}
     tooltip.innerHTML=html;for(const canvas of tooltip.querySelectorAll('[data-bl-cube]'))drawCube(canvas,game.fans.find(f=>f.id===canvas.dataset.blCube));tooltip.hidden=false;anchor.setAttribute('aria-describedby',tooltip.id);
     const r=anchor.getBoundingClientRect(),w=tooltip.offsetWidth,h=tooltip.offsetHeight;
     tooltip.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';
@@ -155,12 +155,12 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function labControlsHTML(){return `<div class="bl-lab-controls" role="group" aria-label="Laboratoire physique"><strong>LABO · COPIE DU SHOW</strong><label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></div>`;}
   function physicalPanelHTML(){return `<fieldset><legend>Foule physique</legend><p>Le placement modifie les vrais rayons du show. Le laboratoire travaille sur une copie.</p>${[['force','Force d’impact',30,650,10],['grip','Adhérence au sol',1,12,.5],['rebound','Rebond',0,.85,.05]].map(([key,label,min,max,step])=>`<label>${label}<output data-bl-physics-output="${key}">${game.physics[key]}</output><input data-bl-physics="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${game.physics[key]}"></label>`).join('')}<label>Unité de rayon<output data-bl-radius-output>${game.room.radiusUnit}</output><input id="bl-radius-unit" type="range" min="60" max="240" step="5" value="${game.room.radiusUnit}"></label><button id="bl-lab">Ouvrir le laboratoire ↗</button><button id="bl-cards">Créer et gérer les cartes ↗</button></fieldset>`;}
-  function showRadius(center,radius=1,core=0){
+  function showRadius(center,radius=1,core=0,{state='card',label=''}={}){
     const world=root.querySelector('.bl-world');if(!game?.spatialVersion||!world||!center)return;
     let layer=world.querySelector('.bl-radius-layer');if(!layer){layer=document.createElementNS('http://www.w3.org/2000/svg','svg');layer.classList.add('bl-radius-layer');layer.setAttribute('aria-hidden','true');world.append(layer);}
-    layer.hidden=false;const p=stage.crowdPoint(center),sx=1,unit=game.room.radiusUnit;
+    layer.hidden=false;layer.dataset.state=state;const p=stage.crowdPoint(center),sx=1,unit=game.room.radiusUnit;
     layer.setAttribute('viewBox',`0 0 ${world.clientWidth} ${world.clientHeight}`);
-    layer.innerHTML=`<ellipse class="bl-radius-outer" cx="${p.x}" cy="${p.y}" rx="${radius*unit*sx}" ry="${radius*unit}"/>${core?`<ellipse class="bl-radius-core" cx="${p.x}" cy="${p.y}" rx="${core*unit*sx}" ry="${core*unit}"/>`:''}<circle class="bl-radius-center" cx="${p.x}" cy="${p.y}" r="5"/>`;
+    layer.innerHTML=`<ellipse class="bl-radius-outer" cx="${p.x}" cy="${p.y}" rx="${radius*unit*sx}" ry="${radius*unit}"/>${core?`<ellipse class="bl-radius-core" cx="${p.x}" cy="${p.y}" rx="${core*unit*sx}" ry="${core*unit}"/>`:''}<circle class="bl-radius-center" cx="${p.x}" cy="${p.y}" r="5"/>${label?`<text class="bl-radius-label" x="${p.x}" y="${p.y-radius*unit+20}" text-anchor="middle">${esc(label)}</text>`:''}`;
   }
   function physicalChrome(){
     if(!game?.spatialVersion||preparing)return;
@@ -286,7 +286,15 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     if(pendingChoice?.type==='duo'&&!targetIds.includes(pendingChoice.targetId))targetIds.push(pendingChoice.targetId);
     const ends=targetIds.map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`)).filter(Boolean);
     if(c.tempo){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
-    if(game.spatialVersion){const center=c.target==='point'?(dragPoint?stage.point(dragPoint.x,dragPoint.y):fan?.position||{x:game.room.width/2,y:game.room.height/2}):fan?.position;if(c.radius&&center)showRadius(center,c.radius,c.coreRadius);if(outcome.conquestReady&&fan){const after=preview.game.fans.find(f=>f.id===fan.id).position;if(!c.radius)showRadius(after,1);else{const p=stage.crowdPoint(after),sx=1;root.querySelector('.bl-radius-layer')?.insertAdjacentHTML('beforeend',`<ellipse class="bl-radius-chain" cx="${p.x}" cy="${p.y}" rx="${game.room.radiusUnit*sx}" ry="${game.room.radiusUnit}"/>`);}}if(c.target==='point'&&center)ends.push(stage.crowdPoint(center));}
+    if(game.spatialVersion){
+      const center=c.target==='point'?(dragPoint?stage.point(dragPoint.x,dragPoint.y):fan?.position||{x:game.room.width/2,y:game.room.height/2}):fan?.position;
+      if(c.radius&&center)showRadius(center,c.radius,c.coreRadius);
+      if(fan&&!fan.conquered&&CONQUEST_EFFECTS[fan.effect]&&!c.radius&&(outcome.conquestReady||c.target==='single'&&Object.hasOwn(c,'power'))){
+        const ready=!!outcome.conquestReady,position=ready?preview.game.fans.find(f=>f.id===fan.id).position:fan.position;
+        showRadius(position,1,0,{state:ready?'triggered':'potential',label:ready?'Conquête · effet déclenché':'À la conquête · rayon 1'});
+      }else if(c.radius&&outcome.conquestReady&&fan){const p=stage.crowdPoint(preview.game.fans.find(f=>f.id===fan.id).position);root.querySelector('.bl-radius-layer')?.insertAdjacentHTML('beforeend',`<ellipse class="bl-radius-chain" cx="${p.x}" cy="${p.y}" rx="${game.room.radiusUnit}" ry="${game.room.radiusUnit}"/>`);}
+      if(c.target==='point'&&center)ends.push(stage.crowdPoint(center));
+    }
     aim.draw(origin,ends,valid||!!c.twoTargets);
     if(!ghost||!dragPoint)return;
     const r=root.querySelector('.bl-viewport').getBoundingClientRect(),expand=!!outcome.conquestReady&&innerWidth<=650;

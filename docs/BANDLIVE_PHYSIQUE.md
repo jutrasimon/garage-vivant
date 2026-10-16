@@ -6,6 +6,8 @@ Depuis la version 0.9.0, les nouveaux shows et répétitions utilisent une foule
 
 La visée affiche la zone réellement calculée par le moteur. Un rayon 1 vaut initialement 180 unités dans la salle, indépendamment de l’écran. Les cercles sont projetés avec la scène, sans changer les distances de combat. Les cartes peuvent cibler un spectateur, deux spectateurs, tout le public, une zone autour d’un spectateur ou un endroit libre au sol.
 
+Le petit cercle à l’arrivée de l’arc indique la cible. Le grand cercle **À la conquête · rayon 1** montre la portée du pouvoir du spectateur, même si la carte ne le conquiert pas encore. Il devient plus marqué et indique **effet déclenché** lorsque l’aperçu prévoit réellement sa conquête. Cette portée potentielle ne signifie pas que la carte à cible unique touche tous les voisins.
+
 Une zone peut avoir un cœur et une couronne : le cœur applique la pleine puissance et la pleine force, la couronne les multiplie par sa proportion. Chaque spectateur est compté une seule fois par effet. La puissance tient compte du style, de la réaction et des bonus présents. Les déplacements affectent aussi les corps des spectateurs déjà conquis.
 
 Les anciennes rangées des cartes deviennent des zones de rayon 1,5. Onde de choc et Projecteur utilisent un rayon 1. Chœur du public choisit au plus un ou deux spectateurs admissibles, par distance puis identifiant stable, dans un rayon 1. Se laisse entraîner et les conditions de voisinage utilisent aussi les positions réelles.
