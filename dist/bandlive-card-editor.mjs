@@ -1,33 +1,91 @@
 import {INSTRUMENTS,validatePersonDecks} from './bandlive-cards.mjs?v=0.9.0';
 import {EFFECTS,CONDITIONS,RARITIES,createCatalog,validateCatalog,compileCard,newEffect,duplicateCard,retireCard} from './bandlive-catalog.mjs?v=0.9.0';
 import {cardFace,escapeCard as esc} from './card-view.mjs?v=0.9.0';
+import {cardFieldHelp} from './bandlive-card-help.mjs?v=0.9.0';
 const options=(values,selected)=>Object.entries(values).map(([id,name])=>`<option value="${esc(id)}" ${id===String(selected)?'selected':''}>${esc(name)}</option>`).join('');
 export function createCardEditor({getWorld,onSave,onTest}){
  const host=document.createElement('section');host.className='bl-card-editor';host.hidden=true;host.role='dialog';host.setAttribute('aria-label','Atelier de cartes');host.setAttribute('aria-modal','true');document.body.append(host);
  let owner,draft,selected,category='guitar',showRetired=false,history=[],status='',previousFocus;
  const card=()=>draft.cards.find(c=>c.id===selected);
  const remember=()=>{history.push(JSON.stringify(draft));history=history.slice(-30);};
- function field(label,key,value,{select,min=0,max=100,step=1,type='number',effect=null}={}){return `<label>${esc(label)}${select?`<select data-ce-field="${key}" ${effect!==null?`data-ce-effect="${effect}"`:''}>${options(select,value)}</select>`:`<input data-ce-field="${key}" ${effect!==null?`data-ce-effect="${effect}"`:''} type="${type}" value="${esc(value)}" ${type==='number'?`min="${min}" max="${max}" step="${step}"`:''}>`}</label>`;}
+ let activeHelp=null,helpTimer,helpFrame;
+ const format=n=>Number(n).toLocaleString('fr-CA');
+ function hideHelp(){clearTimeout(helpTimer);cancelAnimationFrame(helpFrame);if(activeHelp)activeHelp.hidden=true;activeHelp=null;}
+ function showHelp(button){
+  hideHelp();const tip=host.querySelector('#'+button.dataset.ceHelp);if(!tip)return;
+  activeHelp=tip;tip.hidden=false;const anchor=button.getBoundingClientRect(),box=tip.getBoundingClientRect(),gap=10;
+  const left=Math.max(gap,Math.min(anchor.left,innerWidth-box.width-gap));
+  const below=anchor.bottom+gap,top=below+box.height<=innerHeight-gap?below:Math.max(gap,anchor.top-box.height-gap);
+  tip.style.left=left+'px';tip.style.top=top+'px';
+ }
+ function fieldShell(label,key,control,help,{effect=null,checkbox=false}={}){
+  const id=`ce-${effect??'card'}-${key}`,description=`${id}-help`,error=`${id}-error`;
+  return `<div class="ce-field ${checkbox?'ce-checkbox':''}"><div class="ce-field-heading"><label for="${id}">${esc(label)}</label><button type="button" class="ce-help" data-ce-help="${description}" aria-label="Aide : ${esc(label)}" aria-describedby="${description}">?</button></div>${control(id,`${description} ${error}`)}<span id="${description}" role="tooltip" class="ce-tooltip" hidden>${esc(help)}</span><small id="${error}" class="ce-field-error" hidden></small></div>`;
+ }
+ function field(label,key,value,{select,min=0,max=100,step=1,type='number',effect=null,factor=1}={}){
+  const numeric=!select&&type==='number',range=numeric&&key!=='coreRadius'?` Valeurs : ${format(min)} à ${format(max)}${step===1?' (entiers)':''}.`:'';
+  const help=cardFieldHelp(key,effect===null?null:card().effects[effect])+range;
+  return fieldShell(label,key,(id,description)=>{const attrs=`id="${id}" data-ce-field="${key}" data-ce-label="${esc(label)}" aria-describedby="${description}" ${effect!==null?`data-ce-effect="${effect}"`:''}`;return select?`<select ${attrs}>${options(select,value)}</select>`:`<input ${attrs} type="${type}" value="${esc(numeric?(Number.isFinite(value)?Math.round(value*factor*1e6)/1e6:''):value)}" ${numeric?`min="${min}" max="${max}" step="${step}" data-ce-factor="${factor}"`:'maxlength="70" required'}>`;},help,{effect});
+ }
+ function checkbox(label,key,checked,attrs,{effect=null}={}){return fieldShell(label,key,(id,description)=>`<input id="${id}" type="checkbox" ${attrs} aria-describedby="${description}" ${checked?'checked':''}>`,cardFieldHelp(key),{effect,checkbox:true});}
  function effectHTML(e,i){
   const fields=Object.entries(EFFECTS[e.type].fields).filter(([key])=>e.type!=='power'||!['limit','multiplier'].includes(key)||e.formula!=='fixed').filter(([key])=>key!=='limit'||e.formula==='spend').map(([k,f])=>field(f.label,k,e[k],{effect:i,select:f.options,min:f.min,max:f.max,step:f.step})).join('');
-  return `<fieldset class="ce-effect"><legend>Effet ${i+1}</legend><div class="ce-effect-head">${field('Effet','type',e.type,{effect:i,select:Object.fromEntries(Object.entries(EFFECTS).map(([k,v])=>[k,v.name]))})}<button data-ce-action="up" data-index="${i}" ${!i?'disabled':''} aria-label="Monter l’effet ${i+1}">↑</button><button data-ce-action="down" data-index="${i}" ${i===card().effects.length-1?'disabled':''} aria-label="Descendre l’effet ${i+1}">↓</button><button data-ce-action="remove-effect" data-index="${i}" ${card().effects.length===1?'disabled':''}>Retirer l’effet</button></div><div class="ce-fields">${fields}${field('Condition','when',e.when,{effect:i,select:CONDITIONS})}${e.when==='tempo'?field('Seuil de tempo','conditionValue',e.conditionValue??3,{effect:i,min:0,max:10}):''}${e.type==='power'?`<label><input data-ce-threshold="${i}" type="checkbox" ${e.threshold?'checked':''}> Bonus à partir d’un seuil de tempo</label>${e.threshold?field('Seuil','threshold-tempo',e.threshold.tempo,{effect:i,max:10})+field('Bonus','threshold-bonus',e.threshold.bonus,{effect:i,max:30}):''}`:''}</div></fieldset>`;
+  return `<fieldset class="ce-effect"><legend>Effet ${i+1}</legend><div class="ce-effect-head">${field('Effet','type',e.type,{effect:i,select:Object.fromEntries(Object.entries(EFFECTS).map(([k,v])=>[k,v.name]))})}<button data-ce-action="up" data-index="${i}" ${!i?'disabled':''} aria-label="Monter l’effet ${i+1}">↑</button><button data-ce-action="down" data-index="${i}" ${i===card().effects.length-1?'disabled':''} aria-label="Descendre l’effet ${i+1}">↓</button><button data-ce-action="remove-effect" data-index="${i}" ${card().effects.length===1?'disabled':''}>Retirer l’effet</button></div><div class="ce-fields">${fields}${field('Condition','when',e.when,{effect:i,select:CONDITIONS})}${e.when==='tempo'?field('Seuil de tempo','conditionValue',e.conditionValue??3,{effect:i,min:0,max:10}):''}${e.type==='power'?checkbox('Bonus à partir d’un seuil de tempo','threshold',!!e.threshold,`data-ce-threshold="${i}"`,{effect:i})+(e.threshold?field('Seuil','threshold-tempo',e.threshold.tempo,{effect:i,max:10})+field('Bonus','threshold-bonus',e.threshold.bonus,{effect:i,max:30}):''):''}</div></fieldset>`;
+ }
+ function validateFields(){
+  const c=card(),core=host.querySelector('[data-ce-field="coreRadius"]');if(core)core.max=String(Number.isFinite(c.radius)?c.radius:3);
+  let firstError='';
+  for(const el of host.querySelectorAll('input[data-ce-field]')){
+   const key=el.dataset.ceField,n=el.valueAsNumber,min=Number(el.min),max=Number(el.max);let error='';
+   if(el.type==='number'){
+    if(!Number.isFinite(n))error='Saisis un nombre.';
+    else if(key==='coreRadius'&&Number.isFinite(c.radius)&&n>c.radius)error=`Le cœur ne peut pas dépasser le rayon extérieur (${format(c.radius)}).`;
+    else if(n<min||n>max)error=`Choisis une valeur entre ${format(min)} et ${format(max)}.`;
+    else if(el.step==='1'&&!Number.isInteger(n))error='Choisis un nombre entier.';
+   }else if(!el.value.trim())error='Le nom ne peut pas être vide.';
+   else if(el.value.length>70)error='Le nom est limité à 70 caractères.';
+   el.setAttribute('aria-invalid',String(!!error));const message=host.querySelector('#'+el.id+'-error');message.textContent=error;message.hidden=!error;
+   if(error&&!firstError)firstError=el.dataset.ceLabel+' : '+error;
+  }
+  if(!firstError)try{validateCatalog({...draft,cards:[c]},{starters:false});}catch(error){firstError=error.message;}
+  const message=host.querySelector('[data-ce-validation]');message.textContent=firstError;message.hidden=!firstError;
+  host.querySelector('[data-ce-action="test"]').disabled=!!firstError;host.querySelector('[data-ce-action="save"]').disabled=!!firstError;
+  return !firstError;
  }
  function preview(){const c=card();
   const crown=host.querySelector('[data-ce-crown]');if(crown)crown.hidden=!c.coreRadius;
   for(const el of host.querySelectorAll('[data-ce-starter]')){const count=draft.cards.filter(x=>x.enabled&&[el.dataset.ceStarter,'neutral'].includes(x.instrument)).reduce((n,x)=>n+x.starter,0);el.querySelector('b').textContent=`${count}/5`;el.classList.toggle('ce-error',count!==5);}
-  for(const el of host.querySelectorAll('[data-ce-select]')){const item=draft.cards.find(x=>x.id===el.dataset.ceSelect);el.querySelector('strong').textContent=item.name;el.querySelector('small').textContent=`${item.cost} �nergie � ${RARITIES[item.rarity].name} � niv. ${item.minLevel}${item.enabled?'':' � retir�e'}`;}
+  for(const el of host.querySelectorAll('[data-ce-select]')){const item=draft.cards.find(x=>x.id===el.dataset.ceSelect);el.querySelector('strong').textContent=item.name;el.querySelector('small').textContent=`${item.cost} énergie · ${RARITIES[item.rarity].name} · niv. ${item.minLevel}${item.enabled?'':' · retirée'}`;}
   host.querySelector('[data-ce-action="undo"]').disabled=!history.length;
-host.querySelector('.ce-preview-card').innerHTML=cardFace({card:compileCard(c),owner:INSTRUMENTS[c.instrument]||'Neutre',instrument:c.instrument==='neutral'?'voice':c.instrument});host.querySelector('[data-ce-status]').textContent=status;}
+  host.querySelector('.ce-preview-card').innerHTML=validateFields()?cardFace({card:compileCard(c),owner:INSTRUMENTS[c.instrument]||'Neutre',instrument:c.instrument==='neutral'?'voice':c.instrument}):'<div class="ce-preview-invalid"><strong>Aperçu en pause</strong><p>Corrige les champs signalés pour voir une carte jouable.</p></div>';host.querySelector('[data-ce-status]').textContent=status;}
  function render(){
+  hideHelp();
   const list=draft.cards.filter(c=>c.instrument===category&&(showRetired||c.enabled));if(!list.some(c=>c.id===selected))selected=list[0]?.id;
-  const c=card();host.innerHTML=`<header><div><small>BANDLIVE · CRÉATION</small><h2>Atelier de cartes</h2></div><button data-ce-action="close" aria-label="Fermer l’atelier">✕</button></header><div class="ce-body"><aside>${field('Instrument','category',category,{select:{...INSTRUMENTS,neutral:'Neutre · tous les musiciens'}})}<label><input data-ce-retired type="checkbox" ${showRetired?'checked':''}> Voir les cartes retirées</label><button data-ce-action="new">＋ Nouvelle carte</button><div class="ce-card-list" role="navigation" aria-label="Cartes de cet instrument">${list.map(x=>`<button data-ce-select="${esc(x.id)}" aria-current="${x.id===selected?'true':'false'}"><strong>${esc(x.name)}</strong><small>${x.cost} énergie · ${RARITIES[x.rarity].name} · niv. ${x.minLevel}${x.enabled?'':' · retirée'}</small></button>`).join('')}</div></aside><main>${c?`<div class="ce-card-actions"><button data-ce-action="duplicate">Dupliquer la carte</button><button data-ce-action="${c.enabled?'retire':'restore'}">${c.enabled?'Retirer la carte':'Restaurer la carte'}</button></div><div class="ce-fields">${field('Nom','name',c.name,{type:'text'})}${!c.legacyKind?field('Instrument de la carte','instrument',c.instrument,{select:{...INSTRUMENTS,neutral:'Neutre · tous les musiciens'}}):''}${field('Coût en énergie','cost',c.cost,{max:3})}${field('Rareté','rarity',c.rarity,{select:Object.fromEntries(Object.entries(RARITIES).map(([k,v])=>[k,v.name]))})}${field('Niveau minimal d’obtention','minLevel',c.minLevel,{min:1,max:100})}${field('Exemplaires au départ','starter',c.starter,{max:5})}${field('Cible','target',c.target,{select:{single:'Un spectateur',duo:'Deux spectateurs',audience:'Tout le public',radius:'Zone autour d’un spectateur',point:'Endroit au sol'}})}${['radius','point'].includes(c.target)?field('Rayon extérieur','radius',c.radius,{min:.2,max:3,step:.1})+field('Rayon du cœur (0 = zone uniforme)','coreRadius',c.coreRadius,{min:0,max:3,step:.1})+`<div data-ce-crown ${c.coreRadius?'':'hidden'}>${field('Puissance de la couronne','outerScale',c.outerScale,{min:0,max:1,step:.1})}</div>`:''}</div><p class="ce-note">Les effets se jouent dans cet ordre. La conquête en chaîne suit les effets de la carte. Les ressources sont plafonnées; la main contient au plus cinq cartes.</p>${c.effects.map(effectHTML).join('')}<button data-ce-action="add-effect" ${c.effects.length>=12?'disabled':''}>＋ Ajouter un effet</button>`:'<p>Crée une carte pour cet instrument.</p>'}</main><aside class="ce-preview"><h3>Aperçu</h3><div class="ce-preview-card"></div><button data-ce-action="test" ${!c?'disabled':''}>Tester dans la foule ↗</button><p>Le test utilise une copie du show. Les changements du catalogue s’appliquent aux prochains shows.</p><h3>Decks de départ</h3>${Object.entries(INSTRUMENTS).map(([id,name])=>{const count=draft.cards.filter(x=>x.enabled&&[id,'neutral'].includes(x.instrument)).reduce((n,x)=>n+x.starter,0);return `<p data-ce-starter="${id}" class="${count!==5?'ce-error':''}">${name} : <b>${count}/5</b></p>`;}).join('')}<p>Les cartes neutres sont proposées à tous les instruments. Les cartes retirées restent dans les decks déjà acquis.</p></aside></div><footer><p data-ce-status role="status">${esc(status)}</p><div><button data-ce-action="undo" ${!history.length?'disabled':''}>Annuler</button><button data-ce-action="export">Exporter JSON</button><button data-ce-action="import">Importer JSON</button><input data-ce-file type="file" accept="application/json" hidden><button data-ce-action="save" class="primary">Appliquer le catalogue</button></div></footer>`;
+  const c=card();host.innerHTML=`<header><div><small>BANDLIVE · CRÉATION</small><h2>Atelier de cartes</h2></div><button data-ce-action="close" aria-label="Fermer l’atelier">✕</button></header>
+   <div class="ce-body"><aside>${field('Instrument','category',category,{select:{...INSTRUMENTS,neutral:'Neutre · tous les musiciens'}})}${checkbox('Voir les cartes retirées','retired',showRetired,'data-ce-retired')}<button data-ce-action="new">＋ Nouvelle carte</button>
+   <div class="ce-card-list" role="navigation" aria-label="Cartes de cet instrument">${list.map(x=>`<button data-ce-select="${esc(x.id)}" aria-current="${x.id===selected?'true':'false'}"><strong>${esc(x.name)}</strong><small>${x.cost} énergie · ${RARITIES[x.rarity].name} · niv. ${x.minLevel}${x.enabled?'':' · retirée'}</small></button>`).join('')}</div></aside>
+   <main>${c?`<div class="ce-card-actions"><button data-ce-action="duplicate">Dupliquer la carte</button><button data-ce-action="${c.enabled?'retire':'restore'}">${c.enabled?'Retirer la carte':'Restaurer la carte'}</button></div>
+    <div class="ce-fields">${field('Nom','name',c.name,{type:'text'})}${!c.legacyKind?field('Instrument de la carte','instrument',c.instrument,{select:{...INSTRUMENTS,neutral:'Neutre · tous les musiciens'}}):''}${field('Coût en énergie','cost',c.cost,{max:3})}${field('Rareté','rarity',c.rarity,{select:Object.fromEntries(Object.entries(RARITIES).map(([k,v])=>[k,v.name]))})}${field('Niveau minimal d’obtention','minLevel',c.minLevel,{min:1,max:100})}${field('Exemplaires au départ','starter',c.starter,{max:5})}${field('Cible','target',c.target,{select:{single:'Un spectateur',duo:'Deux spectateurs',audience:'Tout le public',radius:'Zone autour d’un spectateur',point:'Endroit au sol'}})}${['radius','point'].includes(c.target)?field('Rayon extérieur','radius',c.radius,{min:.2,max:3,step:.1})+field('Rayon du cœur (0 = zone uniforme)','coreRadius',c.coreRadius,{min:0,max:c.radius,step:.1})+`<div data-ce-crown ${c.coreRadius?'':'hidden'}>${field('Puissance de la couronne (%)','outerScale',c.outerScale,{min:0,max:100,step:.1,factor:100})}</div>`:''}</div>
+    <p data-ce-validation class="ce-validation" role="status" hidden></p><p class="ce-note">Les effets se jouent dans cet ordre. La conquête en chaîne suit les effets de la carte. Les ressources sont plafonnées; la main contient au plus cinq cartes.</p>${c.effects.map(effectHTML).join('')}<button data-ce-action="add-effect" ${c.effects.length>=12?'disabled':''}>＋ Ajouter un effet</button>`:'<p>Crée une carte pour cet instrument.</p>'}</main>
+   <aside class="ce-preview"><h3>Aperçu</h3><div class="ce-preview-card"></div><button data-ce-action="test" ${!c?'disabled':''}>Tester dans la foule ↗</button><p>Le test utilise une copie du show. Les changements du catalogue s’appliquent aux prochains shows.</p><h3>Decks de départ</h3>${Object.entries(INSTRUMENTS).map(([id,name])=>{const count=draft.cards.filter(x=>x.enabled&&[id,'neutral'].includes(x.instrument)).reduce((n,x)=>n+x.starter,0);return `<p data-ce-starter="${id}" class="${count!==5?'ce-error':''}">${name} : <b>${count}/5</b></p>`;}).join('')}<p>Les cartes neutres sont proposées à tous les instruments. Les cartes retirées restent dans les decks déjà acquis.</p></aside></div>
+   <footer><p data-ce-status role="status">${esc(status)}</p><div><button data-ce-action="undo" ${!history.length?'disabled':''}>Annuler</button><button data-ce-action="export">Exporter JSON</button><button data-ce-action="import">Importer JSON</button><input data-ce-file type="file" accept="application/json" hidden><button data-ce-action="save" class="primary">Appliquer le catalogue</button></div></footer>`;
   if(c)preview();
  }
- function close(){host.hidden=true;previousFocus?.focus?.();}
- host.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')close();if(e.key==='Tab'){const elements=[...host.querySelectorAll('button:not([disabled]),input:not([hidden]),select,textarea')].filter(el=>el.offsetParent!==null),first=elements[0],last=elements.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+ function close(){hideHelp();host.hidden=true;previousFocus?.focus?.();}
+ host.addEventListener('pointerover',e=>{
+  clearTimeout(helpTimer);if(e.target.closest('.ce-tooltip'))return;
+  const field=e.target.closest('.ce-field');if(!field||field.contains(e.relatedTarget)&&!e.target.closest('[data-ce-help]'))return;
+  const button=field.querySelector('[data-ce-help]');helpTimer=setTimeout(()=>showHelp(button),200);
+ });
+ host.addEventListener('pointerout',e=>{const field=e.target.closest('.ce-field');if(field&&!field.contains(e.relatedTarget)){clearTimeout(helpTimer);helpTimer=setTimeout(hideHelp,150);}});
+ host.addEventListener('focusin',e=>{hideHelp();if(e.target.matches('[data-ce-help]')){const button=e.target;button.scrollIntoView({block:'nearest'});helpFrame=requestAnimationFrame(()=>{if(document.activeElement===button&&!host.hidden)showHelp(button);});}});
+ host.addEventListener('focusout',e=>{if(e.target.matches('[data-ce-help]'))hideHelp();});
+ host.addEventListener('scroll',e=>{if(!e.target.closest?.('.ce-tooltip')){if(activeHelp)hideHelp();else clearTimeout(helpTimer);}},true);
+ window.addEventListener('resize',hideHelp);
+ host.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();if(activeHelp)hideHelp();else close();}if(e.key==='Tab'){const elements=[...host.querySelectorAll('button:not([disabled]),input:not([hidden]),select,textarea')].filter(el=>el.offsetParent!==null),first=elements[0],last=elements.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
  host.addEventListener('input',e=>{
   const el=e.target;if(!el.matches('[data-ce-field]')||el.tagName==='SELECT')return;
-  const c=card(),key=el.dataset.ceField;if(!c)return;remember();const value=el.type==='number'?Number(el.value):el.value;
+  const c=card(),key=el.dataset.ceField;if(!c)return;remember();const value=el.type==='number'?(Number.isFinite(el.valueAsNumber)?el.valueAsNumber/Number(el.dataset.ceFactor||1):null):el.value;
   if(el.dataset.ceEffect!==undefined){const effect=c.effects[Number(el.dataset.ceEffect)];if(key.startsWith('threshold-'))effect.threshold[key.slice(10)]=value;else effect[key]=value;}else c[key]=value;
   status='Brouillon modifié.';preview();
  });
@@ -42,6 +100,7 @@ host.querySelector('.ce-preview-card').innerHTML=cardFace({card:compileCard(c),o
   render();
  });
  host.addEventListener('click',async e=>{
+  const help=e.target.closest('[data-ce-help]');if(help){showHelp(help);return;}if(e.target.closest('.ce-tooltip'))return;hideHelp();
   const button=e.target.closest('button');if(!button)return;
   if(button.dataset.ceSelect){selected=button.dataset.ceSelect;render();return;}
   const action=button.dataset.ceAction,c=card();if(!action)return;

@@ -44,3 +44,34 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 .bl-juice-collision{color:#ffd0e6;text-shadow:0 2px 0 #253b45,0 0 12px #ff99c9;font-weight:850}
 
 .ce-fields>[data-ce-crown]{display:contents}.ce-fields>[data-ce-crown][hidden]{display:none}
+
+/* The workshop uses readable form typography independently of the stage scale. */
+.bl-card-editor{font-family:var(--sans,system-ui,sans-serif);font-size:14px;line-height:1.45}
+.bl-card-editor button{font-size:13px;line-height:1.35}
+.bl-card-editor label{font-size:14px;line-height:1.4;margin:0;display:block}
+.bl-card-editor input,.bl-card-editor select{font:inherit;min-height:40px}
+.ce-field{min-width:0;margin-bottom:12px}
+.ce-field-heading{display:flex;align-items:center;gap:8px;margin-bottom:6px;min-height:26px}
+.ce-field-heading label{flex:1;min-width:0}
+.ce-effect-head>.ce-field{flex:1;margin:0;min-width:150px}
+.ce-effect-head{align-items:flex-end;gap:8px}
+.ce-effect-head>button{min-height:40px;font-size:12px}
+.ce-card-actions{flex-wrap:wrap}
+.ce-card-list button{padding:11px 12px;line-height:1.4}
+.bl-card-editor .ce-card-list small{font-size:12px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
+.ce-note,.ce-preview p{font-size:13px;line-height:1.6}
+.ce-preview h3{font-size:15px}
+.ce-preview-card{width:196px}
+.bl-card-editor>footer p{font-size:13px}
+.ce-checkbox{display:grid;grid-template-columns:18px minmax(0,1fr);column-gap:8px;align-items:start}
+.ce-checkbox>.ce-field-heading{grid-column:2;grid-row:1;margin:0}
+.bl-card-editor .ce-checkbox>input{grid-column:1;grid-row:1;width:16px;height:16px;min-height:0;margin:5px 0 0}
+.ce-checkbox>.ce-field-error{grid-column:2}
+.bl-card-editor .ce-help{flex:none;width:26px;height:26px;min-width:26px;min-height:26px;border:1px solid #8fa68c;border-radius:50%;padding:0;background:#eef1df;color:#365b49;font-size:14px;font-weight:700;cursor:help}
+.bl-card-editor .ce-help:hover,.bl-card-editor .ce-help:focus-visible{background:#d6e8c9;outline:2px solid #406e57;outline-offset:2px}
+.ce-tooltip{position:fixed;z-index:3;box-sizing:border-box;width:max-content;max-width:min(350px,calc(100vw - 20px));max-height:calc(100dvh - 20px);overflow:auto;padding:14px 16px;border:1px solid #aec6a3;border-radius:12px;background:#294a3e;color:#fffcef;font:400 14px/1.6 var(--sans,system-ui,sans-serif);box-shadow:0 8px 28px #12291c55;white-space:normal;overflow-wrap:break-word;text-align:left;cursor:default}
+.bl-card-editor [aria-invalid=true]{border-color:#ad3f37;background:#fff4ed}
+.ce-field-error{display:block;margin-top:6px;color:#9b322c;font-size:12px;line-height:1.5}
+.ce-validation,.ce-preview-invalid{padding:12px;border:1px solid #dba89a;border-radius:9px;background:#fff2e5;color:#81372d;font-size:13px;line-height:1.5}
+.ce-field-error[hidden],.ce-validation[hidden],.ce-tooltip[hidden]{display:none}
+@media(max-width:650px){.ce-body{display:block}.bl-card-editor input,.bl-card-editor select{font-size:16px}.ce-effect-head>.ce-field{flex-basis:100%}.bl-card-editor .ce-help{width:30px;height:30px;min-width:30px;min-height:30px}.ce-tooltip{font-size:14px}.ce-body .ce-card-list button{min-width:155px}.bl-card-editor>footer button{font-size:12px}.ce-body>aside:not(.ce-preview){max-height:220px}.ce-preview-invalid p{display:block!important}}
