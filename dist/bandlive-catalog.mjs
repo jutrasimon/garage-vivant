@@ -2,7 +2,7 @@ import {INSTRUMENTS,definitionFor} from './bandlive-cards.mjs?v=0.9.0';
 export const RARITIES=Object.freeze({common:{name:'Commune',weight:6},uncommon:{name:'Peu commune',weight:3},rare:{name:'Rare',weight:1},epic:{name:'Épique',weight:.3}});
 const number=(label,min,max,value,step=1)=>({label,min,max,value,step});
 export const EFFECTS=Object.freeze({
- power:{name:'Puissance',fields:{amount:number('Puissance',0,100,6),formula:{label:'Calcul',options:{fixed:'Fixe',tempo:'Ajouter tout le tempo',spend:'Consommer du tempo'}},limit:number('Tempo maximal consommé',1,10,4),multiplier:number('Puissance par tempo',1,5,1),strikes:number('Frappes',1,5,1)}},
+ power:{name:'Puissance',fields:{amount:number('Puissance',0,100,6),formula:{label:'Calcul',options:{fixed:'Fixe',tempo:'Ajouter tout le tempo',spend:'Consommer du tempo'}},limit:number('Tempo maximal consommé',1,10,4),multiplier:number('Puissance par tempo',1,5,1),strikes:number('Frappes',1,5,1),impactStrength:{...number('Force de repoussement',0,3,1,.1),optional:true}}},
  tempo:{name:'Gagner du tempo',fields:{amount:number('Tempo',1,10,2)}},
  energy:{name:'Gagner de l’énergie',fields:{amount:number('Énergie',1,3,1)}},
  draw:{name:'Piocher',fields:{amount:number('Cartes',1,5,1)}},
@@ -57,7 +57,7 @@ export function validateCatalog(value,{starters=true}={}){
   if(!Array.isArray(c.effects)||!c.effects.length||c.effects.length>12)fail('Choisis de 1 à 12 effets.');
   for(const e of c.effects){
    const schema=EFFECTS[e.type];if(!schema||!Object.hasOwn(CONDITIONS,e.when))fail('Effet ou condition inconnu.');
-   for(const [k,f] of Object.entries(schema.fields))if(f.options?!Object.hasOwn(f.options,e[k]):!Number.isFinite(e[k])||e[k]<f.min||e[k]>f.max||f.step===1&&!Number.isInteger(e[k]))fail('Paramètre invalide : '+schema.name+' / '+f.label);
+   for(const [k,f] of Object.entries(schema.fields)){const v=e[k]===undefined&&f.optional?f.value:e[k];if(f.options?!Object.hasOwn(f.options,v):!Number.isFinite(v)||v<f.min||v>f.max||f.step===1&&!Number.isInteger(v))fail('Paramètre invalide : '+schema.name+' / '+f.label);}
    if(e.when==='tempo'&&(!Number.isInteger(e.conditionValue)||e.conditionValue<0||e.conditionValue>10))fail('Seuil de tempo invalide.');
    if(e.type==='power'&&e.threshold!==undefined&&(typeof e.threshold!=='object'||!Number.isInteger(e.threshold.tempo)||e.threshold.tempo<0||e.threshold.tempo>10||!Number.isInteger(e.threshold.bonus)||e.threshold.bonus<0||e.threshold.bonus>30))fail('Bonus au seuil invalide.');
   }
@@ -73,6 +73,7 @@ export function describeCard(c){
  const lines=c.effects.map(e=>{
   let text=e.type==='power'?`${e.amount} puissance${e.formula==='tempo'?' + tout le tempo (consommé)':e.formula==='spend'?` + ${e.multiplier} par tempo consommé (max. ${e.limit})`:''}${e.threshold?.bonus?` (+${e.threshold.bonus} à ${e.threshold.tempo} tempo)`:''}`:e.type==='tempo'?`+${e.amount} tempo`:e.type==='energy'?`+${e.amount} énergie`:e.type==='draw'?`Pioche ${e.amount}`:e.type==='boost'?`+${e.amount} prochaine puissance${e.other==='yes'?' d’un autre musicien':''}`:e.type==='protect'?'Protège de l’ennui ce tour':e.type==='style'?`Adopte le style (${e.duration==='song'?'chanson':'tour'})`:`${EFFECTS[e.type].name} · force ${e.strength}${e.collisionPower?` · collisions +${e.collisionPower}`:''}`;
   if(e.type==='power'&&e.strikes>1)text+=` en ${e.strikes} frappes (puissance partagée)`;
+  if(e.type==='power'&&e.impactStrength!==undefined&&e.impactStrength!==1)text+=e.impactStrength===0?' · sans repoussement':` · repoussement ×${e.impactStrength}`;
   if(e.when!=='always')text+=' — '+CONDITIONS[e.when]+(e.when==='tempo'?' '+e.conditionValue:'');return text+'.';
  });
  return lines.join(' ')+(c.coreRadius?` · cœur ${c.coreRadius}, couronne ${Math.round(c.outerScale*100)} %`:'');

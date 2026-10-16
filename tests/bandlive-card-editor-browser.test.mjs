@@ -3,7 +3,7 @@ import {spawn} from 'node:child_process';
 import {mkdir,readFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
-import {EFFECTS,CONDITIONS,validateCatalog} from '../dist/bandlive-catalog.mjs';
+import {EFFECTS,CONDITIONS,validateCatalog,createCatalog} from '../dist/bandlive-catalog.mjs';
 
 const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});let browser,page;
 try{
@@ -11,12 +11,14 @@ try{
  await mkdir('test-results',{recursive:true});browser=await chromium.launch();
  for(const width of [1440,390]){
   page=await browser.newPage({viewport:{width,height:900},hasTouch:width<500,isMobile:width<500});const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.addInitScript(w=>localStorage.setItem('garage-vivant-v1',JSON.stringify(w)),preparedConcert().world);
+  const oldWorld=preparedConcert().world;oldWorld.cardCatalog=createCatalog();for(const c of oldWorld.cardCatalog.cards)for(const e of c.effects)delete e.impactStrength;
+  await page.addInitScript(w=>localStorage.setItem('garage-vivant-v1',JSON.stringify(w)),oldWorld);
   await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();await page.locator('#bl-cards').first().click();
   const editor=page.locator('.bl-card-editor'),field=key=>editor.locator(`[data-ce-field="${key}"]`),tips=editor.locator('[role="tooltip"]:visible');
   assert(!(await editor.textContent()).includes('\uFFFD'),'The workshop must never replace accented letters with broken characters');
   assert((await editor.locator('[data-ce-select] small').first().textContent()).includes('énergie · Commune · niv. 1'));
   assert(await field('name').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=14));assert(await editor.locator('[data-ce-select] small').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=12));
+  assert.equal(await field('impactStrength').inputValue(),'1','Old catalogs show the normal default without needing migration');await field('impactStrength').fill('4');assert.equal(await field('impactStrength').getAttribute('aria-invalid'),'true');await field('impactStrength').fill('0');assert((await editor.locator('.ce-preview-card').textContent()).includes('sans repoussement'));await field('impactStrength').fill('1');
   await editor.locator('[data-ce-action="duplicate"]').click();await field('name').fill('Écho d’été');await field('target').selectOption('point');
   await field('radius').fill('1.2');await field('coreRadius').fill('0.5');assert.equal(await field('outerScale').inputValue(),'50');
   const radiusHelp=editor.getByRole('button',{name:'Aide : Rayon extérieur',exact:true});
@@ -44,10 +46,11 @@ try{
   await field('when').selectOption('always');await field('formula').selectOption('spend');await field('limit').fill('4');await field('multiplier').fill('2');await field('strikes').fill('3');
   await editor.getByRole('button',{name:'Aide : Frappes',exact:true}).focus();await tips.waitFor();assert((await tips.textContent()).includes('2 + 2 + 2'));await page.keyboard.press('Escape');
   // Changing a number must preserve the next click; rerender-on-blur previously swallowed it.
+  await field('impactStrength').fill('2');await editor.getByRole('button',{name:'Aide : Force de repoussement',exact:true}).focus();await tips.waitFor();assert((await tips.textContent()).includes('0 = aucun recul'));assert((await tips.textContent()).includes('2 = double'));await page.screenshot({path:`test-results/card-impact-field-${width}.png`});await page.keyboard.press('Escape');
   await field('outerScale').fill('50');await editor.locator('[data-ce-action="save"]').click();assert((await editor.locator('[data-ce-status]').textContent()).includes('Catalogue appliqué'));
-  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).cardCatalog),copy=stored.cards.find(c=>c.name==='Écho d’été');assert(copy);assert.equal(copy.outerScale,.5);validateCatalog(stored);
+  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).cardCatalog),copy=stored.cards.find(c=>c.name==='Écho d’été');assert(copy);assert.equal(copy.outerScale,.5);assert.equal(copy.effects[0].impactStrength,2);validateCatalog(stored);
   const downloadPromise=page.waitForEvent('download');await editor.locator('[data-ce-action="export"]').click();const download=await downloadPromise,filename=await download.path(),exported=JSON.parse(await readFile(filename,'utf8'));assert.equal(exported.cards.find(c=>c.id===copy.id).outerScale,.5,'JSON keeps the existing fractional format');
-  await editor.locator('[data-ce-file]').setInputFiles(filename);await page.waitForFunction(()=>document.querySelector('[data-ce-status]')?.textContent.includes('Catalogue importé'));assert.equal(await field('outerScale').inputValue(),'50','Import converts a stored fraction back to a readable percentage');
+  await editor.locator('[data-ce-file]').setInputFiles(filename);await page.waitForFunction(()=>document.querySelector('[data-ce-status]')?.textContent.includes('Catalogue importé'));assert.equal(await field('outerScale').inputValue(),'50','Import converts a stored fraction back to a readable percentage');assert.equal(await field('impactStrength').inputValue(),'2','Per-card recoil survives export and import');
   exported.cards.find(c=>c.id===copy.id).outerScale=.335;await editor.locator('[data-ce-file]').setInputFiles({name:'fraction.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(exported))});await page.waitForFunction(()=>document.querySelector('[data-ce-field="outerScale"]')?.value==='33.5');assert(await editor.locator('[data-ce-action="save"]').isEnabled(),'Previously valid fractional proportions remain editable');await field('outerScale').fill('50');
   await radiusHelp.scrollIntoViewIfNeeded();await radiusHelp.click();await tips.waitFor();box=await tips.boundingBox();assert(box.x>=0&&box.x+box.width<=width);assert(await editor.evaluate(el=>el.scrollWidth<=el.clientWidth),'The workshop does not overflow horizontally');
   if(width<500){const form=await editor.locator('main').boundingBox(),preview=await editor.locator('.ce-preview').boundingBox();assert(preview.y>=form.y+form.height-1,'The phone preview follows the full form instead of overlapping its fields');}

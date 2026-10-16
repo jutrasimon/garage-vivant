@@ -14,6 +14,7 @@ const fields={
  limit:'Quantité maximale de tempo consommée par cet effet. S’il reste moins de tempo, seul le tempo disponible est consommé.',
  multiplier:'Puissance ajoutée pour chaque point de tempo consommé, en plus de la puissance de base.',
  strikes:'Répartit la puissance totale entre ce nombre de frappes. Exemple : 6 puissance en 3 frappes donne 2 + 2 + 2, pas 18. Une cible conquise ne reçoit plus de frappes.',
+ impactStrength:'Multiplie le repoussement de cet effet de puissance : 0 = aucun recul, 0,5 = moitié, 1 = normal, 2 = double, 3 = triple. Ne change pas les cœurs de la frappe; des collisions plus fortes peuvent donner des cœurs en plus. La puissance et les réglages de Disposition restent la base : une force générale des frappes à 0 désactive ce recul. Un effet Repousser ajouté séparément garde sa propre force.',
  other:'Tous : le prochain effet de puissance du groupe peut utiliser le bonus. Un autre musicien : le bonus attend une carte de puissance jouée par un musicien différent de celui-ci.',
  duration:'Ce tour : le style disparaît à la fin du tour. Cette chanson : il reste jusqu’à sa fin. Le style adopté est celui de la chanson en cours.',
  strength:'Multiplicateur de la force du mouvement. 1 = force normale, 0,5 = moitié, 2 = double. La force de base, l’adhérence, le rebond et les contacts se règlent dans Disposition.',
@@ -25,7 +26,7 @@ const fields={
  retired:'Affiche aussi les cartes archivées de cet instrument pour les consulter ou les restaurer. Elles restent jouables dans les decks déjà acquis.',
 };
 const effects={
- power:'Augmente la conquête des spectateurs ciblés, en tenant compte du style, des réactions et des bonus. Chaque frappe repousse aussi sa cible selon les réglages de la foule.',
+ power:'Augmente la conquête des spectateurs ciblés, en tenant compte du style, des réactions et des bonus. La force de repoussement règle le recul propre à cet effet, en plus des réglages de la foule.',
  tempo:'Ajoute du tempo au groupe, sans dépasser 10. Peut déclencher la réaction des spectateurs qui attendent du rythme.',
  energy:'Rend de l’énergie au groupe, sans dépasser 3. Le coût de la carte est payé avant ses effets.',
  draw:'Pioche des cartes du deck vers la main, sans dépasser cinq cartes en main. Les places manquantes limitent la pioche.',

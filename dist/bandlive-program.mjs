@@ -22,11 +22,11 @@ export function playProgram(game,card,targetId,options,hooks){
     if(hooks.hitReaction(game,f,card.actorId)){f.reactionUsed=true;game.events.push({id:game.events.length+1,type:'reaction',turn:game.turn,fanId:f.id,name:f.intent,hits:[]});}
     for(let strike=0;strike<e.strikes&&f.hp>0;strike++){const value=Math.floor(power/e.strikes)+(strike<power%e.strikes?1:0),before=f.hp;f.hp=Math.max(0,before-value);hits.push({id:f.id,before,after:f.hp,gain:before-f.hp,power:value});if(!f.hp)direct.add(f.id);hooks.conquer(game,f,queue);}
    }
-   const physics=physicsSettings(game.physics),pushed=planned.filter(p=>p.power>0);
-   if(physics.hitStrength&&pushed.length){
+   const physics=physicsSettings(game.physics),impact=e.impactStrength??1,pushed=planned.filter(p=>p.power>0);
+   if(physics.hitStrength&&impact&&pushed.length){
     const actorIndex=game.actors.findIndex(a=>a.id===card.actorId),slot=actorIndex%6,count=Math.min(6,game.actors.length-Math.floor(actorIndex/6)*6);
     const center=d.radius?{...origin()}:{x:90+(game.room.width-180)*(slot+.5)/count,y:-160};
-    impulse({center,kind:'hit',targets:pushed.map(p=>p.f.id),strength:physics.hitStrength,strengthById:Object.fromEntries(pushed.map(p=>[p.f.id,Math.min(1.8,Math.max(.35,p.power/6))]))});
+    impulse({center,kind:'hit',targets:pushed.map(p=>p.f.id),strength:physics.hitStrength,strengthById:Object.fromEntries(pushed.map(p=>[p.f.id,impact*Math.min(1.8,Math.max(.35,p.power/6))]))});
    }
    if(e.formula!=='fixed'){game.tempo-=spent;tempoSpent+=spent;}
    game.boost=0;game.relayBoosts=(game.relayBoosts||[]).filter(b=>b.actorId===card.actorId);

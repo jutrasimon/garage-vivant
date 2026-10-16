@@ -62,6 +62,39 @@ test('early physical saves acquire collision settings without losing cards, posi
  const {g}=fixture(),old=structuredClone(g);old.physics={force:230,grip:5,rebound:.28,collisionPower:0};const restored=restoreBandLive(old);assert.equal(restored.physics.collisionPower,2);assert.equal(restored.physics.collisionThreshold,60);assert.equal(restored.physics.collisionRadius,32);assert.equal(restored.physics.force,420);assert.deepEqual(restored.cards,old.cards);assert.deepEqual(restored.fans,old.fans);
  old.physics.force=610;old.physics.grip=2;old.physics.collisionPower=4;const custom=restoreBandLive(old);assert.equal(custom.physics.force,610);assert.equal(custom.physics.grip,2);assert.equal(custom.physics.collisionPower,4);assert.deepEqual(restoreBandLive(custom),custom);
 });
+test('card knockback strength scales displacement independently of musical power',()=>{
+ const distances=new Map();
+ for(const strength of [0,.5,1,2,3]){
+  const {g,c}=fixture({card:{effects:[{...newEffect('power'),impactStrength:strength}]}});g.physics.force=80;g.physics.hitStrength=1.5;g.physics.rebound=0;g.physics.collisionPower=0;
+  for(const [i,f] of g.fans.entries())moveSpectator(g,f.id,i?{x:600+(i-1)%4*110,y:60+Math.floor((i-1)/4)*90}:{x:300,y:130});
+  const before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok);assert.deepEqual(g,before);const result=playCard(g,c.id,'f0');assert.deepEqual(g,preview.game);assert.equal(result.event.hits.find(h=>h.id==='f0').gain,8,'The musical hit keeps the same hearts at every knockback strength');
+  distances.set(strength,Math.hypot(g.fans[0].position.x-300,g.fans[0].position.y-130));assert.equal(result.motions.length,strength===0?0:1);assert.deepEqual(restoreBandLive(g),g);
+  if(!strength)assert.deepEqual(g.fans.map(f=>f.position),before.fans.map(f=>f.position),'Zero skips the impulse entirely, including separation of idle bodies');
+ }
+ // The fixed-step sleep threshold leaves a tiny residual distance at rest.
+ assert.equal(distances.get(0),0);for(const s of [.5,2,3])assert(Math.abs(distances.get(s)/distances.get(1)-s)<.02,'Card strength is a real multiplier, including above the old launch cap');
+});
+test('card-specific knockback drives collision hearts and still respects the global disable switch',()=>{
+ for(const strength of [0,2]){
+  const {g,c}=fixture({card:{effects:[{...newEffect('power'),impactStrength:strength}]}});collisionLine(g);moveSpectator(g,'f0',{x:400,y:130});moveSpectator(g,'f1',{x:480,y:220});g.physics.hitStrength=1.5;
+  const before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok);const played=playCard(g,c.id,'f0');assert.deepEqual(g,preview.game);assert.equal(played.event.hits.find(h=>h.id==='f0'&&!h.kind).gain,8);
+  assert.equal(played.event.hits.some(h=>h.kind==='collision'),strength>0);assert.equal(g.fans[1].hp<100,strength>0);assert.deepEqual(restoreBandLive(g),g);
+  const disabled=structuredClone(before);disabled.physics.hitStrength=0;assert.equal(playCard(disabled,c.id,'f0').motions.length,0);assert.deepEqual(disabled.fans.map(f=>f.position),before.fans.map(f=>f.position));
+ }
+ const {g,c}=fixture({card:{effects:[{...newEffect('power'),impactStrength:0},newEffect('push')]}}),result=playCard(g,c.id,'f0');assert(result.motions.some(m=>m.kind==='push'),'A separate physical effect retains its own strength even when the musical recoil is zero');
+});
+test('catalogs and active shows without card knockback strength preserve their definitions and normal recoil',()=>{
+ const old=createCatalog();for(const c of old.cards)for(const e of c.effects)delete e.impactStrength;validateCatalog(old);
+ const {g,c}=fixture({catalog:old}),copy=structuredClone(g);assert.deepEqual(restoreBandLive(g),copy,'Restoring does not rewrite a frozen catalog or its compiled cards');
+ const next=structuredClone(g);for(const e of next.cards.find(x=>x.id===c.id).definition.program)if(e.type==='power')e.impactStrength=1;
+ const a=playCard(g,c.id,'f0'),b=playCard(next,c.id,'f0');assert.deepEqual(a,b);assert.deepEqual(g.fans,next.fans);assert.deepEqual(restoreBandLive(g),g);assert(g.cards.every(c=>c.definition.program.every(e=>!Object.hasOwn(e,'impactStrength'))));
+});
+test('invalid card knockback strength is rejected and nonstandard recoil is described on the card',()=>{
+ const catalog=createCatalog(),c=catalog.cards.find(c=>c.id==='drums:note'),e=c.effects.find(e=>e.type==='power');
+ for(const value of [-1,3.1,null,NaN,Infinity,'2']){e.impactStrength=value;assert.throws(()=>validateCatalog(catalog),/Force de repoussement/);}
+ e.impactStrength=0;validateCatalog(catalog);assert(compileCard(c).description.includes('sans repoussement'));e.impactStrength=.5;assert(compileCard(c).description.includes('repoussement ×0.5'));
+ e.impactStrength=1;const normal=compileCard(c).description;delete e.impactStrength;validateCatalog(catalog);assert.equal(compileCard(c).description,normal,'Missing and normal multipliers retain the previous description');
+});
 test('every proposed pair of effects executes and previews the exact committed state',()=>{
  const types=['power','tempo','energy','draw','boost','style','protect','push','pull','vortex','jump','return'];
  for(const first of types)for(const second of types){const {g,c}=fixture({card:{target:'radius',radius:1,effects:[newEffect(first),newEffect(second)]}}),before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok,first+' / '+second);assert.deepEqual(g,before);assert(playCard(g,c.id,'f0').ok);assert.deepEqual(g,preview.game);assert.deepEqual(restoreBandLive(g),g);assert(g.hand.length<=5);}
