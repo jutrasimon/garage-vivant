@@ -38,6 +38,8 @@ Les corps restent dans la zone du public, à l’écart de la scène. Les taille
 
 **Laboratoire** utilise une copie du show, avec ses cartes et sa foule. On peut y tester un impact faible, moyen ou fort : repousser, attirer, tourbillonner, bondir ou revenir élastiquement. Activer **Tester un impact**, puis viser le sol. Une carte envoyée depuis l’atelier se joue dans cette copie. **Recommencer le test** retrouve son état initial; **Quitter le labo** retrouve le véritable show sans dépense de carte, d’énergie ou d’XP.
 
+Chaque nouvel essai de carte repart d’une copie du show original. Les cartes temporaires d’un essai précédent sont remplacées, même en changeant d’instrument; leurs déplacements et dépenses ne contaminent pas le prochain essai. Le scénario exporté conserve uniquement la carte du test courant.
+
 L’export de scénario contient l’état initial, l’état courant et la disposition. Il peut être réimporté dans le laboratoire. L’export de disposition physique utilise la version 2 et inclut les positions de combat, la salle, les tailles et la physique. Les anciens exports à grille restent en version 1.
 
 ## Atelier de cartes
@@ -48,6 +50,7 @@ L’atelier contient les quatre entrées de chacun des huit instruments, ainsi q
 - **Retirer la carte** l’archive et met sa quantité de départ à zéro. Elle disparaît des futures propositions et reste valide dans les decks acquis et les anciens shows. Cocher **Voir les cartes retirées** permet de la restaurer.
 - Le nom, le coût, la rareté, le niveau minimal et les exemplaires de départ sont modifiables. Les quantités de départ actives doivent totaliser cinq pour chaque instrument. Une quantité de départ neutre s’ajoute à chaque instrument.
 - Les effets s’ajoutent, se retirent et se réordonnent. Chaque type montre uniquement ses paramètres. Le rayon et son cœur n’apparaissent que pour les cibles de zone. Les paramètres de tempo n’apparaissent que pour les formules qui l’utilisent.
+- Changer un effet ou une condition conserve la position du formulaire et le focus au clavier. Choisir une autre carte revient au début de sa fiche.
 - Chaque champ possède une aide : survole le champ ou son **?**, utilise le clavier pour atteindre le **?**, ou touche-le sur téléphone. L’aide explique le réglage, ses valeurs permises et ses interactions. **Échap** ferme d’abord l’aide, puis l’atelier.
 - **Rayon extérieur** mesure la distance du centre au bord : 1 vaut une unité de rayon de la salle (180 au départ, réglable dans Disposition). Le **rayon du cœur** utilise cette même unité et ne peut pas dépasser l’extérieur; 0 rend la zone uniforme. La **puissance de la couronne (%)** s’applique à la puissance et à la force hors du cœur : saisir 50 signifie 50 %, pas 5 000 %. Le format JSON conserve sa proportion habituelle (0,5 pour 50 %).
 - Une valeur vide, hors limites ou un cœur trop grand affiche une erreur près du champ. L’aperçu attend sa correction et les boutons de test et d’application sont suspendus. La saisie conserve le curseur et les modifications en brouillon.

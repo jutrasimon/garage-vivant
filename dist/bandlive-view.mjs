@@ -146,7 +146,9 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function startLab(card=null){
     if(stage.editing)stage.toggle();
-    if(!labOriginal){labOriginal={game,preparing};game=game?structuredClone(game):createBandLive({people:getWorld().people.slice(0,4),songs:[{id:'lab',title:'Essai musical',style:'Jazz',turns:5}],audienceSize:12,spatial:true,catalog:getWorld().cardCatalog});}
+    const entering=!labOriginal;if(entering)labOriginal={game,preparing};
+    // Every draft test starts from the real show, never from a previous temporary recipe.
+    if(entering||card)game=labOriginal.game?structuredClone(labOriginal.game):createBandLive({people:getWorld().people.slice(0,4),songs:[{id:'lab',title:'Essai musical',style:'Jazz',turns:5}],audienceSize:12,spatial:true,catalog:getWorld().cardCatalog});
     if(!game.spatialVersion){initializeCrowd(game);game.catalog=createCatalog();for(const a of game.actors)a.bandLiveDeck=game.cards.filter(c=>c.actorId===a.id).map(c=>c.kind);for(const c of game.cards)c.definition=compileCard(catalogCard(game.catalog,c.instrument,c.kind));}
     if(game.phase==='choose')chooseSong(game,game.songs[0].id);
     if(['won','lost'].includes(game.phase)){game.phase='play';for(const f of game.fans){f.hp=f.max;f.conquered=false;f.reactionUsed=false;}}

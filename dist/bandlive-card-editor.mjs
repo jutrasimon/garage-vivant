@@ -59,7 +59,9 @@ export function createCardEditor({getWorld,onSave,onTest}){
   for(const el of host.querySelectorAll('[data-ce-select]')){const item=draft.cards.find(x=>x.id===el.dataset.ceSelect);el.querySelector('strong').textContent=item.name;el.querySelector('small').textContent=`${item.cost} énergie · ${RARITIES[item.rarity].name} · niv. ${item.minLevel}${item.enabled?'':' · retirée'}`;}
   host.querySelector('[data-ce-action="undo"]').disabled=!history.length;
   host.querySelector('.ce-preview-card').innerHTML=validateFields()?cardFace({card:compileCard(c),owner:INSTRUMENTS[c.instrument]||'Neutre',instrument:c.instrument==='neutral'?'voice':c.instrument}):'<div class="ce-preview-invalid"><strong>Aperçu en pause</strong><p>Corrige les champs signalés pour voir une carte jouable.</p></div>';host.querySelector('[data-ce-status]').textContent=status;}
- function render(){
+ function render({resetForm=false}={}){
+  const scrolls=['.ce-body','.ce-body>main','.ce-body>aside:not(.ce-preview)','.ce-preview','.ce-card-list'].map(selector=>{const el=host.querySelector(selector);return {selector,top:el?.scrollTop||0,left:el?.scrollLeft||0};});
+  const active=document.activeElement,focus=host.contains(active)?active.id?'#'+CSS.escape(active.id):active.dataset.ceAction?`[data-ce-action="${active.dataset.ceAction}"]${active.dataset.index!==undefined?`[data-index="${active.dataset.index}"]`:''}`:null:null;
   hideHelp();
   const list=draft.cards.filter(c=>c.instrument===category&&(showRetired||c.enabled));if(!list.some(c=>c.id===selected))selected=list[0]?.id;
   const c=card();host.innerHTML=`<header><div><small>BANDLIVE · CRÉATION</small><h2>Atelier de cartes</h2></div><button data-ce-action="close" aria-label="Fermer l’atelier">✕</button></header>
@@ -71,6 +73,8 @@ export function createCardEditor({getWorld,onSave,onTest}){
    <aside class="ce-preview"><h3>Aperçu</h3><div class="ce-preview-card"></div><button data-ce-action="test" ${!c?'disabled':''}>Tester dans la foule ↗</button><p>Le test utilise une copie du show. Les changements du catalogue s’appliquent aux prochains shows.</p><h3>Decks de départ</h3>${Object.entries(INSTRUMENTS).map(([id,name])=>{const count=draft.cards.filter(x=>x.enabled&&[id,'neutral'].includes(x.instrument)).reduce((n,x)=>n+x.starter,0);return `<p data-ce-starter="${id}" class="${count!==5?'ce-error':''}">${name} : <b>${count}/5</b></p>`;}).join('')}<p>Les cartes neutres sont proposées à tous les instruments. Les cartes retirées restent dans les decks déjà acquis.</p></aside></div>
    <footer><p data-ce-status role="status">${esc(status)}</p><div><button data-ce-action="undo" ${!history.length?'disabled':''}>Annuler</button><button data-ce-action="export">Exporter JSON</button><button data-ce-action="import">Importer JSON</button><input data-ce-file type="file" accept="application/json" hidden><button data-ce-action="save" class="primary">Appliquer le catalogue</button></div></footer>`;
   if(c)preview();
+  for(const {selector,top,left} of scrolls){const el=host.querySelector(selector);if(el){el.scrollTop=resetForm&&['.ce-body','.ce-body>main'].includes(selector)?0:top;el.scrollLeft=left;}}
+  if(focus&&!resetForm)host.querySelector(focus)?.focus({preventScroll:true});
  }
  function close(){hideHelp();host.hidden=true;previousFocus?.focus?.();}
  host.addEventListener('pointerover',e=>{
@@ -96,14 +100,14 @@ export function createCardEditor({getWorld,onSave,onTest}){
   if(el.matches('[data-ce-threshold]')){remember();const effect=card().effects[Number(el.dataset.ceThreshold)];if(el.checked)effect.threshold={tempo:3,bonus:2};else delete effect.threshold;render();return;}
   if(el.matches('input[data-ce-field]'))return;
   if(el.tagName!=='SELECT'||!el.matches('[data-ce-field]'))return;
-  const key=el.dataset.ceField;if(key==='category'){category=el.value;render();return;}remember();
+  const key=el.dataset.ceField;if(key==='category'){category=el.value;render({resetForm:true});return;}remember();
   if(el.dataset.ceEffect!==undefined){const i=Number(el.dataset.ceEffect);if(key==='type')card().effects[i]=newEffect(el.value);else{card().effects[i][key]=el.value;if(key==='when'&&el.value==='tempo')card().effects[i].conditionValue=3;}}else{card()[key]=el.value;if(key==='instrument')category=el.value;}
   render();
  });
  host.addEventListener('click',async e=>{
   const help=e.target.closest('[data-ce-help]');if(help){showHelp(help);return;}if(e.target.closest('.ce-tooltip'))return;hideHelp();
   const button=e.target.closest('button');if(!button)return;
-  if(button.dataset.ceSelect){selected=button.dataset.ceSelect;render();return;}
+  if(button.dataset.ceSelect){selected=button.dataset.ceSelect;render({resetForm:true});return;}
   const action=button.dataset.ceAction,c=card();if(!action)return;
   try{
    if(action==='close'){close();return;}
@@ -120,7 +124,7 @@ export function createCardEditor({getWorld,onSave,onTest}){
    if(action==='add-effect')c.effects.push(newEffect());
    if(action==='remove-effect')c.effects.splice(Number(button.dataset.index),1);
    if(action==='up'||action==='down'){const i=Number(button.dataset.index),j=i+(action==='up'?-1:1);[c.effects[i],c.effects[j]]=[c.effects[j],c.effects[i]];}
-   render();
+   render({resetForm:action==='duplicate'||action==='new'});
   }catch(error){status=error.message;host.querySelector('[data-ce-status]').textContent=status;}
  });
  return {open(){previousFocus=document.activeElement;if(!draft||owner!==getWorld()){owner=getWorld();draft=structuredClone(owner.cardCatalog||createCatalog());history=[];}host.hidden=false;render();host.querySelector('button').focus();},close};

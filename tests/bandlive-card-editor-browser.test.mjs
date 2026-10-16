@@ -4,6 +4,7 @@ import {mkdir,readFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {EFFECTS,CONDITIONS,validateCatalog,createCatalog} from '../dist/bandlive-catalog.mjs';
+import {restoreBandLive,previewCard} from '../dist/bandlive.mjs';
 
 const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});let browser,page;
 try{
@@ -43,6 +44,13 @@ try{
   await editor.locator('[data-ce-action="save"]').click();saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).cardCatalog.cards.find(c=>c.name==='Écho d’été'));assert.equal(saved.effects[0].strikes,6,'Six strikes are accepted by Apply immediately after editing');
   await field('strikes').scrollIntoViewIfNeeded();await page.mouse.move(0,0);await page.screenshot({path:`test-results/card-editor-limits-${width}.png`});
   await editor.locator('[data-ce-threshold]').check();await field('threshold-tempo').fill('3');await field('threshold-bonus').fill('2');
+  await editor.locator('[data-ce-action="add-effect"]').click();const lastType=field('type').last();await lastType.scrollIntoViewIfNeeded();await lastType.focus();
+  const scrollPositions=()=>editor.locator('.ce-body, .ce-body>main').evaluateAll(els=>els.map(el=>({top:el.scrollTop,max:el.scrollHeight-el.clientHeight})));
+  const beforeSelect=await scrollPositions();assert(beforeSelect.some(el=>el.top>100));await lastType.selectOption('tempo');const afterSelect=await scrollPositions();
+  for(let i=0;i<afterSelect.length;i++)assert(Math.abs(afterSelect[i].top-Math.min(beforeSelect[i].top,afterSelect[i].max))<2,'Changing an effect preserves the form scroll, clamped only to its new height');
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'ce-1-type','Changing an effect preserves keyboard focus');
+  await field('amount').last().fill('12');const afterInput=await scrollPositions();assert.deepEqual(afterInput,afterSelect,'Editing the revealed field keeps the same viewport');
+  await editor.locator('[data-ce-action="remove-effect"][data-index="1"]').click();
   for(const type of Object.keys(EFFECTS)){
    await field('type').selectOption(type);if(type==='power')await field('formula').selectOption('spend');
    for(const control of await editor.locator('[data-ce-field], [data-ce-threshold], [data-ce-retired]').all()){
@@ -63,7 +71,28 @@ try{
   exported.cards.find(c=>c.id===copy.id).outerScale=.335;await editor.locator('[data-ce-file]').setInputFiles({name:'fraction.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(exported))});await page.waitForFunction(()=>document.querySelector('[data-ce-field="outerScale"]')?.value==='33.5');assert(await editor.locator('[data-ce-action="save"]').isEnabled(),'Previously valid fractional proportions remain editable');await field('outerScale').fill('50');
   await radiusHelp.scrollIntoViewIfNeeded();await radiusHelp.click();await tips.waitFor();box=await tips.boundingBox();assert(box.x>=0&&box.x+box.width<=width);assert(await editor.evaluate(el=>el.scrollWidth<=el.clientWidth),'The workshop does not overflow horizontally');
   if(width<500){const form=await editor.locator('main').boundingBox(),preview=await editor.locator('.ce-preview').boundingBox();assert(preview.y>=form.y+form.height-1,'The phone preview follows the full form instead of overlapping its fields');}
-  await page.screenshot({path:`test-results/card-editor-help-${width}.png`});await editor.locator('[data-ce-action="close"]').click();assert.equal(await tips.count(),0);assert.deepEqual(errors,[]);await page.close();
+  await page.screenshot({path:`test-results/card-editor-help-${width}.png`});await editor.locator('[data-ce-action="close"]').click();assert.equal(await tips.count(),0);
+  const world=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1'))),live=(await world()).performance.bandLive.game;
+  const scenario=async()=>{const download=page.waitForEvent('download');await page.locator('#bl-lab-export').click();return JSON.parse(await readFile(await (await download).path(),'utf8'));};
+  for(const instrument of ['guitar','keys','guitar']){
+   await page.locator('#bl-cards').first().click();await field('category').selectOption(instrument);await editor.locator(`[data-ce-select="${instrument==='guitar'?copy.id:'keys:note'}"]`).click();await editor.locator('[data-ce-action="test"]').click();await page.locator('.bl-render-ready').waitFor();
+   const data=await scenario();assert.deepEqual(restoreBandLive(data.initial),data.initial);assert.deepEqual(restoreBandLive(data.current),data.current);assert.equal(data.current.cards.filter(c=>c.kind==='lab:test').length,1,'Testing another instrument cannot leave old temporary cards behind');assert.equal(data.current.played,live.played,'Each draft test starts from the real show rather than the previous trial');
+  }
+  const initialLab=(await scenario()).initial,testId=initialLab.hand[0];await page.locator(`[data-bl-card="${testId}"]`).click();
+  const visibleFan=await page.locator('[data-bl-fan]').evaluateAll(els=>els.find(el=>{const r=el.getBoundingClientRect();return r.x+r.width/2>20&&r.x+r.width/2<innerWidth-20&&r.y+r.height/2>180&&r.y+r.height/2<innerHeight-230;})?.dataset.blFan);assert(visibleFan);
+  await page.locator(`[data-bl-fan="${visibleFan}"]`).click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);
+  const playedLab=(await scenario()).current,event=playedLab.events.findLast(e=>e.type==='card'),expected=previewCard(initialLab,testId,visibleFan,{point:event.point});assert(expected.ok);assert.deepEqual(playedLab,expected.game,'The composed draft really plays the previewed state in the laboratory');assert.deepEqual((await world()).performance.bandLive.game,live);
+  await page.locator('#bl-lab-reset').click();assert.deepEqual((await scenario()).current,initialLab);await page.locator('#bl-lab-close').click();assert.deepEqual((await world()).performance.bandLive.game,live);
+  // Apply a new starting deck, then enter a genuinely new rehearsal through the UI.
+  await page.locator('#bl-cards').first().click();await field('category').selectOption('guitar');
+  for(const id of ['guitar:note','guitar:special']){await editor.locator(`[data-ce-select="${id}"]`).click();await field('starter').fill('0');}
+  await editor.locator(`[data-ce-select="${copy.id}"]`).click();await field('starter').fill('5');await field('cost').fill('0');await editor.locator('[data-ce-action="add-effect"]').click();await field('type').last().selectOption('tempo');await field('amount').last().fill('12');await editor.locator('[data-ce-action="save"]').click();assert((await editor.locator('[data-ce-status]').textContent()).includes('Catalogue appliqué'));await editor.locator('[data-ce-action="close"]').click();
+  assert.deepEqual((await world()).performance.bandLive.game,live,'Applying a catalog keeps the current combat frozen');await page.locator('#bl-cancel').click();await page.locator('#bandlive-nav').click();await page.locator('#bl-start').click();await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();
+  const rehearsal=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-bandlive-v1')).game);let next=await rehearsal();assert.deepEqual(restoreBandLive(next),next);const authored=next.cards.filter(c=>c.kind===copy.id);assert.equal(authored.length,5,'The next show uses the applied starting quantities');assert(authored.every(c=>c.definition.program[0].strikes===6&&c.definition.program[1].amount===12));
+  if(!authored.some(c=>next.hand.includes(c.id))){await page.locator('#bl-end').click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);next=await rehearsal();}
+  const playable=authored.find(c=>next.hand.includes(c.id));assert(playable,'The authored card is drawn into the new rehearsal');await page.locator(`[data-bl-card="${playable.id}"]`).click();await page.locator('[data-bl-fan]').first().click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);
+  const after=await rehearsal(),cast=after.events.findLast(e=>e.type==='card'),forecast=previewCard(next,playable.id,'f0',{point:cast.point});assert(forecast.ok);assert.deepEqual(after,forecast.game);assert.equal(after.tempo,10,'The edited tempo effect is active in the next show');assert.deepEqual(restoreBandLive(after),after);await page.screenshot({path:`test-results/card-full-flow-${width}.png`});
+  assert.deepEqual(errors,[]);await page.close();
  }
- console.log('Card workshop passed: UTF-8 typography, readable fields, help for every effect/condition, hover/keyboard/touch, bounded tooltips, visible limits, +12 tempo and 6 strikes, live numeric errors, percentages and unchanged JSON format.');
+ console.log('Card workshop passed: typography, field help, hover/keyboard/touch, stable form scroll/focus, numeric errors, +12 tempo and 6 strikes, import/export, repeated cross-instrument lab trials, actual draft play/reset and edited starting deck played in a new rehearsal.');
 }catch(error){if(page&&!page.isClosed())await page.screenshot({path:'test-results/card-editor-help-failure.png'});throw error;}finally{await browser?.close();child.kill();}
