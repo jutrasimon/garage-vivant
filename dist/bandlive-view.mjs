@@ -81,7 +81,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   const stage=createBandLiveStage({root,getReducedEffects,onLayout:syncLayoutTools,onPositions:()=>{previewMemo=null;persist();}});
   const cardEditor=createCardEditor({getWorld,onSave:onCatalogSave,onTest:startLab,onApplyCurrent:applyCurrentCard,canApplyCurrent:()=>{const current=labOriginal?.game||game;return !!current?.spatialVersion&&['choose','play'].includes(current.phase);}});
   const aim=createBandLiveAim();
-  let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null,previewMemo=null;
+  let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null,previewMemo=null,touchGrab=null,ignoreClick=false,quietPointer=null,lastPointer=null;
   const liveShow=()=>{const s=getWorld().performance;return !labOriginal&&liveId&&s?.id===liveId&&s.bandLive&&getWorld().showEventId?s:null;};
   function syncConcert(){
     if(labOriginal)return;
@@ -94,12 +94,13 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   syncConcert();
   const tooltip=document.createElement('div');tooltip.id='bandlive-tooltip';tooltip.className='bl-tooltip';tooltip.role='tooltip';tooltip.hidden=true;document.body.append(tooltip);
   const previewLayer=document.createElement('div');previewLayer.className='bl-preview-layer';document.body.append(previewLayer);
-  const inspection=createBandLiveInspection({root,blocked:()=>stage.editing||!!animation||!!activeCard,lookup:id=>{if(!game)return null;const c=cardById(game,id);if(!c)return null;const actor=game.actors.find(a=>a.id===c.actorId);return {card:cardDefinition(c),owner:actor.name,instrument:INSTRUMENTS[c.instrument],instrumentKey:c.instrument,icon:CARD_GLYPHS[c.instrument],accent:actor.color};}});
+  const inspection=createBandLiveInspection({root,onShow:hideTip,blocked:()=>stage.editing||!!animation||!!activeCard||!!quietPointer,lookup:id=>{if(!game)return null;const c=cardById(game,id);if(!c)return null;const actor=game.actors.find(a=>a.id===c.actorId);return {card:cardDefinition(c),owner:actor.name,instrument:INSTRUMENTS[c.instrument],instrumentKey:c.instrument,icon:CARD_GLYPHS[c.instrument],accent:actor.color};}});
   inspection.targets.append(previewLayer);
   const dragImage=document.createElement('canvas');dragImage.width=dragImage.height=1;dragImage.style.cssText='position:fixed;left:-10px;top:-10px;pointer-events:none';document.body.append(dragImage);
   function persist(){if(labOriginal)return;if(liveShow()&&liveShow().bandLive.game===game)onConcertUpdate?.();else if(!liveId)rehearsalGame=game;try{localStorage.setItem(STORAGE,JSON.stringify({enabled,draft,game:liveId?rehearsalGame:game}));storageProblem=false;}catch{if(!storageProblem)notify('La répétition ne peut pas être enregistrée dans ce navigateur.');storageProblem=true;}}
   function hideTip(){if(!activeCard&&!selectedCard)root.querySelector('.bl-radius-layer')?.remove();tooltip.hidden=true;root.querySelectorAll('.bl-conquest-area').forEach(el=>el.classList.remove('bl-conquest-area'));root.querySelectorAll('[aria-describedby="bandlive-tooltip"]').forEach(el=>el.removeAttribute('aria-describedby'));}
   function showTip(target){
+    if(quietPointer)return hideTip();
     const style=target.closest('[data-bl-style]'),actorEl=target.closest('[data-bl-actor]'),fanEl=target.closest('[data-bl-fan]');
     let html,anchor;
     if(style){html=esc(style.dataset.blStyle);anchor=style;}
@@ -107,6 +108,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     else if(fanEl&&game){html=fanTooltip(game,game.fans.find(f=>f.id===fanEl.dataset.blFan));anchor=fanEl;}
     else return hideTip();
     if(activeCard||selectedCard||animation)return hideTip();
+    inspection.hide();
     root.querySelectorAll('.bl-conquest-area').forEach(el=>el.classList.remove('bl-conquest-area'));
     if(fanEl&&game&&!style){const source=game.fans.find(f=>f.id===fanEl.dataset.blFan);if(game.spatialVersion&&!source.conquered&&CONQUEST_EFFECTS[source.effect])showRadius(source.position,1,0,{state:'potential',label:'À la conquête · rayon 1'});if(!source.conquered)for(const fan of conquestTargets(game,source))root.querySelector(`[data-bl-fan="${CSS.escape(fan.id)}"]`)?.classList.add('bl-conquest-area');}
     tooltip.innerHTML=html;for(const canvas of tooltip.querySelectorAll('[data-bl-cube]'))drawCube(canvas,game.fans.find(f=>f.id===canvas.dataset.blCube));tooltip.hidden=false;anchor.setAttribute('aria-describedby',tooltip.id);
@@ -268,6 +270,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     const scroll=previousViewport?{x:previousViewport.scrollLeft,y:previousAudience?.scrollTop||0}:null;
     restoreVersion();hideTip();root.innerHTML=game&&!preparing?showHTML():setupHTML();
     physicalChrome();if(preparing)root.querySelector('.bl-setup')?.insertAdjacentHTML('beforeend','<button id="bl-cards">Atelier de cartes ↗</button>');
+    syncCardSelection();
     root.querySelector('.bl-audience')?.insertAdjacentHTML('afterbegin',tempoNotesHTML());
     animateResourceChanges(root,previousResources,getReducedEffects()||matchMedia('(prefers-reduced-motion: reduce)').matches);
     previewLayer.replaceChildren(...root.querySelectorAll('[data-bl-preview]'));
@@ -279,13 +282,28 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(liveShow()&&['won','lost'].includes(game.phase)&&!animation&&lastReport!==game){root.querySelector('.bl-concert-result')?.scrollIntoView({block:'start'});lastReport=game;}
   }
   function announce(message){const help=root.querySelector('#bl-help');if(help)help.textContent=message;}
+  function syncCardSelection(){
+    root.querySelectorAll('[data-bl-card]').forEach(el=>{const selected=el.dataset.blCard===selectedCard;el.classList.toggle('bl-selected',selected);el.setAttribute('aria-pressed',String(selected));});
+    const dock=root.querySelector('.bl-turn-dock');if(!dock)return;
+    let button=dock.querySelector('#bl-put-back');if(!button){button=document.createElement('button');button.id='bl-put-back';button.type='button';button.innerHTML='✕ Reposer la carte <kbd>Échap</kbd>';dock.append(button);}button.hidden=!selectedCard;
+  }
+  function cancelCard({pointer=null,suppressClick=false}={}){
+    const hadCard=!!(selectedCard||activeCard||pendingChoice||touchGrab),hadChoice=!!pendingChoice;selectedCard=null;pendingChoice=null;choiceTouch=null;touchGrab=null;
+    quietPointer=hadCard||suppressClick?pointer||dragPoint||lastPointer||{x:NaN,y:NaN}:null;if(suppressClick)ignoreClick=true;
+    clearDrag();hideTip();syncCardSelection();if(hadChoice)root.querySelector('.bl-card-choice')?.remove();
+    if(hadCard)announce('Carte reposée en main. Glisse une carte vers le public, ou sélectionne-la puis choisis sa cible.');
+  }
+  function selectCard(id,pointer=null){
+    if(selectedCard===id){cancelCard({pointer});return;}
+    clearDrag();hideTip();quietPointer=null;pendingChoice=null;selectedCard=id;render();root.querySelector(`[data-bl-card="${CSS.escape(id)}"]`)?.focus({preventScroll:true});
+  }
   function clearDrag(){
     previewMemo=null;
-    activeCard=null;dragPointer=null;dragPoint=null;if(dragFrame!==null)cancelAnimationFrame(dragFrame);dragFrame=null;ghost?.remove();ghost=null;root.classList.remove('bl-dragging');inspection.hide();clearPreview();root.querySelectorAll('.bl-drop-active,.bl-drop-valid,.bl-tempo-target').forEach(el=>el.classList.remove('bl-drop-active','bl-drop-valid','bl-tempo-target'));
+    const pointer=dragPointer;selectedCard=null;pendingChoice=null;choiceTouch=null;activeCard=null;dragPointer=null;touchGrab=null;dragPoint=null;if(pointer!==null&&root.hasPointerCapture(pointer))root.releasePointerCapture(pointer);if(dragFrame!==null)cancelAnimationFrame(dragFrame);dragFrame=null;ghost?.remove();ghost=null;root.classList.remove('bl-dragging');inspection.hide();clearPreview();root.querySelector('.bl-card-choice')?.remove();root.querySelectorAll('.bl-drop-active,.bl-drop-valid,.bl-tempo-target').forEach(el=>el.classList.remove('bl-drop-active','bl-drop-valid','bl-tempo-target'));syncCardSelection();
   }
   function startDrag(id){
     if(!game||!canPlay(game,id)||animation||stage.editing)return false;
-    previewMemo=null;
+    clearDrag();quietPointer=null;
     activeCard=id;hideTip();inspection.hide();root.classList.add('bl-dragging');const c=cardDefinition(cardById(game,id));
     root.querySelectorAll(c.target==='single'?'.bl-fan:not(.bl-conquered)':'.bl-audience').forEach(el=>el.classList.add('bl-drop-valid'));
     return true;
@@ -373,8 +391,9 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     }
   }
   function dropAtPoint(x,y){
-    const target=document.elementFromPoint(x,y)?.closest('[data-bl-target]');
-    // A freely positioned hand is never an obstacle to the fan's drop region.
+    const element=document.elementFromPoint(x,y);if(element?.closest('.bl-hand'))return null;
+    const target=element?.closest('[data-bl-target]');
+    // Returning to a hand is an explicit cancellation, including above the crowd.
     const clip=root.querySelector('.bl-audience-viewport')?.getBoundingClientRect();
     if(clip&&x>=Math.max(0,clip.left)&&x<=Math.min(innerWidth,clip.right)&&y>=Math.max(0,clip.top)&&y<=Math.min(innerHeight,clip.bottom)){
       const fan=[...root.querySelectorAll('[data-bl-fan]')].find(el=>{const r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;});
@@ -415,17 +434,17 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
   }
   function perform(id,targetId,options={}){
     if(animation||stage.editing)return false;
-    const card=cardById(game,id);if(!card||!canPlay(game,id))return false;
+    const card=cardById(game,id);if(!card||!canPlay(game,id)){cancelCard();return false;}
     const c=cardDefinition(card);
     if(c.twoTargets){
       if(pendingChoice?.type==='duo'&&pendingChoice.id===id){options.secondTargetId=targetId;targetId=pendingChoice.targetId;}
-      else {if(!game.fans.some(f=>f.id===targetId&&f.hp>0))return false;clearDrag();selectedCard=id;pendingChoice={type:'duo',id,targetId};render();announce('Choisis un deuxième spectateur distinct.');return false;}
+      else {if(!game.fans.some(f=>f.id===targetId&&f.hp>0)){cancelCard();return false;}clearDrag();selectedCard=id;pendingChoice={type:'duo',id,targetId};render();announce('Choisis un deuxième spectateur distinct.');return false;}
     }
     if(c.discard&&!options.discardId){clearDrag();selectedCard=id;pendingChoice={type:'discard',id};render();root.querySelector('.bl-card-choice')?.scrollIntoView({block:'nearest'});return false;}
     if(c.target==='point'&&!options.point)options.point=dragPoint?stage.point(dragPoint.x,dragPoint.y):game.fans.find(f=>f.id===targetId)?.position||{x:game.room.width/2,y:game.room.height/2};
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`),r=playCard(game,id,targetId,options);
     clearDrag();
-    if(!r.ok){announce(r.message);return false;}
+    if(!r.ok){cancelCard({suppressClick:true});announce(r.message+' Carte reposée en main.');return false;}
     selectedCard=null;pendingChoice=null;
     animation={motions:r.motions,started:performance.now(),origin,events:[r.event,...r.effects],cued:new Set(),duration:(1+r.effects.filter(e=>e.type!=='motion').length)*420+500};
     if(sound)playSound({type:'card',instrument:card.instrument});
@@ -483,40 +502,48 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(performance.now()-animation.started<animation.duration)requestAnimationFrame(animate);else{animation=null;render();}
   }
   root.addEventListener('dragstart',event=>{const card=event.target.closest('[data-bl-card]');if(!card||!startDrag(card.dataset.blCard))return event.preventDefault();event.dataTransfer.setData('application/x-bandlive-card',activeCard);event.dataTransfer.effectAllowed='move';event.dataTransfer.setDragImage(dragImage,0,0);ghost=makeDragGhost(activeCard);document.body.append(ghost);moveDrag(event.clientX,event.clientY);});
-  root.addEventListener('dragend',clearDrag);
+  root.addEventListener('dragend',event=>{if(activeCard)cancelCard({pointer:dragPoint||{x:event.clientX,y:event.clientY},suppressClick:true});});
   root.addEventListener('dragenter',event=>{if(!activeCard)return;event.preventDefault();moveDrag(event.clientX,event.clientY);});
   root.addEventListener('dragleave',event=>{if(!root.contains(event.relatedTarget)){dragPoint=null;highlightDrop(null);}});
   root.addEventListener('dragover',event=>{if(!activeCard)return;event.preventDefault();event.dataTransfer.dropEffect='move';moveDrag(event.clientX,event.clientY);});
-  root.addEventListener('drop',event=>{if(!activeCard)return;event.preventDefault();const target=dropAtPoint(event.clientX,event.clientY),id=activeCard;if(target)perform(id,target.dataset.blTarget);else clearDrag();});
+  root.addEventListener('drop',event=>{if(!activeCard)return;event.preventDefault();ignoreClick=true;const target=dropAtPoint(event.clientX,event.clientY),id=activeCard;if(target)perform(id,target.dataset.blTarget);else cancelCard({pointer:{x:event.clientX,y:event.clientY},suppressClick:true});});
   root.addEventListener('pointerdown',event=>{
     if(event.pointerType==='mouse')return;
-    const choice=pendingChoice?.type==='duo'?event.target.closest('[data-bl-fan]'):pendingChoice?.type==='discard'?event.target.closest('[data-bl-discard]'):null;
-    if(choice){choiceTouch={pointerId:event.pointerId,x:event.clientX,y:event.clientY,targetId:choice.dataset.blFan,discardId:choice.dataset.blDiscard};return;}
-    const card=event.target.closest('[data-bl-card]');if(!card||!startDrag(card.dataset.blCard))return;
-    event.preventDefault();dragPointer=event.pointerId;root.setPointerCapture(event.pointerId);ghost=makeDragGhost(activeCard);document.body.append(ghost);moveDrag(event.clientX,event.clientY);
+    const choice=event.target.closest('[data-bl-discard],[data-bl-target],#bl-put-back');
+    if(selectedCard&&choice){choiceTouch={id:selectedCard,pointerId:event.pointerId,x:event.clientX,y:event.clientY,targetId:choice.dataset.blFan||choice.dataset.blTarget,discardId:choice.dataset.blDiscard,cancel:choice.id==='bl-put-back'};return;}
+    const card=event.target.closest('[data-bl-card]');if(!card||animation||stage.editing||!canPlay(game,card.dataset.blCard))return;
+    touchGrab={pointerId:event.pointerId,id:card.dataset.blCard,x:event.clientX,y:event.clientY};
   });
   root.addEventListener('pointermove',event=>{
+    lastPointer={x:event.clientX,y:event.clientY};
+    if(dragPointer===event.pointerId&&!root.hasPointerCapture(event.pointerId)){cancelCard({pointer:lastPointer,suppressClick:true});return;}
+    if(touchGrab?.pointerId===event.pointerId&&Math.hypot(event.clientX-touchGrab.x,event.clientY-touchGrab.y)>=8){const id=touchGrab.id;touchGrab=null;if(startDrag(id)){event.preventDefault();dragPointer=event.pointerId;root.setPointerCapture(event.pointerId);ghost=makeDragGhost(id);document.body.append(ghost);}}
     if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};highlightDrop(dropAtPoint(event.clientX,event.clientY));inspection.move(dragPoint);aim.movePointer(dragPoint);}
     if(labOriginal&&labShoot&&!stage.editing){const spot=stage.point(event.clientX,event.clientY);if(spot&&spot.y>=0&&spot.y<=game.room.height)showRadius(spot,1,.4);}
     if(dragPointer!==event.pointerId)return;
     event.preventDefault();moveDrag(event.clientX,event.clientY);
   });
   root.addEventListener('pointerup',event=>{
+    lastPointer={x:event.clientX,y:event.clientY};
+    if(dragPointer===event.pointerId&&!root.hasPointerCapture(event.pointerId)){cancelCard({pointer:lastPointer,suppressClick:true});return;}
+    if(touchGrab?.pointerId===event.pointerId){const tap=touchGrab;touchGrab=null;event.preventDefault();ignoreClick=true;if(Math.hypot(event.clientX-tap.x,event.clientY-tap.y)<8)selectCard(tap.id,{x:event.clientX,y:event.clientY});else cancelCard({pointer:lastPointer,suppressClick:true});return;}
     if(dragPointer!==event.pointerId){
       const choice=choiceTouch;choiceTouch=null;
-      if(choice?.pointerId===event.pointerId&&pendingChoice&&Math.hypot(event.clientX-choice.x,event.clientY-choice.y)<12){event.preventDefault();if(choice.discardId)perform(pendingChoice.id,'audience',{discardId:choice.discardId});else perform(pendingChoice.id,choice.targetId);}
+      if(choice?.pointerId===event.pointerId&&choice.id===selectedCard){event.preventDefault();ignoreClick=true;if(choice.cancel||Math.hypot(event.clientX-choice.x,event.clientY-choice.y)>=12)cancelCard({pointer:lastPointer,suppressClick:true});else if(choice.discardId)perform(choice.id,'audience',{discardId:choice.discardId});else perform(choice.id,choice.targetId,{point:stage.point(event.clientX,event.clientY)});}
       return;
-    }const id=activeCard,target=dropAtPoint(event.clientX,event.clientY);root.releasePointerCapture(event.pointerId);if(target)perform(id,target.dataset.blTarget);else clearDrag();});
-  // Native HTML dragging cancels its mouse pointer. Only cancel a captured
-  // touch/pen drag here; mouse dragging finishes through drop/dragend.
-  root.addEventListener('pointercancel',event=>{choiceTouch=null;if(dragPointer===event.pointerId)clearDrag();});
-  root.addEventListener('lostpointercapture',()=>{if(dragPointer!==null)clearDrag();});
+    }const id=activeCard,target=dropAtPoint(event.clientX,event.clientY);ignoreClick=true;dragPointer=null;if(root.hasPointerCapture(event.pointerId))root.releasePointerCapture(event.pointerId);if(target)perform(id,target.dataset.blTarget);else cancelCard({pointer:{x:event.clientX,y:event.clientY},suppressClick:true});});
+  // Native HTML dragging cancels its mouse pointer and ends through drop/dragend.
+  // Only tracked touch/pen gestures are cancelled by pointercancel here.
+  root.addEventListener('pointercancel',event=>{if(dragPointer===event.pointerId||choiceTouch?.pointerId===event.pointerId||touchGrab?.pointerId===event.pointerId)cancelCard({pointer:{x:event.clientX,y:event.clientY},suppressClick:true});});
+  root.addEventListener('lostpointercapture',event=>{if(event.target===root&&dragPointer!==null)cancelCard({suppressClick:true});});
   root.addEventListener('mouseover',event=>{showTip(event.target);if(selectedCard)highlightDrop(event.target.closest('[data-bl-target]')||document.activeElement?.closest('[data-bl-target]'));});root.addEventListener('focusin',event=>{showTip(event.target);if(selectedCard)highlightDrop(event.target.closest('[data-bl-target]')||document.activeElement?.closest('[data-bl-target]'));});
   root.addEventListener('mouseout',event=>{if(!event.relatedTarget||!root.contains(event.relatedTarget))hideTip();});root.addEventListener('focusout',hideTip);
-  root.addEventListener('keydown',event=>{if(event.key==='Escape'){clearDrag();selectedCard=null;pendingChoice=null;hideTip();render();}else if(event.key==='Enter'&&event.target.matches('.bl-audience')&&selectedCard){event.preventDefault();perform(selectedCard,'audience');}});
+  root.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('.bl-audience')&&selectedCard){event.preventDefault();perform(selectedCard,'audience');}});
+  root.addEventListener('click',event=>{if(ignoreClick&&event.detail>0){ignoreClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
   root.addEventListener('click',async event=>{
     if(event.target.closest('[data-bl-style]')&&!selectedCard)return;
-    const target=event.target.closest('button,[data-bl-target]');if(!target)return;
+    const target=event.target.closest('button,[data-bl-target]');if(!target){if(selectedCard)cancelCard({pointer:{x:event.clientX,y:event.clientY}});return;}
+    if(target.id==='bl-put-back'){cancelCard({pointer:{x:event.clientX,y:event.clientY}});return;}
     if(target.id==='bl-page-prev'||target.id==='bl-page-next'){stage.setPage(stage.page+(target.id==='bl-page-next'?1:-1));clearDrag();selectedCard=null;render();return;}
     if(target.id==='bl-cards'){clearDrag();cardEditor.open();return;}
     if(target.id==='bl-neighborhood'){if(labOriginal){animation=null;clearDrag();const original=labOriginal;labOriginal=null;game=original.game;preparing=original.preparing;labShoot=false;}onReturn();return;}
@@ -541,9 +568,9 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     else if(target.dataset.blRewardKind){rewardChoice.kind=target.dataset.blRewardKind;render();}
     else if(target.id==='bl-confirm-exchange'){const result=exchangeBandLiveCard(getWorld(),rewardChoice);notify(result.message);persist();render();}
     else if(target.dataset.blDiscard&&pendingChoice?.type==='discard'){perform(pendingChoice.id,'audience',{discardId:target.dataset.blDiscard});}
-    else if(target.id==='bl-cancel-choice'){pendingChoice=null;selectedCard=null;pendingChoice=null;render();}
+    else if(target.id==='bl-cancel-choice'){cancelCard({pointer:{x:event.clientX,y:event.clientY}});}
     else if(target.dataset.blSong){chooseSong(game,target.dataset.blSong);persist();render();}
-    else if(target.dataset.blCard){pendingChoice=null;selectedCard=selectedCard===target.dataset.blCard?null:target.dataset.blCard;render();root.querySelector(`[data-bl-card="${CSS.escape(target.dataset.blCard)}"]`)?.focus({preventScroll:true});}
+    else if(target.dataset.blCard){selectCard(target.dataset.blCard,{x:event.clientX,y:event.clientY});}
     else if(target.dataset.blTarget&&selectedCard)perform(selectedCard,target.dataset.blTarget,{point:stage.point(event.clientX,event.clientY)});
     else if(target.id==='bl-start'){
       const plan=initializeDraft();if(!plan.ready){notify(plan.reason);return render();}
@@ -582,7 +609,12 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     else if(event.target.id==='bl-seed'){const seed=Number(event.target.value);if(Number.isInteger(seed)&&seed>=0&&seed<=4294967295)draft.seed=seed;else event.target.value=draft.seed;persist();}
     else if(event.target.id==='bl-audience-size'){const size=Number(event.target.value);if(Number.isInteger(size)&&size>=RULES.minAudience&&size<=RULES.maxAudience)draft.audienceSize=size;else event.target.value=draft.audienceSize;persist();}
   });
-  window.addEventListener('blur',clearDrag);
+  document.addEventListener('pointerdown',event=>{lastPointer={x:event.clientX,y:event.clientY};ignoreClick=false;quietPointer=null;if((selectedCard||activeCard||pendingChoice)&&!root.contains(event.target))cancelCard({pointer:lastPointer,suppressClick:!!activeCard});},true);
+  const resumeHover=event=>{lastPointer={x:event.clientX,y:event.clientY};if(quietPointer&&(!Number.isFinite(quietPointer.x)||Math.hypot(event.clientX-quietPointer.x,event.clientY-quietPointer.y)>8)){quietPointer=null;if(event.type==='pointermove')showTip(event.target);}};
+  root.addEventListener('pointerover',resumeHover,true);root.addEventListener('pointermove',resumeHover,true);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&(selectedCard||activeCard||pendingChoice||touchGrab)){event.preventDefault();cancelCard({suppressClick:!!activeCard});}else if(event.key!=='Escape')quietPointer=null;});
+  document.addEventListener('contextmenu',event=>{if(selectedCard||activeCard||pendingChoice||touchGrab){event.preventDefault();cancelCard({pointer:{x:event.clientX,y:event.clientY},suppressClick:true});}});
+  window.addEventListener('blur',()=>cancelCard({suppressClick:!!activeCard}));
   toggle.checked=true;toggle.disabled=true;toggle.closest('label')?.setAttribute('title','BandLive est le moteur de tous les nouveaux shows.');nav.hidden=!enabled&&!liveId;
   toggle.addEventListener('change',()=>{enabled=true;toggle.checked=true;nav.hidden=!enabled&&!liveId;hideTip();clearDrag();persist();if(!enabled)onDisable();});
   document.addEventListener('click',event=>{
@@ -614,7 +646,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     refresh(){syncConcert();lastReport=null;initializeDraft();render();},
     replayConcert(snapshot){if(!enabled||!canStart()){notify(!enabled?'Active BandLive dans Réglages pour revoir ce show.':'Termine la soirée avant de revoir un show.');return false;}animation=null;clearDrag();selectedCard=null;pendingChoice=null;liveId=null;game=createConcertReplay(snapshot);rehearsalGame=game;preparing=false;persist();onOpen();return true;},
     concertEntryHTML(show){if(show?.bandLive&&getWorld().showEventId)return '<div class="panel bl-entry"><b>Ce spectacle se joue avec BandLive.</b><button data-bandlive-open class="primary">Reprendre BandLive ↗</button></div>';if(!enabled||!show||show.preview||show.status!=='playing')return '';const plan=resolveBandLiveConcert(getWorld());return `<div class="panel bl-entry"><div><b>Jouer ce spectacle avec BandLive</b><p id="bandlive-eligibility" role="status">${plan.ready?`${plan.profile.label} · ${plan.profile.audienceSize} spectateurs · ${plan.songs.length} chansons au choix · ${esc(show.role||'Prestation')} · le résultat compte dans la partie.`:esc(plan.reason)}</p></div><button data-bandlive-concert aria-describedby="bandlive-eligibility" title="${esc(plan.reason||'Commencer ce spectacle avec BandLive')}" class="primary" ${plan.ready?'':'disabled'}>Jouer avec BandLive ↗</button></div>${eveningHTML(show)}`;},
-    leave(){restoreVersion();hideTip();clearDrag();inspection.hide();stage.leave();},
+    leave(){restoreVersion();cancelCard();stage.leave();},
     entryHTML(){return enabled?'<div class="panel bl-entry"><div><b>BandLive · le show jouable</b><p>Réserve un show avec deux à vingt-quatre musiciens et un répertoire ou une jam libre. BandLive commence automatiquement à l’arrivée sur scène. Les répétitions restent sans récompense.</p></div><button data-bandlive-open class="primary">Essayer BandLive ↗</button></div>':'';},
   };
 }
