@@ -66,6 +66,16 @@ body.bandlive-mode .workspace.bandlive-layout>main{padding:0;scrollbar-gutter:au
 .bl-conquest-preview[hidden],.bl-conquest-preview-chain[hidden],.drag-conquest-rule[hidden],.outcome-conquest[hidden]{display:none}
 .bl-conquest-pending{margin:9px 0;padding:8px 10px;border:1px solid #bfd2cd55;border-radius:9px;background:#a4c4b111;color:#d6e2db;font-size:12px;line-height:1.4;font-weight:650}
 .bl-conquest-pending[hidden]{display:none}
+.drag-card-feedback.bl-radius-compact .drag-fan-rules{display:none}
+.bl-radius-compact .bl-conquest-preview{padding:7px 10px;margin:5px 0}
+.bl-radius-compact .bl-conquest-preview-head{margin:5px 0}
+.bl-radius-compact .bl-conquest-preview-targets{margin-top:5px;padding-top:5px}
+.bl-inspection.bl-radius-compact .preview-face,.bl-inspection.bl-radius-compact .preview-caption,.bl-inspection.bl-radius-compact .bl-full-program,.bl-inspection.bl-radius-compact .preview-targets,.bl-inspection.bl-radius-compact .outcome-reaction,.bl-inspection.bl-radius-compact .outcome-conquest,.bl-inspection.bl-radius-compact .outcome-trigger{display:none}
+.bl-tooltip.bl-radius-compact .bl-fan-portrait{display:none}
+.drag-card-feedback.bl-radius-compact .drag-local-outcome{padding-top:4px;margin-top:4px}
+.drag-card-feedback.bl-radius-compact .drag-impact{margin:4px 0}
+.drag-card-feedback.bl-radius-compact .drag-release{margin-top:5px}
+@media(max-width:650px){.drag-card-feedback.bl-radius-compact{width:min(320px,calc(100vw - 24px))!important}}
 .bl-conquest-preview-kicker{font-size:10px;font-weight:950;letter-spacing:.8px;color:#ffc6e0;line-height:1.2}
 .bl-conquest-preview-head{display:flex;align-items:center;gap:9px;margin:7px 0}
 .bl-conquest-preview-icon{display:grid;place-items:center;flex:none;width:31px;height:31px;border:1px solid #ffdbed9c;border-radius:10px;background:radial-gradient(circle at 30% 20%,#ffd4e7,#f19bc2);box-shadow:0 0 13px #ffb5d65c;color:#59314c;font-size:24px;line-height:1;transform:rotate(-7deg)}

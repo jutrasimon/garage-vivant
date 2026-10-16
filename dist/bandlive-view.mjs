@@ -12,7 +12,7 @@ import {resourceDockHTML,readResourceValues,animateResourceChanges} from './band
 import {tempoNotesHTML} from './bandlive-tempo-notes.mjs?v=0.9.0';
 import {SIZE_CONTROLS} from './bandlive-layout-profile.mjs?v=0.9.0';
 import {createBandLiveInspection} from './bandlive-inspection.mjs?v=0.9.0';
-import {createDragFeedback,showDragFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.9.0';
+import {createDragFeedback,showDragFeedback,moveDragFeedback,fitFeedback} from './bandlive-drag-feedback.mjs?v=0.9.0';
 import {createBandLiveAim} from './bandlive-aim.mjs?v=0.9.0';
 import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=0.9.0';
 import {drawMicroBody} from './character-view.mjs?v=0.9.0';
@@ -111,6 +111,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     const r=anchor.getBoundingClientRect(),w=tooltip.offsetWidth,h=tooltip.offsetHeight;
     tooltip.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';
     tooltip.style.top=(r.bottom+h+12<innerHeight?r.bottom+9:Math.max(8,r.top-h-9))+'px';
+    if(fanEl&&!style&&game.spatialVersion){const {position}=fitFeedback(tooltip,{pointer:{x:r.left+r.width/2,y:r.top+r.height/2},target:r,zones:radiusZones(),bounds:{left:8,right:innerWidth-8,top:8,bottom:innerHeight-8}});tooltip.style.left=position.x+'px';tooltip.style.top=position.y+'px';}
   }
   function initializeDraft(){
     return resolveBandLivePlan(getWorld(),draft,{canStart:canStart()});
@@ -162,6 +163,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     layer.setAttribute('viewBox',`0 0 ${world.clientWidth} ${world.clientHeight}`);
     layer.innerHTML=`<ellipse class="bl-radius-outer" cx="${p.x}" cy="${p.y}" rx="${radius*unit*sx}" ry="${radius*unit}"/>${core?`<ellipse class="bl-radius-core" cx="${p.x}" cy="${p.y}" rx="${core*unit*sx}" ry="${core*unit}"/>`:''}<circle class="bl-radius-center" cx="${p.x}" cy="${p.y}" r="5"/>${label?`<text class="bl-radius-label" x="${p.x}" y="${p.y-radius*unit+20}" text-anchor="middle">${esc(label)}</text>`:''}`;
   }
+  function radiusZones(){return [...root.querySelectorAll('.bl-radius-outer,.bl-radius-chain')].map(el=>{const r=el.getBoundingClientRect();return {cx:r.left+r.width/2,cy:r.top+r.height/2,rx:r.width/2,ry:r.height/2};});}
   function physicalChrome(){
     if(!game?.spatialVersion||preparing)return;
     const arena=root.querySelector('.bl-arena');arena.classList.add('bl-spatial');arena.dataset.theme=theme;
@@ -299,9 +301,10 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     }
     aim.draw(origin,ends,valid||!!c.twoTargets);
     if(!ghost||!dragPoint)return;
-    const r=root.querySelector('.bl-viewport').getBoundingClientRect(),expand=!!outcome.conquestReady&&innerWidth<=650;
-    // On phones, a larger conquest announcement can use the header space to protect its target.
-    showDragFeedback(ghost,{outcome,pointer:dragPoint,target:fan&&target.getBoundingClientRect(),bounds:{left:Math.max(12,r.left+12),right:Math.min(innerWidth-12,r.right-12),top:expand?12:Math.max(12,r.top+12),bottom:expand?innerHeight-12:Math.min(innerHeight-12,r.bottom-12)}});
+    const zones=game.spatialVersion?radiusZones():[];
+    const r=root.querySelector('.bl-viewport').getBoundingClientRect(),expand=zones.length||!!outcome.conquestReady&&innerWidth<=650;
+    // A radius can use the space above the scene; short screens get a compact forecast.
+    showDragFeedback(ghost,{outcome,pointer:dragPoint,target:fan&&target.getBoundingClientRect(),zones,bounds:{left:Math.max(12,r.left+12),right:Math.min(innerWidth-12,r.right-12),top:expand?12:Math.max(12,r.top+12),bottom:expand?innerHeight-12:Math.min(innerHeight-12,r.bottom-12)}});
   }
   function highlightDrop(target){
     const current=activeCard||selectedCard;
@@ -331,6 +334,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
         out.style.top=Math.max(6,Math.min(innerHeight-out.offsetHeight-6,r.top+6))+'px';
       }
     }
+    if(!ghost&&game.spatialVersion){const zones=radiusZones();if(zones.length){const r=target.getBoundingClientRect();inspection.place({pointer:dragPoint||{x:r.left+r.width/2,y:r.top+r.height/2},target:game.fans.some(f=>f.id===target.dataset.blTarget)?r:null,zones,bounds:{left:12,right:innerWidth-12,top:12,bottom:innerHeight-12}});}}
   }
   function dropAtPoint(x,y){
     const target=document.elementFromPoint(x,y)?.closest('[data-bl-target]');

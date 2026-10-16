@@ -5,6 +5,7 @@ import {chromium} from 'playwright';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
 import {chooseSong,previewCard,restoreBandLive} from '../dist/bandlive.mjs';
+import {duplicateCard,compileCard} from '../dist/bandlive-catalog.mjs';
 
 const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});let browser,page;
 try{
@@ -15,28 +16,34 @@ try{
   {name:'variety-pending',hp:7,intent:'variety',remaining:1},
   {name:'direct-conquest',hp:6,intent:'variety',remaining:0},
   {name:'variety-conquest',hp:7,intent:'variety',otherActor:true,remaining:0},
+  {name:'point-conquest',hp:6,intent:'variety',point:true,remaining:0},
   ...(width>500?[{name:'collision-conquest',hp:8,intent:'following',collision:true,remaining:0}]:[]),
  ]){
   const world=preparedConcert({instruments:['drums','keys','voice']}).world,game=beginBandLiveConcert(world).game;chooseSong(game,game.songs[0].id);
   const note=game.cards.find(c=>c.kind==='note'),favorite=game.audienceRules.styles.find(s=>s!==game.songs.find(s=>s.id===game.songId).style);game.hand=[note.id];game.discard=[];game.deck=game.cards.filter(c=>c.id!==note.id).map(c=>c.id);game.physics.hitStrength=scenario.collision?1.5:0;
+  if(scenario.point){const recipe=duplicateCard(game.catalog,'drums:note');Object.assign(recipe,{target:'point',radius:1.2,coreRadius:.5});note.kind=recipe.id;note.definition=compileCard(recipe);game.actors.find(a=>a.id===note.actorId).bandLiveDeck[Number(note.id.split(':').at(-1))]=recipe.id;}
   for(const [i,f] of game.fans.entries())Object.assign(f,{hp:100,max:100,conquered:false,favorite,intent:'bored',effect:'spotlight',effectValue:1,reactionUsed:false,reactionActors:[],reactionTempo:0,position:i===0?{x:scenario.collision?400:260,y:130}:i===1?{x:480,y:220}:{x:740+(i%3)*100,y:70+(Math.floor((i-2)/3)%3)*90}});
   Object.assign(game.fans[0],{hp:scenario.hp,max:16,intent:scenario.intent,effect:'shock',effectValue:4,reactionActors:scenario.otherActor?[game.actors.find(a=>a.id!==note.actorId).id]:[]});if(scenario.collision)game.fans[1].hp=1;restoreBandLive(game);
-  const expected=previewCard(game,note.id,'f0'),ready=scenario.remaining===0;assert(expected.ok);assert.equal(expected.game.fans[0].hp,scenario.remaining,scenario.name);assert.equal(expected.effects.some(e=>e.type==='conquest'&&e.fanId==='f0'),ready);if(scenario.collision)assert(expected.event.hits.some(h=>h.kind==='collision'));
+  const expected=previewCard(game,note.id,'f0',scenario.point?{point:game.fans[0].position}:{}),ready=scenario.remaining===0;assert(expected.ok);assert.equal(expected.game.fans[0].hp,scenario.remaining,scenario.name);assert.equal(expected.effects.some(e=>e.type==='conquest'&&e.fanId==='f0'),ready);if(scenario.collision)assert(expected.event.hits.some(h=>h.kind==='collision'));
   page=await browser.newPage({viewport:{width,height:900},hasTouch:width<500,isMobile:width<500});const errors=[];page.on('pageerror',e=>errors.push(e.message));if(width<500)await page.emulateMedia({reducedMotion:'reduce'});
   await page.addInitScript(w=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(w));},world);await page.goto(url);await page.locator('.bl-render-ready').waitFor();
+  async function outsideRadius(panel){for(const ellipse of await page.locator('.bl-radius-outer,.bl-radius-chain').all()){const r=await ellipse.boundingBox(),p=await panel.boundingBox(),cx=r.x+r.width/2,cy=r.y+r.height/2,x=Math.max(p.x,Math.min(cx,p.x+p.width)),y=Math.max(p.y,Math.min(cy,p.y+p.height));assert(((x-cx)/(r.width/2))**2+((y-cy)/(r.height/2))**2>=1,`The forecast stays outside the complete radius (${scenario.name}, ${width}): ${JSON.stringify({p,r})}`);assert(p.x>=0&&p.y>=0&&p.x+p.width<=width&&p.y+p.height<=900);}}
+  if(width>500)await page.locator('[data-bl-fan="f0"]').hover();else await page.locator('[data-bl-fan="f0"]').focus();await page.locator('#bandlive-tooltip').waitFor();await outsideRadius(page.locator('#bandlive-tooltip'));await page.mouse.move(8,8);
   const card=page.locator(`[data-bl-card="${note.id}"]`),fan=page.locator('[data-bl-fan="f0"]');await card.scrollIntoViewIfNeeded();const source=await card.boundingBox(),target=await fan.boundingBox(),point={x:target.x+target.width/2,y:target.y+target.height/2};assert(point.x>0&&point.x<width,'The target is visible while dragging');let cdp;
   if(width<500){cdp=await page.context().newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:source.x+source.width/2,y:source.y+source.height/2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point]});}
   else{await page.mouse.move(source.x+source.width/2,source.y+source.height/2);await page.mouse.down();await page.mouse.move(point.x,point.y,{steps:6});}
-  const layer=page.locator(`.bl-radius-layer[data-state="${ready?'triggered':'potential'}"]`);await layer.waitFor();const popup=page.locator('.drag-card-feedback');
+  const layer=page.locator(`.bl-radius-layer[data-state="${scenario.point?'card':ready?'triggered':'potential'}"]`);await layer.waitFor();const popup=page.locator('.drag-card-feedback');
+  await outsideRadius(popup);
   assert.equal(await popup.locator('.bl-conquest-preview').isVisible(),ready);assert.equal(await popup.locator('.bl-conquest-pending').isVisible(),!ready);
   const style=await layer.locator('.bl-radius-outer').evaluate(el=>{const s=getComputedStyle(el);return {dash:s.strokeDasharray,fill:s.fill,glow:s.filter,animation:s.animationName};});
-  if(ready){assert.equal(style.dash,'none','A triggered power has a solid circle');assert.notEqual(style.glow,'none');assert((await layer.textContent()).includes('CONQUÊTE !'));if(width<500)assert.equal(style.animation,'none');}
+  if(ready&&!scenario.point){assert.equal(style.dash,'none','A triggered power has a solid circle');assert.notEqual(style.glow,'none');assert((await layer.textContent()).includes('CONQUÊTE !'));if(width<500)assert.equal(style.animation,'none');}
+  else if(scenario.point){assert(await layer.locator('.bl-radius-core').isVisible());assert(await layer.locator('.bl-radius-chain').isVisible(),'The panel also protects the additional conquest radius');}
   else{assert.notEqual(style.dash,'none');assert(style.fill==='transparent'||style.fill==='rgba(0, 0, 0, 0)');assert((await popup.locator('.bl-conquest-pending').textContent()).includes('encore '+scenario.remaining+' ♥'));assert((await layer.textContent()).includes('encore '+scenario.remaining+' ♥'));}
   const remaining=16-scenario.remaining;assert((await popup.locator('.drag-outcome-main').textContent()).includes('→ '+remaining+'/16'),'The meter and activation state use the same complete simulation');await page.screenshot({path:`test-results/conquest-radius-${scenario.name}-${width}.png`});
   if(cdp)await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});else{await page.keyboard.press('Escape');await page.mouse.up();}
   assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game),game,'Inspecting or cancelling spends no resources');
-  if(width>500){
-   await card.click();await fan.hover();await layer.waitFor();assert.equal(await page.locator('#bl-card-preview .bl-conquest-pending').isVisible(),!ready);
+  {
+   if(cdp){await card.tap();await fan.focus();}else{await card.click();await fan.hover();}await layer.waitFor();assert.equal(await page.locator('#bl-card-preview .bl-conquest-pending').isVisible(),!ready);await outsideRadius(page.locator('#bl-card-preview'));
    // A nested mouseover used to overwrite the cached forecast with the ordinary fan tooltip.
    await fan.locator('.bl-cube').dispatchEvent('mouseover',{bubbles:true});assert(await layer.isVisible(),'The activation state survives nested hover events on the same target');assert(await page.locator('#bandlive-tooltip').isHidden());await page.keyboard.press('Escape');
   }
