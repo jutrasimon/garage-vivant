@@ -52,7 +52,7 @@ export function showDragFeedback(ghost,{outcome,pointer,target,bounds}) {
   ghost.querySelector('.drag-outcome-meta').textContent=outcome.meta;
   for(const [selector,key] of [['.drag-reaction','reaction'],['.drag-conquest-rule','conquest'],['.drag-trigger','trigger']])ghost.querySelector(selector).textContent=outcome[key]||'';
   const conquest=outcome.valid?outcome.conquestReady:null;
-  updateConquestPreview(ghost.querySelector('.bl-conquest-preview'),conquest);
+  updateConquestPreview(ghost.querySelector('.bl-conquest-preview'),conquest,outcome.valid?outcome.conquestPending:null);
   ghost.classList.toggle('has-conquest-effect',!!conquest);
   ghost.querySelector('.drag-conquest-rule').hidden=!!conquest;
   const key=target?outcome.name+'|'+outcome.main+'|'+outcome.valid:'';

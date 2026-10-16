@@ -64,6 +64,8 @@ body.bandlive-mode .workspace.bandlive-layout>main{padding:0;scrollbar-gutter:au
 .drag-card-feedback,.drag-card-feedback.has-target{width:260px!important;height:auto!important;overflow:hidden}
 .bl-conquest-preview{position:relative;margin:10px 0 8px;padding:11px 12px;border:1.5px solid #ffb6d6;border-radius:13px;background:linear-gradient(135deg,#653956,#3b304d);box-shadow:0 0 19px #fa8cc632,inset 0 1px #fff1f52b;color:#fff4f8;transform-origin:center}
 .bl-conquest-preview[hidden],.bl-conquest-preview-chain[hidden],.drag-conquest-rule[hidden],.outcome-conquest[hidden]{display:none}
+.bl-conquest-pending{margin:9px 0;padding:8px 10px;border:1px solid #bfd2cd55;border-radius:9px;background:#a4c4b111;color:#d6e2db;font-size:12px;line-height:1.4;font-weight:650}
+.bl-conquest-pending[hidden]{display:none}
 .bl-conquest-preview-kicker{font-size:10px;font-weight:950;letter-spacing:.8px;color:#ffc6e0;line-height:1.2}
 .bl-conquest-preview-head{display:flex;align-items:center;gap:9px;margin:7px 0}
 .bl-conquest-preview-icon{display:grid;place-items:center;flex:none;width:31px;height:31px;border:1px solid #ffdbed9c;border-radius:10px;background:radial-gradient(circle at 30% 20%,#ffd4e7,#f19bc2);box-shadow:0 0 13px #ffb5d65c;color:#59314c;font-size:24px;line-height:1;transform:rotate(-7deg)}

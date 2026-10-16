@@ -20,7 +20,7 @@ export function createBandLiveInspection({root,lookup,blocked}){
   root.addEventListener('pointerover',hover);root.addEventListener('focusin',e=>{const c=e.target.closest('[data-bl-card]');if(c&&!pinned)show(c.dataset.blCard);});
   root.addEventListener('pointerout',e=>{if(!pinned&&e.target.closest('[data-bl-card]')&&!e.relatedTarget?.closest?.('[data-bl-card]')){clearTimeout(timer);timer=setTimeout(hide,90);}});
   panel.addEventListener('pointerenter',()=>clearTimeout(timer));panel.addEventListener('pointerleave',()=>{if(!pinned)timer=setTimeout(hide,90);});
-  function outcome(value){const box=panel.querySelector('.preview-outcome');box.hidden=false;box.classList.toggle('invalid',!value.valid);for(const key of ['name','main','meta','reaction','conquest','trigger'])box.querySelector('.outcome-'+key).textContent=value[key]||'';const conquest=value.valid?value.conquestReady:null;updateConquestPreview(box.querySelector('.bl-conquest-preview'),conquest);box.querySelector('.outcome-conquest').hidden=!!conquest;}
+  function outcome(value){const box=panel.querySelector('.preview-outcome');box.hidden=false;box.classList.toggle('invalid',!value.valid);for(const key of ['name','main','meta','reaction','conquest','trigger'])box.querySelector('.outcome-'+key).textContent=value[key]||'';const conquest=value.valid?value.conquestReady:null;updateConquestPreview(box.querySelector('.bl-conquest-preview'),conquest,value.valid?value.conquestPending:null);box.querySelector('.outcome-conquest').hidden=!!conquest;}
   window.addEventListener('blur',hide);document.addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
   return {show,pin:id=>show(id,true),hide,outcome,targets:panel.querySelector('.preview-targets'),panel};
 }

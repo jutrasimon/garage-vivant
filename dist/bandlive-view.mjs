@@ -104,7 +104,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     else if(actorEl&&game){html=actorTooltip(game.actors.find(a=>a.id===actorEl.dataset.blActor));anchor=actorEl;}
     else if(fanEl&&game){html=fanTooltip(game,game.fans.find(f=>f.id===fanEl.dataset.blFan));anchor=fanEl;}
     else return hideTip();
-    if(activeCard||animation)return hideTip();
+    if(activeCard||selectedCard||animation)return hideTip();
     root.querySelectorAll('.bl-conquest-area').forEach(el=>el.classList.remove('bl-conquest-area'));
     if(fanEl&&game&&!style){const source=game.fans.find(f=>f.id===fanEl.dataset.blFan);if(game.spatialVersion&&!source.conquered&&CONQUEST_EFFECTS[source.effect])showRadius(source.position,1,0,{state:'potential',label:'À la conquête · rayon 1'});if(!source.conquered)for(const fan of conquestTargets(game,source))root.querySelector(`[data-bl-fan="${CSS.escape(fan.id)}"]`)?.classList.add('bl-conquest-area');}
     tooltip.innerHTML=html;for(const canvas of tooltip.querySelectorAll('[data-bl-cube]'))drawCube(canvas,game.fans.find(f=>f.id===canvas.dataset.blCube));tooltip.hidden=false;anchor.setAttribute('aria-describedby',tooltip.id);
@@ -280,6 +280,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
       outcome.reaction=fan.reactionUsed?'Réaction consommée ce tour':reactionText(game,fan)+' : '+(REACTIONS[fan.intent]?.description||'');outcome.conquest=conquestLabel(game,fan)+' : '+conquestDescription(game,fan);outcome.trigger=valid&&preview.game.fans.find(f=>f.id===fan.id).reactionUsed&&!fan.reactionUsed?'✦ Réaction déclenchée par cette carte':'';
       const conquestEffects=valid?preview.effects.filter(event=>event.type==='conquest'):[],effect=conquestEffects.find(event=>event.fanId===fan.id);
       if(effect)outcome.conquestReady={sourceId:fan.id,icon:CONQUEST_EFFECTS[effect.effect].icon,name:effect.name,description:conquestDescription(game,fan),targets:effect.targets.map(id=>game.fans.find(f=>f.id===id).name),chainCount:conquestEffects.length};
+      else if(valid&&!fan.conquered&&CONQUEST_EFFECTS[fan.effect]){const after=preview.game.fans.find(f=>f.id===fan.id);if(after.hp>0)outcome.conquestPending={remaining:after.hp};}
     }
     if(ghost)inspection.hide();else{inspection.pin(id);inspection.outcome(outcome);}
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`);
@@ -292,7 +293,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
       if(c.radius&&center)showRadius(center,c.radius,c.coreRadius);
       if(fan&&!fan.conquered&&CONQUEST_EFFECTS[fan.effect]&&!c.radius&&(outcome.conquestReady||c.target==='single'&&Object.hasOwn(c,'power'))){
         const ready=!!outcome.conquestReady,position=ready?preview.game.fans.find(f=>f.id===fan.id).position:fan.position;
-        showRadius(position,1,0,{state:ready?'triggered':'potential',label:ready?'Conquête · effet déclenché':'À la conquête · rayon 1'});
+        showRadius(position,1,0,{state:ready?'triggered':'potential',label:ready?'CONQUÊTE ! · effet déclenché':outcome.conquestPending?'Pouvoir inactif · encore '+outcome.conquestPending.remaining+' ♥':'À la conquête · rayon 1'});
       }else if(c.radius&&outcome.conquestReady&&fan){const p=stage.crowdPoint(preview.game.fans.find(f=>f.id===fan.id).position);root.querySelector('.bl-radius-layer')?.insertAdjacentHTML('beforeend',`<ellipse class="bl-radius-chain" cx="${p.x}" cy="${p.y}" rx="${game.room.radiusUnit}" ry="${game.room.radiusUnit}"/>`);}
       if(c.target==='point'&&center)ends.push(stage.crowdPoint(center));
     }

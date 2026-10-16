@@ -39,8 +39,13 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 
 .bl-radius-chain{fill:#ffc1e51a;stroke:#ffb9dd;stroke-width:3;stroke-dasharray:3 5}
 .bl-radius-label{fill:#ffe8f1;font-size:13px;font-weight:700;paint-order:stroke;stroke:#20393f;stroke-width:5px;stroke-linejoin:round}
-.bl-radius-layer[data-state=potential] .bl-radius-outer{fill:#f4bdcf09;stroke:#e8bfd9;stroke-width:2.5;stroke-dasharray:10 7}
-.bl-radius-layer[data-state=triggered] .bl-radius-outer{fill:#ffc1e521;stroke:#ffc6e3;stroke-width:3.5;stroke-dasharray:5 4}
+.bl-radius-layer[data-state=potential] .bl-radius-outer{fill:transparent;stroke:#a8c5bb88;stroke-width:1.5;stroke-dasharray:10 10}
+.bl-radius-layer[data-state=potential] .bl-radius-label{fill:#c4d5ce;font-size:12px}
+.bl-radius-layer[data-state=triggered] .bl-radius-outer{fill:#ff8db837;stroke:#ffe5f1;stroke-width:4;stroke-dasharray:none;filter:drop-shadow(0 0 7px #ff79b3);animation:bl-conquest-radius-announce .5s ease-out}
+.bl-radius-layer[data-state=triggered] .bl-radius-label{fill:#fff0f8;font-size:15px;font-weight:900}
+@keyframes bl-conquest-radius-announce{from{fill:#ffc6e35c;stroke-opacity:.55}to{fill:#ff8db837;stroke-opacity:1}}
+@media(prefers-reduced-motion:reduce){.bl-radius-layer[data-state=triggered] .bl-radius-outer{animation:none}}
+.reduce-effects .bl-radius-layer[data-state=triggered] .bl-radius-outer{animation:none}
 .bl-juice-collision{color:#ffd0e6;text-shadow:0 2px 0 #253b45,0 0 12px #ff99c9;font-weight:850}
 
 .ce-fields>[data-ce-crown]{display:contents}.ce-fields>[data-ce-crown][hidden]{display:none}
