@@ -39,6 +39,12 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 
 .bl-radius-chain{fill:#ffc1e51a;stroke:#ffb9dd;stroke-width:3;stroke-dasharray:3 5}
 .bl-radius-label{fill:#ffe8f1;font-size:13px;font-weight:700;paint-order:stroke;stroke:#20393f;stroke-width:5px;stroke-linejoin:round}
+.bl-radius-chain-label{font-size:11px!important;fill:#ffd4e8!important}
+.bl-radius-movement{color:#ffe3a5;fill:#ffe3a522;stroke:#ffe3a5;stroke-width:1.5;pointer-events:none}
+.bl-radius-movement path{fill:none;stroke-dasharray:4 5;opacity:.7}
+.bl-radius-movement text{fill:#fff0bd;stroke:#20393f;stroke-width:3px;paint-order:stroke;font-size:17px;font-weight:800}
+.bl-spatial .bl-impact-kind{position:absolute;left:50%;top:91px;transform:translateX(-50%);border:1px solid #f6b9d280;border-radius:7px;padding:2px 5px;background:#493548;color:#ffe3f0;white-space:nowrap;font-size:10px;font-weight:750;line-height:1.2;pointer-events:none;z-index:4}
+.bl-spatial [data-bl-impact-kind=collision] .bl-impact-kind{background:#51452e;color:#ffe3a5;border-color:#ffe3a580}
 .bl-radius-layer[data-state=potential] .bl-radius-outer{fill:transparent;stroke:#a8c5bb88;stroke-width:1.5;stroke-dasharray:10 10}
 .bl-radius-layer[data-state=potential] .bl-radius-label{fill:#c4d5ce;font-size:12px}
 .bl-radius-layer[data-state=triggered] .bl-radius-outer{fill:#ff8db837;stroke:#ffe5f1;stroke-width:4;stroke-dasharray:none;filter:drop-shadow(0 0 7px #ff79b3);animation:bl-conquest-radius-announce .5s ease-out}

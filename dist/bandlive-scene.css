@@ -61,7 +61,8 @@ body.bandlive-mode .workspace.bandlive-layout>main{padding:0;scrollbar-gutter:au
 @media(prefers-reduced-motion:reduce){.bl-minuit .bl-audience.bl-drop-active:before,.bl-minuit .bl-audience.bl-drop-active:after,.bl-minuit .bl-fan.bl-drop-active:before{animation:none;opacity:.65;will-change:auto}}
 .reduce-effects .bl-minuit .bl-audience.bl-drop-active:before,.reduce-effects .bl-minuit .bl-audience.bl-drop-active:after,.reduce-effects .bl-minuit .bl-fan.bl-drop-active:before{animation:none;opacity:.65;will-change:auto}
 .reduce-effects .bl-aim-line{animation:none}
-.drag-card-feedback,.drag-card-feedback.has-target{width:260px!important;height:auto!important;overflow:hidden}
+.drag-card-feedback,.drag-card-feedback.has-target{width:260px!important;height:auto!important;overflow:hidden;border-radius:19px}
+@keyframes feedback-enter{from{opacity:0;transform:translateY(3px) scale(.97)}to{opacity:1;transform:none}}
 .bl-conquest-preview{position:relative;margin:10px 0 8px;padding:11px 12px;border:1.5px solid #ffb6d6;border-radius:13px;background:linear-gradient(135deg,#653956,#3b304d);box-shadow:0 0 19px #fa8cc632,inset 0 1px #fff1f52b;color:#fff4f8;transform-origin:center}
 .bl-conquest-preview[hidden],.bl-conquest-preview-chain[hidden],.drag-conquest-rule[hidden],.outcome-conquest[hidden]{display:none}
 .bl-conquest-pending{margin:9px 0;padding:8px 10px;border:1px solid #bfd2cd55;border-radius:9px;background:#a4c4b111;color:#d6e2db;font-size:12px;line-height:1.4;font-weight:650}
@@ -88,6 +89,11 @@ body.bandlive-mode .workspace.bandlive-layout>main{padding:0;scrollbar-gutter:au
 .bl-inspection:not([hidden]):has(.preview-outcome:not([hidden]) .bl-conquest-preview:not([hidden])){display:flex;flex-direction:column;gap:9px;overflow:hidden}
 .bl-inspection:has(.preview-outcome:not([hidden]) .bl-conquest-preview:not([hidden])) .preview-outcome{order:-1;flex-shrink:0;margin-top:0}
 .bl-inspection:has(.preview-outcome:not([hidden]) .bl-conquest-preview:not([hidden])) .preview-face{flex-shrink:0}
+.bl-inspection.bl-effect-preview{width:260px!important;display:block!important;overflow:hidden;color:#f4f9f4;font-family:var(--sans);animation:none}
+.bl-inspection.bl-effect-preview .preview-face,.bl-inspection.bl-effect-preview .preview-caption,.bl-inspection.bl-effect-preview .bl-full-program,.bl-inspection.bl-effect-preview .preview-targets{display:none}
+.bl-inspection.bl-effect-preview .preview-outcome{margin:0;padding:0;border:0;border-radius:0;background:none;font-size:inherit}
+.bl-inspection.bl-effect-preview .drag-fan-rules>*{margin:0;padding-top:7px}
+.bl-inspection.bl-effect-preview.bl-radius-compact .drag-fan-rules{display:none}
 .bl-minuit .bl-zone-label,.bl-minuit .bl-drop-hint{display:none}
 .bl-minuit .bl-intent{font-size:9px;min-width:98px;max-width:120px;padding:3px 7px}
 .bl-minuit .bl-conquest-bonus{font-size:8px;padding:2px 5px;max-width:120px}

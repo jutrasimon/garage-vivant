@@ -39,6 +39,29 @@ test('fixed-step impacts transfer momentum, remain bounded and deterministic, an
  const a=simulateImpulse(g,args),b=simulateImpulse(copy,args);assert.deepEqual(a,b);assert.deepEqual(g,copy);assert(a.contacts.some(c=>c.a==='f0'&&c.b==='f1'));assert(g.fans[1].position.x>352);assert(a.frames.length<=50);validateCrowd(g);
  for(const kind of ['pull','vortex','jump','return']){const next=structuredClone(g);const m=simulateImpulse(next,{...args,kind});assert(m.frames.length);validateCrowd(next);}
 });
+test('radius boundaries and core/crown previews use the same positions as the actual hit',()=>{
+ const {g,c}=fixture({card:{target:'point',radius:1,coreRadius:.4,outerScale:.5,effects:[{...newEffect('power'),impactStrength:0}]}}),point={x:320,y:160},unit=g.room.radiusUnit;
+ for(const [i,f] of g.fans.entries())moveSpectator(g,f.id,i<3?{x:point.x+(i===0?.4*unit:i===1?unit:unit+.01),y:point.y}:{x:900,y:80+i*20});
+ const before=structuredClone(g),preview=previewCard(g,c.id,null,{point});assert(preview.ok);assert.deepEqual(g,before);
+ assert.deepEqual(preview.areas[0].center,point);assert.deepEqual(preview.areas[0].targets.map(t=>t.id),['f0','f1']);assert(!preview.event.hits.some(h=>h.id==='f2'),'A center outside the visible boundary is not a direct target');
+ assert.equal(preview.event.hits.find(h=>h.id==='f0').gain,8);assert.equal(preview.event.hits.find(h=>h.id==='f1').gain,4);
+ const actual=playCard(g,c.id,null,{point});assert.deepEqual(actual.areas,preview.areas);assert.deepEqual(g,preview.game);assert(!Object.hasOwn(actual.event,'areas'),'Preview geometry never grows the saved event history');
+});
+test('all conquest chains expose their own exact impact-time circle and displaced targets',()=>{
+ const {g,c}=fixture();g.physics.hitStrength=1.5;
+ for(const [i,f] of g.fans.entries())Object.assign(f,{hp:i===0?6:i===1?1:100,effect:'shock',effectValue:4,position:i===0?{x:400,y:130}:i===1?{x:480,y:220}:{x:740+(i%3)*100,y:70+(Math.floor((i-2)/3)%3)*90}});
+ const before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok);assert.deepEqual(g,before);assert(preview.event.hits.some(h=>h.id==='f1'&&h.kind==='collision'));
+ const chain=preview.areas.find(a=>a.kind==='conquest'&&a.sourceId==='f1');assert(chain);assert(chain.targets.some(t=>t.id==='f9'));assert(Math.hypot(g.fans[9].position.x-preview.game.fans[0].position.x,g.fans[9].position.y-preview.game.fans[0].position.y)>g.room.radiusUnit,'A later conquest can reach beyond the first circle');
+ for(const area of preview.areas.filter(a=>a.kind==='conquest')){const event=preview.effects.find(e=>e.type==='conquest'&&e.fanId===area.sourceId);assert.deepEqual(area.targets.map(t=>t.id),event.targets);for(const t of area.targets)assert(Math.hypot(t.position.x-area.center.x,t.position.y-area.center.y)<=area.radius*g.room.radiusUnit+1e-6);}
+ assert.deepEqual(chain.center,preview.game.fans[1].position);assert.notDeepEqual(chain.center,g.fans[1].position);const actual=playCard(g,c.id,'f0');assert.deepEqual(actual.areas,preview.areas);assert.deepEqual(g,preview.game);assert.deepEqual(restoreBandLive(g),g);
+});
+test('a radius following a pushed target exposes both ordered centers instead of reusing its initial circle',()=>{
+ const {g,c}=fixture({card:{target:'radius',radius:1,effects:[{...newEffect('push'),strength:1.5},{...newEffect('power'),impactStrength:0}]}});g.physics.collisionPower=0;
+ for(const [i,f] of g.fans.entries())moveSpectator(g,f.id,i===0?{x:260,y:130}:i===1?{x:480,y:220}:{x:740+(i%3)*100,y:70+(Math.floor((i-2)/3)%3)*90});
+ const preview=previewCard(g,c.id,'f0');assert(preview.ok);const [first,second]=preview.areas.filter(a=>a.kind==='card');assert.deepEqual(first.center,g.fans[0].position);assert.notDeepEqual(second.center,first.center);assert.deepEqual(second.center,preview.game.fans[0].position);
+ assert.deepEqual(preview.event.hits.filter(h=>h.kind!=='collision').map(h=>h.id).sort(),second.targets.map(t=>t.id).sort());for(const t of second.targets)assert(Math.hypot(t.position.x-second.center.x,t.position.y-second.center.y)<=g.room.radiusUnit+1e-6);
+ const actual=playCard(g,c.id,'f0');assert.deepEqual(actual.areas,preview.areas);assert.deepEqual(g,preview.game);
+});
 function collisionLine(game){for(const [i,f] of game.fans.entries())moveSpectator(game,f.id,i<3?{x:300+i*120,y:180}:{x:740+(i%3)*100,y:60+Math.floor((i-3)/3)*90});}
 test('strong contacts transmit through several spectators and award hearts only to the struck bodies',()=>{
  const {g}=fixture();collisionLine(g);const args={center:{x:200,y:180},targets:['f0'],strength:2},copy=structuredClone(g),r=impactCrowd(g,args),other=impactCrowd(copy,args);assert.deepEqual(r,other);assert.deepEqual(g,copy);

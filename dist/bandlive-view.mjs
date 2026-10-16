@@ -94,7 +94,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   syncConcert();
   const tooltip=document.createElement('div');tooltip.id='bandlive-tooltip';tooltip.className='bl-tooltip';tooltip.role='tooltip';tooltip.hidden=true;document.body.append(tooltip);
   const previewLayer=document.createElement('div');previewLayer.className='bl-preview-layer';document.body.append(previewLayer);
-  const inspection=createBandLiveInspection({root,blocked:()=>stage.editing||!!animation||!!activeCard,lookup:id=>{if(!game)return null;const c=cardById(game,id);if(!c)return null;const actor=game.actors.find(a=>a.id===c.actorId);return {card:cardDefinition(c),owner:actor.name,instrument:INSTRUMENTS[c.instrument],instrumentKey:c.instrument};}});
+  const inspection=createBandLiveInspection({root,blocked:()=>stage.editing||!!animation||!!activeCard,lookup:id=>{if(!game)return null;const c=cardById(game,id);if(!c)return null;const actor=game.actors.find(a=>a.id===c.actorId);return {card:cardDefinition(c),owner:actor.name,instrument:INSTRUMENTS[c.instrument],instrumentKey:c.instrument,icon:CARD_GLYPHS[c.instrument],accent:actor.color};}});
   inspection.targets.append(previewLayer);
   const dragImage=document.createElement('canvas');dragImage.width=dragImage.height=1;dragImage.style.cssText='position:fixed;left:-10px;top:-10px;pointer-events:none';document.body.append(dragImage);
   function persist(){if(labOriginal)return;if(liveShow()&&liveShow().bandLive.game===game)onConcertUpdate?.();else if(!liveId)rehearsalGame=game;try{localStorage.setItem(STORAGE,JSON.stringify({enabled,draft,game:liveId?rehearsalGame:game}));storageProblem=false;}catch{if(!storageProblem)notify('La répétition ne peut pas être enregistrée dans ce navigateur.');storageProblem=true;}}
@@ -176,6 +176,24 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     layer.innerHTML=`<ellipse class="bl-radius-outer" cx="${p.x}" cy="${p.y}" rx="${radius*unit*sx}" ry="${radius*unit}"/>${core?`<ellipse class="bl-radius-core" cx="${p.x}" cy="${p.y}" rx="${core*unit*sx}" ry="${core*unit}"/>`:''}<circle class="bl-radius-center" cx="${p.x}" cy="${p.y}" r="5"/>${label?`<text class="bl-radius-label" x="${p.x}" y="${p.y-radius*unit+20}" text-anchor="middle">${esc(label)}</text>`:''}`;
   }
   function radiusZones(){return [...root.querySelectorAll('.bl-radius-outer,.bl-radius-chain')].map(el=>{const r=el.getBoundingClientRect();return {cx:r.left+r.width/2,cy:r.top+r.height/2,rx:r.width/2,ry:r.height/2};});}
+  function showResolvedAreas(preview,primarySource=null){
+    const areas=preview?.areas||[],seen=new Set(),markers=new Set();
+    for(const area of areas){
+      const key=[area.kind,area.sourceId,area.center.x,area.center.y,area.radius].join(':');if(seen.has(key))continue;seen.add(key);
+      let layer=root.querySelector('.bl-radius-layer');
+      const main=area.kind==='conquest'&&area.sourceId===primarySource;
+      const initialCard=area.kind==='card'&&areas.find(a=>a.kind==='card')===area;
+      if(!layer){showRadius(area.center,area.radius,area.coreRadius,{state:area.kind==='conquest'?'triggered':'card',label:area.kind==='conquest'?'CONQUÊTE ! · effet déclenché':''});layer=root.querySelector('.bl-radius-layer');if(area.kind==='conquest')layer.querySelector('.bl-radius-outer').setAttribute('data-bl-radius-source',area.sourceId);}
+      else if(!main&&!initialCard){const p=stage.crowdPoint(area.center),r=area.radius*game.room.radiusUnit,name=area.kind==='conquest'?game.fans.find(f=>f.id===area.sourceId)?.name:'Après déplacement';layer.insertAdjacentHTML('beforeend',`<ellipse class="bl-radius-chain" data-bl-radius-source="${esc(area.sourceId)}" cx="${p.x}" cy="${p.y}" rx="${r}" ry="${r}"/><text class="bl-radius-label bl-radius-chain-label" x="${p.x}" y="${p.y-r+20}" text-anchor="middle">${area.kind==='conquest'?'En chaîne · ':''}${esc(name)}</text>`);}
+      if(main)layer.querySelector('.bl-radius-outer')?.setAttribute('data-bl-radius-source',area.sourceId);
+      for(const target of [...area.targets,...(area.kind==='conquest'?[{id:area.sourceId,position:area.center}]:[])]){
+        const before=game.fans.find(f=>f.id===target.id)?.position;if(!before||Math.hypot(before.x-target.position.x,before.y-target.position.y)<4)continue;
+        const key=[target.id,target.position.x,target.position.y].join(':');if(markers.has(key))continue;markers.add(key);
+        const a=stage.crowdPoint(before),b=stage.crowdPoint(target.position);
+        layer.insertAdjacentHTML('beforeend',`<g class="bl-radius-movement" data-bl-future-target="${esc(target.id)}"><path d="M ${a.x} ${a.y} L ${b.x} ${b.y}"/><circle cx="${b.x}" cy="${b.y}" r="23"/><text x="${b.x}" y="${b.y+4}" text-anchor="middle">↗</text></g>`);
+      }
+    }
+  }
   function physicalChrome(){
     if(!game?.spatialVersion||preparing)return;
     const arena=root.querySelector('.bl-arena');arena.classList.add('bl-spatial');arena.dataset.theme=theme;
@@ -272,7 +290,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     root.querySelectorAll(c.target==='single'?'.bl-fan:not(.bl-conquered)':'.bl-audience').forEach(el=>el.classList.add('bl-drop-valid'));
     return true;
   }
-  function clearPreview(){root.querySelector('.bl-radius-layer')?.remove();aim.hide();root.querySelectorAll('.bl-forecast').forEach(el=>{el.classList.remove('bl-forecast');el.style.removeProperty('--bl-forecast');});previewLayer.querySelectorAll('[data-bl-preview]').forEach(el=>{el.hidden=true;el.textContent='';});}
+  function clearPreview(){root.querySelector('.bl-radius-layer')?.remove();aim.hide();root.querySelectorAll('.bl-forecast').forEach(el=>{el.classList.remove('bl-forecast');el.removeAttribute('data-bl-impact-kind');el.querySelector('.bl-impact-kind')?.remove();el.style.removeProperty('--bl-forecast');});previewLayer.querySelectorAll('[data-bl-preview]').forEach(el=>{el.hidden=true;el.textContent='';});}
   function makeDragGhost(id){
     const card=cardById(game,id),actor=game.actors.find(a=>a.id===card.actorId);
     const el=createDragFeedback({card:cardDefinition(card),owner:actor.name,icon:CARD_GLYPHS[card.instrument],accent:actor.color});el.classList.add('bl-ghost');el.setAttribute('aria-hidden','true');return el;
@@ -284,6 +302,8 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
       const next=preview.game,after=fan&&next.fans.find(f=>f.id===fan.id),gains=game.fans.map((f,i)=>f.hp-next.fans[i].hp),total=gains.reduce((a,b)=>a+b,0),conquests=game.fans.filter((f,i)=>f.hp>0&&next.fans[i].hp===0).length;
       const resources=['Énergie '+game.energy+' → '+next.energy];if(game.tempo!==next.tempo)resources.push('Tempo '+game.tempo+' → '+next.tempo);if(game.boost!==next.boost)resources.push('Bonus '+game.boost+' → '+next.boost);
       const collisionGain=preview.event.hits.filter(h=>h.kind==='collision').reduce((n,h)=>n+h.gain,0);if(collisionGain)resources.push('Chocs : +'+collisionGain+' ♥');
+      const chains=preview.effects.filter(e=>e.type==='conquest');if(chains.length>1)resources.push(chains.length+' pouvoirs en chaîne');
+      if(preview.areas?.some(a=>[...a.targets,...(a.kind==='conquest'?[{id:a.sourceId,position:a.center}]:[])].some(t=>{const f=game.fans.find(f=>f.id===t.id);return f&&Math.hypot(f.position.x-t.position.x,f.position.y-t.position.y)>4;})))resources.push('↗ Positions après déplacement indiquées');
       if(c.target==='audience'||preview.effects.length)resources.push('Total +'+total+' ♥');if(conquests)resources.push(conquests+' conquis');
       const meter=after?(fan.max-fan.hp)+'/'+fan.max+' → '+(after.max-after.hp)+'/'+after.max:'';
       const movement=preview.effects.filter(e=>e.type==='motion').reduce((n,e)=>n+e.targets.length,0);
@@ -298,9 +318,9 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     }
     if(ghost)inspection.hide();else{inspection.pin(id);inspection.outcome(outcome);}
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`);
-    const targetIds=valid?[...new Set(preview.event.hits.map(h=>h.id))]:fan?[fan.id]:[];
+    const targetIds=valid?[...new Set(preview.event.hits.filter(h=>h.kind!=='collision').map(h=>h.id))]:fan?[fan.id]:[];
     if(pendingChoice?.type==='duo'&&!targetIds.includes(pendingChoice.targetId))targetIds.push(pendingChoice.targetId);
-    const ends=targetIds.map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`)).filter(Boolean);
+    const ends=targetIds.map(id=>{const position=preview?.areas?.filter(a=>a.kind==='card').flatMap(a=>a.targets).find(t=>t.id===id)?.position,before=game.fans.find(f=>f.id===id)?.position;return position&&before&&Math.hypot(position.x-before.x,position.y-before.y)>4?stage.crowdPoint(position):pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`);}).filter(Boolean);
     if(c.tempo){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
     if(game.spatialVersion){
       const center=c.target==='point'?(dragPoint?stage.point(dragPoint.x,dragPoint.y):fan?.position||{x:game.room.width/2,y:game.room.height/2}):fan?.position;
@@ -308,15 +328,17 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
       if(fan&&!fan.conquered&&CONQUEST_EFFECTS[fan.effect]&&!c.radius&&(outcome.conquestReady||c.target==='single'&&Object.hasOwn(c,'power'))){
         const ready=!!outcome.conquestReady,position=ready?preview.game.fans.find(f=>f.id===fan.id).position:fan.position;
         showRadius(position,1,0,{state:ready?'triggered':'potential',label:ready?'CONQUÊTE ! · effet déclenché':outcome.conquestPending?'Pouvoir inactif · encore '+outcome.conquestPending.remaining+' ♥':'À la conquête · rayon 1'});
-      }else if(c.radius&&outcome.conquestReady&&fan){const p=stage.crowdPoint(preview.game.fans.find(f=>f.id===fan.id).position);root.querySelector('.bl-radius-layer')?.insertAdjacentHTML('beforeend',`<ellipse class="bl-radius-chain" cx="${p.x}" cy="${p.y}" rx="${game.room.radiusUnit}" ry="${game.room.radiusUnit}"/>`);}
+      }
+      if(valid)showResolvedAreas(preview,!c.radius&&outcome.conquestReady?fan?.id:null);
       if(c.target==='point'&&center)ends.push(stage.crowdPoint(center));
     }
     aim.draw(origin,ends,valid||!!c.twoTargets);
-    if(!ghost||!dragPoint)return;
+    if(!dragPoint&&!target)return;
     const zones=game.spatialVersion?radiusZones():[];
     const r=root.querySelector('.bl-viewport').getBoundingClientRect(),expand=zones.length||!!outcome.conquestReady&&innerWidth<=650;
     // A radius can use the space above the scene; short screens get a compact forecast.
-    showDragFeedback(ghost,{outcome,pointer:dragPoint,target:fan&&target.getBoundingClientRect(),zones,bounds:{left:Math.max(12,r.left+12),right:Math.min(innerWidth-12,r.right-12),top:expand?12:Math.max(12,r.top+12),bottom:expand?innerHeight-12:Math.min(innerHeight-12,r.bottom-12)}});
+    const box=target?.getBoundingClientRect(),placement={pointer:dragPoint||{x:box.left+box.width/2,y:box.top+box.height/2},target:fan&&box,zones,bounds:{left:Math.max(12,r.left+12),right:Math.min(innerWidth-12,r.right-12),top:expand?12:Math.max(12,r.top+12),bottom:expand?innerHeight-12:Math.min(innerHeight-12,r.bottom-12)}};
+    if(ghost)showDragFeedback(ghost,{outcome,...placement});else inspection.place(placement);
   }
   function highlightDrop(target){
     const current=activeCard||selectedCard;
@@ -335,6 +357,9 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     const hits=[...preview.event.hits,...preview.effects.flatMap(e=>e.hits)];
     for(const fan of game.fans.filter(f=>hits.some(h=>h.id===f.id)||fanStatus(f)!==fanStatus(preview.game.fans.find(n=>n.id===f.id)))){
       const after=preview.game.fans.find(f=>f.id===fan.id);const node=root.querySelector('[data-bl-fan="'+fan.id+'"]');node?.classList.add('bl-forecast');node?.style.setProperty('--bl-forecast',(1-after.hp/fan.max)*100+'%');const power=hits.filter(h=>h.id===fan.id).reduce((n,h)=>n+h.power,0),out=previewLayer.querySelector('[data-bl-preview="'+fan.id+'"]'),anchor=root.querySelector('[data-bl-fan="'+fan.id+'"]');
+      const direct=preview.event.hits.some(h=>h.id===fan.id&&h.kind!=='collision')||preview.areas?.some(a=>a.kind==='card'&&a.targets.some(t=>t.id===fan.id)),collision=preview.event.hits.some(h=>h.id===fan.id&&h.kind==='collision'),chain=preview.effects.some(e=>e.type==='conquest'&&e.targets.includes(fan.id)),kind=direct?'direct':collision?'collision':chain?'chain':'reaction';
+      node?.setAttribute('data-bl-impact-kind',kind);
+      if(node&&!direct){const label=document.createElement('span');label.className='bl-impact-kind';label.textContent=(collision?'Choc':chain?'En chaîne':'Réaction')+(fan.hp>after.hp?' +'+(fan.hp-after.hp)+' ♥':'');node.append(label);}
       if(out&&anchor){
         const r=anchor.getBoundingClientRect(),clip=anchor.closest('.bl-audience-viewport').getBoundingClientRect();
         if(r.bottom<Math.max(clip.top,0)||r.top>Math.min(clip.bottom,innerHeight)||r.right<0||r.left>innerWidth)continue;
@@ -346,7 +371,6 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
         out.style.top=Math.max(6,Math.min(innerHeight-out.offsetHeight-6,r.top+6))+'px';
       }
     }
-    if(!ghost&&game.spatialVersion){const zones=radiusZones();if(zones.length){const r=target.getBoundingClientRect();inspection.place({pointer:dragPoint||{x:r.left+r.width/2,y:r.top+r.height/2},target:game.fans.some(f=>f.id===target.dataset.blTarget)?r:null,zones,bounds:{left:12,right:innerWidth-12,top:12,bottom:innerHeight-12}});}}
   }
   function dropAtPoint(x,y){
     const target=document.elementFromPoint(x,y)?.closest('[data-bl-target]');
@@ -472,7 +496,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     event.preventDefault();dragPointer=event.pointerId;root.setPointerCapture(event.pointerId);ghost=makeDragGhost(activeCard);document.body.append(ghost);moveDrag(event.clientX,event.clientY);
   });
   root.addEventListener('pointermove',event=>{
-    if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};highlightDrop(dropAtPoint(event.clientX,event.clientY));}
+    if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};highlightDrop(dropAtPoint(event.clientX,event.clientY));inspection.move(dragPoint);aim.movePointer(dragPoint);}
     if(labOriginal&&labShoot&&!stage.editing){const spot=stage.point(event.clientX,event.clientY);if(spot&&spot.y>=0&&spot.y<=game.room.height)showRadius(spot,1,.4);}
     if(dragPointer!==event.pointerId)return;
     event.preventDefault();moveDrag(event.clientX,event.clientY);

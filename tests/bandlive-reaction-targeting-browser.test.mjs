@@ -39,8 +39,8 @@ try{
    await page.locator('.drag-card-feedback.has-target:not(.invalid)').waitFor({timeout:2500});return point;
   }
   async function checkOutcome(container,selected=false){
-   assert((await container.locator(selected?'.outcome-name':'.drag-outcome-name').textContent()).includes(fan.name));
-   assert((await container.locator(selected?'.outcome-trigger':'.drag-trigger').textContent()).includes('Réaction déclenchée'));
+   assert((await container.locator('.drag-outcome-name').textContent()).includes(fan.name));
+   assert((await container.locator('.drag-trigger').textContent()).includes('Réaction déclenchée'));
    const banner=container.locator('.bl-conquest-preview');assert.equal(await banner.isVisible(),!!power,'Only a real conquest power gets the conquest announcement');
    if(power){assert.equal(await banner.locator('.bl-conquest-preview-name').textContent(),power.name);assert((await banner.locator('.bl-conquest-preview-chain').textContent()).includes('2'),'The chain counts conquest powers, never reactions');}
   }

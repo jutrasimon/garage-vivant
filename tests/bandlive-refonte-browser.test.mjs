@@ -48,11 +48,11 @@ try{
  const popup=await page.locator('.drag-card-feedback').boundingBox(),name=await page.locator('.drag-outcome-name').textContent();
  for(const dx of [-5,5,-3,3]){await page.mouse.move(cx+dx,cy);await page.waitForTimeout(90);const box=await page.locator('.drag-card-feedback').boundingBox();assert(Math.abs(box.x-popup.x)<20&&Math.abs(box.y-popup.y)<20,'Small pointer movements never make the tooltip jump');assert.equal(await page.locator('.drag-outcome-name').textContent(),name);}
  await page.screenshot({path:'test-results/refonte-stable-hover.png'});await page.mouse.move(8,8,{steps:5});await page.mouse.up();
- await card.click();await page.locator('[data-bl-fan="f0"]').hover({force:true});assert((await page.locator('.outcome-conquest').textContent()).length>15);assert((await page.locator('.outcome-reaction').textContent()).length>15);
+ await card.click();await page.locator('[data-bl-fan="f0"]').hover({force:true});assert((await page.locator('#bl-card-preview .drag-conquest-rule').textContent()).length>15);assert((await page.locator('#bl-card-preview .drag-reaction').textContent()).length>15);
  await page.keyboard.press('Escape');
  await page.locator('#bl-end').click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game);await page.reload();await page.locator('[data-bl-fan]').first().waitFor();assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game),saved);
- await page.locator('[data-view="groups"]').click();assert(await page.locator('.group-member .person-card .character-portrait').count()>0);
+ await page.locator('#bl-neighborhood').click();await page.locator('[data-view="groups"]').click();assert(await page.locator('.group-member .person-card .character-portrait').count()>0);
  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  await page.setViewportSize({width:1440,height:900});await page.locator('#bandlive-nav').click();await page.locator('#bl-simulate').click();
  const reward=page.locator('#bandlive-view [data-level-reward]').first();await reward.waitFor();

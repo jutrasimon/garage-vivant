@@ -5,7 +5,7 @@ export function playProgram(game,card,targetId,options,hooks){
  if(d.twoTargets&&(!second||second===fan||!second.hp))return {ok:false,message:'Choisis deux spectateurs distincts.'};
  if(d.target==='point'&&(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y)||point.x<game.room.margin||point.x>game.room.width-game.room.margin||point.y<game.room.margin||point.y>game.room.height-game.room.margin))return {ok:false,message:'Vise le sol dans la zone du public.'};
  const anchor=fan?.position||point,neighbor=d.target==='audience'?game.fans.some(f=>!f.hp):anchor&&inRadius(game,anchor,d.radius||1,{alive:false,exclude:fan?.id}).some(f=>!f.hp);
- const initialTempo=game.tempo,previous=game.events.findLast(e=>e.type==='card'&&e.turn===game.turn),start=game.events.length,queue=[],hits=[],motions=[],direct=new Set();
+ const initialTempo=game.tempo,previous=game.events.findLast(e=>e.type==='card'&&e.turn===game.turn),start=game.events.length,queue=[],hits=[],motions=[],areas=[],direct=new Set();
  const origin=()=>d.target==='point'?point:fan?.position||{x:game.room.width/2,y:game.room.height/2};
  const targets=()=>d.target==='audience'?game.fans.filter(f=>f.hp>0):d.radius?inRadius(game,origin(),d.radius):[fan,...(d.twoTargets?[second]:[])].filter(f=>f?.hp>0);
  game.energy-=d.cost;game.hand.splice(game.hand.indexOf(card.id),1);game.discard.push(card.id);game.played++;
@@ -14,6 +14,11 @@ export function playProgram(game,card,targetId,options,hooks){
  for(const e of d.program){
   const condition=e.when==='always'||e.when==='tempo'&&initialTempo>=e.conditionValue||e.when==='alternate'&&previous&&previous.actorId!==card.actorId||e.when==='neighbor'&&neighbor||e.when==='conquest'&&direct.size>0;if(!condition)continue;
   const selected=targets();
+  // Preview geometry must describe positions when the effect lands, before its recoil.
+  if(d.radius&&!['tempo','energy','draw','boost'].includes(e.type)){
+   const affected=['power','protect','style'].includes(e.type)?selected:inRadius(game,origin(),d.radius,{alive:false});
+   areas.push({kind:'card',sourceId:card.actorId,center:{...origin()},radius:d.radius,coreRadius:d.coreRadius||0,targets:affected.map(f=>({id:f.id,position:{...f.position}}))});
+  }
   if(e.type==='power'){
    const spent=e.formula==='tempo'?game.tempo:e.formula==='spend'?Math.min(game.tempo,e.limit):0;
    const base=e.amount+spent*e.multiplier+(e.threshold&&initialTempo>=e.threshold.tempo?e.threshold.bonus:0),center={...origin()};
@@ -46,7 +51,7 @@ export function playProgram(game,card,targetId,options,hooks){
   }
  }
  const event={id:game.events.length+1,type:'card',turn:game.turn,cardId:card.id,actorId:card.actorId,name:d.name,hits,tempo:game.tempo,tempoGain,tempoSpent,boostGain,boost:game.boost,...(point?{point:{...point}}:{}),...(options.secondTargetId?{secondTargetId:options.secondTargetId}:{})};
- game.events.push(event);hooks.resolveConquests(game,queue);hooks.checkVictory(game);
+ game.events.push(event);hooks.resolveConquests(game,queue,areas);hooks.checkVictory(game);
  game.logs.push(d.name+' · '+hits.reduce((n,h)=>n+h.gain,0)+' conquête.');
- return {ok:true,event,effects:game.events.slice(start).filter(e=>e!==event),motions};
+ return {ok:true,event,effects:game.events.slice(start).filter(e=>e!==event),motions,areas};
 }

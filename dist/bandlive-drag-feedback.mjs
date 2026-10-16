@@ -56,7 +56,7 @@ export function createDragFeedback({card,owner,icon,accent}) {
   return ghost;
 }
 
-export function showDragFeedback(ghost,{outcome,pointer,target,bounds,zones=[]}) {
+export function updateDragFeedback(ghost,outcome,target=null) {
   ghost.classList.toggle('has-target',!!target);ghost.classList.toggle('invalid',!outcome.valid);
   const local=ghost.querySelector('.drag-local-outcome');local.hidden=false;
   const hasGain=outcome.valid&&Number.isFinite(outcome.gain);
@@ -77,6 +77,10 @@ export function showDragFeedback(ghost,{outcome,pointer,target,bounds,zones=[]})
     ghost.querySelector('.drag-impact').animate?.([{transform:'translateY(3px) scale(.93)',opacity:.65},{transform:'translateY(-1px) scale(1.045)',opacity:1,offset:.65},{transform:'none',opacity:1}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});
   }
   ghost._feedbackKey=key;
+}
+
+export function showDragFeedback(ghost,{outcome,pointer,target,bounds,zones=[]}) {
+  updateDragFeedback(ghost,outcome,target);
   // Measure after content changes, then move using cached geometry only.
   ghost._placement=fitFeedback(ghost,{pointer,bounds,target,zones,preferredSide:ghost._placement?.side});
   moveDragFeedback(ghost,pointer);

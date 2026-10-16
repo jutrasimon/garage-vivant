@@ -174,10 +174,11 @@ function conquer(game,fan,queue) {
     if(game.reactionVersion>=2)triggerReaction(game,other,queue);
   }
 }
-function resolveConquests(game,queue){
+function resolveConquests(game,queue,areas=null){
   const events=[];
   for(let i=0;i<queue.length;i++){
     const fan=queue[i],effect=CONQUEST_EFFECTS[fan.effect],targets=conquestTargets(game,fan),hits=[];
+    if(areas&&game.spatialVersion)areas.push({kind:'conquest',sourceId:fan.id,center:{...fan.position},radius:1,coreRadius:0,targets:targets.map(f=>({id:f.id,position:{...f.position}}))});
     for(const target of targets){
       if(['shock','wave','pierce'].includes(fan.effect)){
         const power=fan.effectValue||{shock:3,wave:2,pierce:4}[fan.effect],before=target.hp;
