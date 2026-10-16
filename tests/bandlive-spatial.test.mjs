@@ -95,6 +95,36 @@ test('invalid card knockback strength is rejected and nonstandard recoil is desc
  e.impactStrength=0;validateCatalog(catalog);assert(compileCard(c).description.includes('sans repoussement'));e.impactStrength=.5;assert(compileCard(c).description.includes('repoussement ×0.5'));
  e.impactStrength=1;const normal=compileCard(c).description;delete e.impactStrength;validateCatalog(catalog);assert.equal(compileCard(c).description,normal,'Missing and normal multipliers retain the previous description');
 });
+test('large authored tempo gains preserve the show cap and count only actual gains for rhythm',()=>{
+ for(const amount of [12,100])for(const initial of [0,8,10]){
+  const {g,c}=fixture({card:{effects:[{...newEffect('tempo'),amount}]}});g.tempo=initial;g.fans[0].intent='rhythm';g.physics.hitStrength=0;
+  const before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok);assert.deepEqual(g,before);
+  const result=playCard(g,c.id,'f0');assert.deepEqual(g,preview.game);assert.equal(g.tempo,10);assert.equal(result.event.tempoGain,10-initial);
+  assert.equal(g.fans[0].reactionTempo,Math.min(3,10-initial));assert.equal(g.fans[0].reactionUsed,initial===0,'Overflow never advances rhythm or repeats its reward');assert.deepEqual(restoreBandLive(g),g);
+ }
+ const {g,c}=fixture({card:{effects:[{...newEffect('tempo'),amount:12},{...newEffect('power'),amount:0,formula:'tempo'},{...newEffect('tempo'),amount:12,when:'alternate'}]}});g.physics.hitStrength=0;
+ const previous=g.cards.find(x=>x.actorId!==c.actorId&&x.kind==='note');g.hand.push(previous.id);g.deck=g.deck.filter(id=>id!==previous.id);assert(playCard(g,previous.id,'f1').ok);
+ const preview=previewCard(g,c.id,'f0'),result=playCard(g,c.id,'f0');assert(result.ok);assert.deepEqual(g,preview.game);assert.equal(result.event.tempoGain,20);assert.equal(result.event.tempoSpent,10);assert.equal(g.tempo,10,'Each ordered gain is capped independently, even with alternation and a spend between them');assert.deepEqual(restoreBandLive(g),g);
+});
+test('six and one hundred authored strikes share power, stop at conquest and survive resumption',()=>{
+ for(const strikes of [6,100])for(const remaining of [100,3]){
+  const {g,c}=fixture({card:{effects:[{...newEffect('power'),strikes}]}});g.physics.hitStrength=0;g.fans[0].hp=remaining;
+  const before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok);assert.deepEqual(g,before);const result=playCard(g,c.id,'f0');assert.deepEqual(g,preview.game);
+  const hits=result.event.hits.filter(h=>h.id==='f0');assert.equal(hits.reduce((n,h)=>n+h.gain,0),Math.min(remaining,8),'Six base power plus the matching style bonus is shared, never multiplied');
+  assert(hits.length<=strikes);assert.equal(g.fans[0].hp,Math.max(0,remaining-8));if(strikes===6&&remaining===100)assert.deepEqual(hits.map(h=>h.power),[2,2,1,1,1,1]);
+  if(remaining===3)assert.equal(hits.at(-1).after,0,'No further strikes are recorded after conquest');assert.deepEqual(restoreBandLive(g),g);
+ }
+});
+test('expanded editor limits validate catalogs and report card, effect, field and allowed range',()=>{
+ const world=createWorld(55,4),catalog=createCatalog(),c=catalog.cards.find(c=>c.id==='drums:note');c.effects=[{...newEffect('power'),strikes:6},{...newEffect('tempo'),amount:12},{...newEffect('tempo'),amount:12,when:'alternate'}];world.cardCatalog=catalog;
+ validateCatalog(catalog);assert.deepEqual(restore(world).cardCatalog,catalog);assert.equal(compileCard(c).program[0].strikes,6);
+ for(const [index,key] of [[0,'strikes'],[1,'amount']]){
+  const original=c.effects[index][key];for(const value of [0,101,1.5,null,Infinity,'12']){
+   c.effects[index][key]=value;assert.throws(()=>validateCatalog(catalog),error=>error.message.includes('carte « Note »')&&error.message.includes(`effet ${index+1}`)&&error.message.includes(index?'Tempo':'Frappes')&&error.message.includes('un entier entre 1 et 100'));
+  }c.effects[index][key]=original;
+ }
+ validateCatalog(catalog);
+});
 test('every proposed pair of effects executes and previews the exact committed state',()=>{
  const types=['power','tempo','energy','draw','boost','style','protect','push','pull','vortex','jump','return'];
  for(const first of types)for(const second of types){const {g,c}=fixture({card:{target:'radius',radius:1,effects:[newEffect(first),newEffect(second)]}}),before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok,first+' / '+second);assert.deepEqual(g,before);assert(playCard(g,c.id,'f0').ok);assert.deepEqual(g,preview.game);assert.deepEqual(restoreBandLive(g),g);assert(g.hand.length<=5);}

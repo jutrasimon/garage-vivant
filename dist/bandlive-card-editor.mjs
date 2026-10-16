@@ -18,14 +18,15 @@ export function createCardEditor({getWorld,onSave,onTest}){
   const below=anchor.bottom+gap,top=below+box.height<=innerHeight-gap?below:Math.max(gap,anchor.top-box.height-gap);
   tip.style.left=left+'px';tip.style.top=top+'px';
  }
- function fieldShell(label,key,control,help,{effect=null,checkbox=false}={}){
-  const id=`ce-${effect??'card'}-${key}`,description=`${id}-help`,error=`${id}-error`;
-  return `<div class="ce-field ${checkbox?'ce-checkbox':''}"><div class="ce-field-heading"><label for="${id}">${esc(label)}</label><button type="button" class="ce-help" data-ce-help="${description}" aria-label="Aide : ${esc(label)}" aria-describedby="${description}">?</button></div>${control(id,`${description} ${error}`)}<span id="${description}" role="tooltip" class="ce-tooltip" hidden>${esc(help)}</span><small id="${error}" class="ce-field-error" hidden></small></div>`;
+ function fieldShell(label,key,control,help,{effect=null,checkbox=false,hint=''}={}){
+  const id=`ce-${effect??'card'}-${key}`,description=`${id}-help`,error=`${id}-error`,hintId=`${id}-hint`;
+  return `<div class="ce-field ${checkbox?'ce-checkbox':''}"><div class="ce-field-heading"><label for="${id}">${esc(label)}</label><button type="button" class="ce-help" data-ce-help="${description}" aria-label="Aide : ${esc(label)}" aria-describedby="${description}">?</button></div>${control(id,`${description} ${error}${hint?' '+hintId:''}`)}${hint?`<small id="${hintId}" class="ce-field-hint">${esc(hint)}</small>`:''}<span id="${description}" role="tooltip" class="ce-tooltip" hidden>${esc(help)}</span><small id="${error}" class="ce-field-error" hidden></small></div>`;
  }
  function field(label,key,value,{select,min=0,max=100,step=1,type='number',effect=null,factor=1}={}){
   const numeric=!select&&type==='number',range=numeric&&key!=='coreRadius'?` Valeurs : ${format(min)} à ${format(max)}${step===1?' (entiers)':''}.`:'';
-  const help=cardFieldHelp(key,effect===null?null:card().effects[effect])+range;
-  return fieldShell(label,key,(id,description)=>{const attrs=`id="${id}" data-ce-field="${key}" data-ce-label="${esc(label)}" aria-describedby="${description}" ${effect!==null?`data-ce-effect="${effect}"`:''}`;return select?`<select ${attrs}>${options(select,value)}</select>`:`<input ${attrs} type="${type}" value="${esc(numeric?(Number.isFinite(value)?Math.round(value*factor*1e6)/1e6:''):value)}" ${numeric?`min="${min}" max="${max}" step="${step}" data-ce-factor="${factor}"`:'maxlength="70" required'}>`;},help,{effect});
+  const e=effect===null?null:card().effects[effect],help=cardFieldHelp(key,e)+range;
+  const hint=numeric?(key==='coreRadius'?'De 0 au rayon extérieur.':`De ${format(min)} à ${format(max)}${step===1?' · nombres entiers':''}.`)+(e?.type==='tempo'&&key==='amount'?' La jauge du show reste limitée à 10; le surplus est perdu.':key==='strikes'?' La puissance totale est partagée entre les frappes.':''):'';
+  return fieldShell(label,key,(id,description)=>{const attrs=`id="${id}" data-ce-field="${key}" data-ce-label="${esc(label)}" aria-describedby="${description}" ${effect!==null?`data-ce-effect="${effect}"`:''}`;return select?`<select ${attrs}>${options(select,value)}</select>`:`<input ${attrs} type="${type}" value="${esc(numeric?(Number.isFinite(value)?Math.round(value*factor*1e6)/1e6:''):value)}" ${numeric?`min="${min}" max="${max}" step="${step}" data-ce-factor="${factor}"`:'maxlength="70" required'}>`;},help,{effect,hint});
  }
  function checkbox(label,key,checked,attrs,{effect=null}={}){return fieldShell(label,key,(id,description)=>`<input id="${id}" type="checkbox" ${attrs} aria-describedby="${description}" ${checked?'checked':''}>`,cardFieldHelp(key),{effect,checkbox:true});}
  function effectHTML(e,i){

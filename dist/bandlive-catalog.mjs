@@ -2,8 +2,8 @@ import {INSTRUMENTS,definitionFor} from './bandlive-cards.mjs?v=0.9.0';
 export const RARITIES=Object.freeze({common:{name:'Commune',weight:6},uncommon:{name:'Peu commune',weight:3},rare:{name:'Rare',weight:1},epic:{name:'Épique',weight:.3}});
 const number=(label,min,max,value,step=1)=>({label,min,max,value,step});
 export const EFFECTS=Object.freeze({
- power:{name:'Puissance',fields:{amount:number('Puissance',0,100,6),formula:{label:'Calcul',options:{fixed:'Fixe',tempo:'Ajouter tout le tempo',spend:'Consommer du tempo'}},limit:number('Tempo maximal consommé',1,10,4),multiplier:number('Puissance par tempo',1,5,1),strikes:number('Frappes',1,5,1),impactStrength:{...number('Force de repoussement',0,3,1,.1),optional:true}}},
- tempo:{name:'Gagner du tempo',fields:{amount:number('Tempo',1,10,2)}},
+ power:{name:'Puissance',fields:{amount:number('Puissance',0,100,6),formula:{label:'Calcul',options:{fixed:'Fixe',tempo:'Ajouter tout le tempo',spend:'Consommer du tempo'}},limit:number('Tempo maximal consommé',1,10,4),multiplier:number('Puissance par tempo',1,5,1),strikes:number('Frappes',1,100,1),impactStrength:{...number('Force de repoussement',0,3,1,.1),optional:true}}},
+ tempo:{name:'Gagner du tempo',fields:{amount:number('Tempo',1,100,2)}},
  energy:{name:'Gagner de l’énergie',fields:{amount:number('Énergie',1,3,1)}},
  draw:{name:'Piocher',fields:{amount:number('Cartes',1,5,1)}},
  boost:{name:'Bonus de prochaine puissance',fields:{amount:number('Puissance',1,30,3),other:{label:'Musicien',options:{no:'Tous',yes:'Un autre musicien'}}}},
@@ -55,9 +55,15 @@ export function validateCatalog(value,{starters=true}={}){
   if(c.legacyKind!==undefined&&!['note','special','new1','new2'].includes(c.legacyKind))fail('Carte historique invalide.');
   if(c.legacyKind!==undefined){const alias=c.instrument+':'+c.legacyKind;if(c.instrument==='neutral'||aliases.has(alias))fail('Référence de carte historique ambiguë.');aliases.add(alias);}
   if(!Array.isArray(c.effects)||!c.effects.length||c.effects.length>12)fail('Choisis de 1 à 12 effets.');
-  for(const e of c.effects){
+  for(const [index,e] of c.effects.entries()){
    const schema=EFFECTS[e.type];if(!schema||!Object.hasOwn(CONDITIONS,e.when))fail('Effet ou condition inconnu.');
-   for(const [k,f] of Object.entries(schema.fields)){const v=e[k]===undefined&&f.optional?f.value:e[k];if(f.options?!Object.hasOwn(f.options,v):!Number.isFinite(v)||v<f.min||v>f.max||f.step===1&&!Number.isInteger(v))fail('Paramètre invalide : '+schema.name+' / '+f.label);}
+   for(const [k,f] of Object.entries(schema.fields)){
+    const v=e[k]===undefined&&f.optional?f.value:e[k];
+    if(f.options?!Object.hasOwn(f.options,v):!Number.isFinite(v)||v<f.min||v>f.max||f.step===1&&!Number.isInteger(v)){
+     const allowed=f.options?'Choisis parmi : '+Object.values(f.options).join(', ')+'.':`Choisis ${f.step===1?'un entier':'une valeur'} entre ${f.min} et ${f.max}.`;
+     fail(`Paramètre invalide : carte « ${c.name} », effet ${index+1} (${schema.name}) / ${f.label}. ${allowed}`);
+    }
+   }
    if(e.when==='tempo'&&(!Number.isInteger(e.conditionValue)||e.conditionValue<0||e.conditionValue>10))fail('Seuil de tempo invalide.');
    if(e.type==='power'&&e.threshold!==undefined&&(typeof e.threshold!=='object'||!Number.isInteger(e.threshold.tempo)||e.threshold.tempo<0||e.threshold.tempo>10||!Number.isInteger(e.threshold.bonus)||e.threshold.bonus<0||e.threshold.bonus>30))fail('Bonus au seuil invalide.');
   }

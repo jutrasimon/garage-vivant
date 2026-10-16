@@ -27,7 +27,7 @@ const fields={
 };
 const effects={
  power:'Augmente la conquête des spectateurs ciblés, en tenant compte du style, des réactions et des bonus. La force de repoussement règle le recul propre à cet effet, en plus des réglages de la foule.',
- tempo:'Ajoute du tempo au groupe, sans dépasser 10. Peut déclencher la réaction des spectateurs qui attendent du rythme.',
+ tempo:'Ajoute du tempo au groupe. La carte peut demander jusqu’à 100, mais la jauge reste plafonnée à 10 : le surplus est perdu. Seul le tempo réellement gagné compte pour les spectateurs qui attendent du rythme.',
  energy:'Rend de l’énergie au groupe, sans dépasser 3. Le coût de la carte est payé avant ses effets.',
  draw:'Pioche des cartes du deck vers la main, sans dépasser cinq cartes en main. Les places manquantes limitent la pioche.',
  boost:'Prépare un bonus pour le prochain effet de puissance admissible du groupe. Il ne donne pas de conquête immédiatement.',
@@ -49,6 +49,6 @@ const conditions={
 export function cardFieldHelp(key,effect){
  if(key==='type')return 'Les effets se jouent de haut en bas, puis les pouvoirs de conquête en chaîne se résolvent. '+effects[effect.type];
  if(key==='when')return 'Condition de déclenchement de cet effet. '+conditions[effect.when];
- if(key==='amount')return {power:'Puissance de base, avant le tempo, le style, les réactions et les bonus.',tempo:'Tempo gagné par cet effet. Le total du groupe ne peut pas dépasser 10.',energy:'Énergie rendue par cet effet. Le total du groupe ne peut pas dépasser 3.',draw:'Nombre de cartes à piocher, dans la limite des cinq places de la main.',boost:'Puissance ajoutée au prochain effet de puissance admissible.'}[effect.type];
+ if(key==='amount')return {power:'Puissance de base, avant le tempo, le style, les réactions et les bonus.',tempo:'Gain demandé par cet effet. Exemple : +12 tempo avec une jauge à 8 donne réellement +2, pour atteindre 10. Le surplus est perdu et ne déclenche aucune réaction supplémentaire.',energy:'Énergie rendue par cet effet. Le total du groupe ne peut pas dépasser 3.',draw:'Nombre de cartes à piocher, dans la limite des cinq places de la main.',boost:'Puissance ajoutée au prochain effet de puissance admissible.'}[effect.type];
  return fields[key];
 }

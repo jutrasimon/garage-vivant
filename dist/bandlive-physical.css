@@ -77,6 +77,7 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 .ce-tooltip{position:fixed;z-index:3;box-sizing:border-box;width:max-content;max-width:min(350px,calc(100vw - 20px));max-height:calc(100dvh - 20px);overflow:auto;padding:14px 16px;border:1px solid #aec6a3;border-radius:12px;background:#294a3e;color:#fffcef;font:400 14px/1.6 var(--sans,system-ui,sans-serif);box-shadow:0 8px 28px #12291c55;white-space:normal;overflow-wrap:break-word;text-align:left;cursor:default}
 .bl-card-editor [aria-invalid=true]{border-color:#ad3f37;background:#fff4ed}
 .ce-field-error{display:block;margin-top:6px;color:#9b322c;font-size:12px;line-height:1.5}
+.ce-field-hint{display:block;margin-top:5px;color:#52674e;font-size:12px;line-height:1.5}
 .ce-validation,.ce-preview-invalid{padding:12px;border:1px solid #dba89a;border-radius:9px;background:#fff2e5;color:#81372d;font-size:13px;line-height:1.5}
 .ce-field-error[hidden],.ce-validation[hidden],.ce-tooltip[hidden]{display:none}
 @media(max-width:650px){.ce-body{display:block}.bl-card-editor input,.bl-card-editor select{font-size:16px}.ce-effect-head>.ce-field{flex-basis:100%}.bl-card-editor .ce-help{width:30px;height:30px;min-width:30px;min-height:30px}.ce-tooltip{font-size:14px}.ce-body .ce-card-list button{min-width:155px}.bl-card-editor>footer button{font-size:12px}.ce-body>aside:not(.ce-preview){max-height:220px}.ce-preview-invalid p{display:block!important}}
