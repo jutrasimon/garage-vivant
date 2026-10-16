@@ -10,12 +10,13 @@ const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PO
 try{
  const url=await new Promise((resolve,reject)=>{let out='';const timer=setTimeout(()=>reject(Error('Serveur indisponible')),5000);child.on('error',reject);child.stdout.on('data',b=>{out+=b;const match=out.match(/http:\/\/127\.0\.0\.1:\d+\//);if(match){clearTimeout(timer);resolve(match[0]);}});});
  await mkdir('test-results',{recursive:true});browser=await chromium.launch();
- for(const width of [1440,390]){
+ for(const width of [1440,860,390]){
   page=await browser.newPage({viewport:{width,height:900},hasTouch:width<500,isMobile:width<500});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const oldWorld=preparedConcert().world;oldWorld.cardCatalog=createCatalog();for(const c of oldWorld.cardCatalog.cards)for(const e of c.effects)delete e.impactStrength;
   await page.addInitScript(w=>localStorage.setItem('garage-vivant-v1',JSON.stringify(w)),oldWorld);
   await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();await page.locator('#bl-cards').first().click();
   const editor=page.locator('.bl-card-editor'),field=key=>editor.locator(`[data-ce-field="${key}"]`),tips=editor.locator('[role="tooltip"]:visible');
+  assert(await editor.locator('[data-ce-action="test"]').isVisible(),'Immediate testing remains available when the preview column is hidden');
   assert(!(await editor.textContent()).includes('\uFFFD'),'The workshop must never replace accented letters with broken characters');
   assert((await editor.locator('[data-ce-select] small').first().textContent()).includes('énergie · Commune · niv. 1'));
   assert(await field('name').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=14));assert(await editor.locator('[data-ce-select] small').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=12));
@@ -88,9 +89,19 @@ try{
    await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);
    return fanId;
   };
+  let previousTrial=null;
   for(const instrument of ['guitar','keys','guitar']){
    await page.locator('#bl-cards').first().click();await field('category').selectOption(instrument);await editor.locator(`[data-ce-select="${instrument==='guitar'?copy.id:'keys:note'}"]`).click();await editor.locator('[data-ce-action="test"]').click();await page.locator('.bl-render-ready').waitFor();
-   const data=await scenario();assert.deepEqual(restoreBandLive(data.initial),data.initial);assert.deepEqual(restoreBandLive(data.current),data.current);assert.equal(data.current.cards.filter(c=>c.kind==='lab:test').length,1,'Testing another instrument cannot leave old temporary cards behind');assert.equal(data.current.played,live.played,'Each draft test starts from the real show rather than the previous trial');
+   const data=await scenario();assert.deepEqual(restoreBandLive(data.initial),data.initial);assert.deepEqual(restoreBandLive(data.current),data.current);assert.equal(data.current.cards.filter(c=>c.kind==='lab:test').length,1,'Testing another instrument cannot leave old temporary cards behind');
+   if(previousTrial)for(const key of ['fans','physics','room','turn','section','tempo','played','events','logs'])assert.deepEqual(data.current[key],previousTrial[key],key+' stays in the same trial when the card changes');
+   if(!previousTrial){
+    await castCard(data.current.hand[0],'f0');const played=(await scenario()).current;await page.locator('#bl-lab-replay-card').click();
+    const replayBox=await page.locator('#bl-lab-replay-card').boundingBox(),controlsBox=await page.locator('.bl-lab-controls').boundingBox();assert(replayBox.y>=controlsBox.y&&replayBox.y+replayBox.height<=controlsBox.y+controlsBox.height,'The quick replay button is visible without scrolling the lab controls');await page.screenshot({path:`test-results/card-same-show-replay-${width}.png`});
+    const replay=(await scenario()).current;assert.deepEqual(replay.fans,played.fans,'Replay re-arms the card without resetting its targets');assert.equal(replay.played,played.played);assert.equal(replay.energy,3);assert(replay.hand.includes(replay.cards.find(c=>c.kind==='lab:test').id));await page.locator('#bl-layout').first().click();
+    for(const [selector,value] of [['[data-bl-physics="force"]','610'],['#bl-radius-unit','225']])await page.locator(selector).evaluate((el,value)=>{el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},value);
+    await page.locator('#bl-layout').first().click();
+   }
+   previousTrial=(await scenario()).current;assert.deepEqual((await world()).performance.bandLive.game,live,'Rapid iteration never changes the actual show');
   }
   const initialLab=(await scenario()).initial,testId=initialLab.hand[0];
   const visibleFan=await page.locator('[data-bl-fan]').evaluateAll(els=>els.find(el=>{const r=el.getBoundingClientRect();return r.x+r.width/2>20&&r.x+r.width/2<innerWidth-20&&r.y+r.height/2>180&&r.y+r.height/2<innerHeight-230;})?.dataset.blFan);assert(visibleFan);

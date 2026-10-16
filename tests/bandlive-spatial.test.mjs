@@ -7,6 +7,7 @@ import {initializeCrowd,simulateImpulse,moveSpectator,inRadius,validateCrowd} fr
 import {claimLevelReward} from '../dist/level-rewards.mjs';
 import {chooseAutomaticMove,simulateBandLive} from '../dist/bandlive-auto.mjs';
 import {validatePersonDecks} from '../dist/bandlive-cards.mjs';
+import {replaceLabCard} from '../dist/bandlive-lab-card.mjs';
 function fixture({card=null,catalog=createCatalog(),spatial=true}={}){
  const people=createWorld(55,4).people;people[0].instrument='drums';
  if(card){const c=duplicateCard(catalog,'drums:note');Object.assign(c,card,{id:c.id,instrument:'drums',starter:0});people[0].bandLiveDecks={drums:[c.id,'note','note','special','special']};}
@@ -124,6 +125,29 @@ test('expanded editor limits validate catalogs and report card, effect, field an
   }c.effects[index][key]=original;
  }
  validateCatalog(catalog);
+});
+test('successive laboratory cards preserve the live crowd, settings, resources and turn history',()=>{
+ const {g}=fixture(),before=structuredClone(g),entry=structuredClone(g.catalog.cards.find(c=>c.id==='drums:note'));entry.effects[0].impactStrength=0;
+ let lab=replaceLabCard(g,entry,{original:g});assert.deepEqual(g,before);const slot=lab.hand[0];assert(playCard(lab,slot,'f0').ok);lab.tempo=7;lab.physics.force=610;lab.physics.grip=2;lab.room.radiusUnit=225;moveSpectator(lab,'f0',{x:310,y:120});
+ for(const instrument of ['keys','drums','keys']){
+  const current=structuredClone(lab),card=structuredClone(g.catalog.cards.find(c=>c.id===instrument+':note'));card.effects[0].amount=12;lab=replaceLabCard(lab,card,{original:g});
+  for(const key of ['fans','physics','room','turn','section','tempo','boost','relayBoosts','played','events','logs'])assert.deepEqual(lab[key],current[key],key+' survives a card swap');
+  assert.equal(lab.energy,3);assert.equal(lab.cards.filter(c=>c.kind==='lab:test').length,1);assert.equal(lab.cards.find(c=>c.kind==='lab:test').instrument,instrument);assert(lab.hand.length<=5);assert(lab.hand.includes(lab.cards.find(c=>c.kind==='lab:test').id));
+  for(const c of lab.cards.filter(c=>c.kind!=='lab:test'))assert.deepEqual(c,g.cards.find(x=>x.id===c.id),'Previous temporary slots regain their exact original card');
+  assert.deepEqual(restoreBandLive(lab),lab);assert.deepEqual(current.events,lab.events);
+ }
+});
+test('laboratory source cards survive scenario export/import and earlier trials without source metadata',()=>{
+ const {g}=fixture(),card=structuredClone(g.catalog.cards.find(c=>c.id==='drums:note')),first=replaceLabCard(g,card,{original:g}),slot=first.hand[0],keys=structuredClone(g.catalog.cards.find(c=>c.id==='keys:note'));
+ for(const old of [false,true]){
+  const imported=JSON.parse(JSON.stringify(first));if(old)delete imported.catalog.cards.find(c=>c.id==='lab:test').labSourceKind;
+  const next=replaceLabCard(restoreBandLive(imported),keys,{original:old?g:null});assert.deepEqual(next.cards.find(c=>c.id===slot),g.cards.find(c=>c.id===slot));assert.equal(next.cards.filter(c=>c.kind==='lab:test').length,1);assert.deepEqual(restoreBandLive(next),next);
+ }
+});
+test('laboratory replacement is atomic, retains a valid card partition and works with a full catalog',()=>{
+ const {g}=fixture();g.hand=g.cards.filter(c=>c.actorId===g.actors[0].id).map(c=>c.id);g.deck=g.cards.filter(c=>!g.hand.includes(c.id)).map(c=>c.id);while(g.catalog.cards.length<256)duplicateCard(g.catalog,'sax:note');validateCatalog(g.catalog);
+ const before=structuredClone(g),entry=structuredClone(g.catalog.cards.find(c=>c.id==='keys:note')),next=replaceLabCard(g,entry,{original:g});assert.deepEqual(g,before);assert.equal(next.catalog.cards.length,256);assert.equal(next.hand.length,5);assert.equal(new Set([...next.hand,...next.deck,...next.discard]).size,next.cards.length);assert.deepEqual(restoreBandLive(next),next);
+ entry.effects[0].strikes=101;assert.throws(()=>replaceLabCard(g,entry,{original:g}),/Frappes/);assert.deepEqual(g,before,'A rejected draft cannot partially replace the card or its catalog');
 });
 test('every proposed pair of effects executes and previews the exact committed state',()=>{
  const types=['power','tempo','energy','draw','boost','style','protect','push','pull','vortex','jump','return'];

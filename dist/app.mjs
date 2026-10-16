@@ -953,6 +953,7 @@ function changeView(v) {
   $(".topline").hidden = false;
   viewPositions.save(view, $("#main"));
   view = v;
+  levelNotices.update();
   $(".workspace").classList.toggle(
     "show-layout",
     v === "shows" && showingPerformance && !!world.performance,
