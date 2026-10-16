@@ -4,6 +4,8 @@ Depuis la version 0.9.0, les nouveaux shows et répétitions utilisent une foule
 
 ## Jouer avec la foule
 
+Pour une carte visant **un endroit au sol**, un seul arc rejoint le centre du cercle sous le curseur ou le doigt. Il reste à cet endroit en passant au-dessus d’un spectateur. Le tir rejoint ce centre, puis une onde se propage dans le rayon et son cœur; les spectateurs reçoivent les effets de la zone. Une carte mixte avec du tempo conserve ce seul arc. L’aperçu indique toujours les personnages affectés, les collisions et les conquêtes en chaîne.
+
 La visée affiche la zone réellement calculée par le moteur. Un rayon 1 vaut initialement 180 unités dans la salle, indépendamment de l’écran. Les cercles sont projetés avec la scène, sans changer les distances de combat. Les cartes peuvent cibler un spectateur, deux spectateurs, tout le public, une zone autour d’un spectateur ou un endroit libre au sol.
 
 Le petit cercle à l’arrivée de l’arc indique la cible. Le grand cercle montre la portée du pouvoir du spectateur. Avant de choisir une carte, cette portée est théorique. Pendant la visée, un cercle discret en pointillés et la mention **Pouvoir inactif · encore X ♥** indiquent qu’il manque encore des cœurs après la carte. Si le calcul complet, réactions et collisions comprises, prévoit la conquête, le cercle devient **rose plein et lumineux**, marqué **CONQUÊTE ! · effet déclenché**, et la fiche annonce le pouvoir et ses cibles. Un aperçu 15/16 reste inactif : il manque 1 cœur. Cette portée potentielle ne signifie pas que la carte à cible unique touche tous les voisins.

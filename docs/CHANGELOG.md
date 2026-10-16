@@ -1,6 +1,6 @@
 # V0.9.0 — 14 octobre 2026
 
-Foule physique et atelier de cartes, rayons de chaîne explicites, aperçu d’effet commun et annulation complète des cartes à la souris et au tactile. [Notes complètes](./versions.md#v090).
+Foule physique et atelier de cartes, tir unique au centre des zones au sol, rayons de chaîne explicites, aperçu d’effet commun et annulation complète des cartes à la souris et au tactile. [Notes complètes](./versions.md#v090).
 
 # V0.8.15 — 13 octobre 2026
 

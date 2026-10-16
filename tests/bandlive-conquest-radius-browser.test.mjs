@@ -6,6 +6,7 @@ import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
 import {chooseSong,previewCard,restoreBandLive} from '../dist/bandlive.mjs';
 import {duplicateCard,compileCard,newEffect} from '../dist/bandlive-catalog.mjs';
+import {assertGroundAim} from './bandlive-ground-aim-helpers.mjs';
 
 const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});let browser,page;
 try{
@@ -26,6 +27,7 @@ try{
   if(scenario.point||scenario.shift){const recipe=duplicateCard(game.catalog,'drums:note');Object.assign(recipe,scenario.shift?{target:'radius',radius:1,effects:[{...newEffect('push'),strength:1.5},{...newEffect('power'),impactStrength:0}]}:{target:'point',radius:1.2,coreRadius:.5});note.kind=recipe.id;note.definition=compileCard(recipe);game.actors.find(a=>a.id===note.actorId).bandLiveDeck[Number(note.id.split(':').at(-1))]=recipe.id;if(scenario.shift)game.physics.collisionPower=0;}
   for(const [i,f] of game.fans.entries())Object.assign(f,{hp:100,max:100,conquered:false,favorite,intent:'bored',effect:'spotlight',effectValue:1,reactionUsed:false,reactionActors:[],reactionTempo:0,position:i===0?{x:scenario.collision?400:260,y:130}:i===1?{x:480,y:220}:{x:740+(i%3)*100,y:70+(Math.floor((i-2)/3)%3)*90}});
   Object.assign(game.fans[0],{hp:scenario.hp,max:16,intent:scenario.intent,effect:'shock',effectValue:4,reactionActors:scenario.otherActor?[game.actors.find(a=>a.id!==note.actorId).id]:[]});if(scenario.collision)game.fans[1].hp=1;
+  if(scenario.point)game.fans[1].position={x:360,y:190};
   if(scenario.chain){game.fans[0].favorite=game.songs.find(s=>s.id===game.songId).style;game.fans[1].effect='shock';game.fans[1].effectValue=4;game.initialFanHp[0]=Math.min(16,game.initialFanHp[0]);}restoreBandLive(game);
   const expected=previewCard(game,note.id,'f0',scenario.point?{point:game.fans[0].position}:{}),ready=scenario.remaining===0;assert(expected.ok);assert.equal(expected.game.fans[0].hp,scenario.remaining,scenario.name);assert.equal(expected.effects.some(e=>e.type==='conquest'&&e.fanId==='f0'),ready);if(scenario.collision)assert(expected.event.hits.some(h=>h.kind==='collision'));
   page=await browser.newPage({viewport:{width,height:900},hasTouch:width<500,isMobile:width<500});const errors=[];page.on('pageerror',e=>errors.push(e.message));if(width<500)await page.emulateMedia({reducedMotion:'reduce'});
@@ -36,6 +38,7 @@ try{
   if(width<500){cdp=await page.context().newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:source.x+source.width/2,y:source.y+source.height/2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point]});}
   else{await page.mouse.move(source.x+source.width/2,source.y+source.height/2);await page.mouse.down();await page.mouse.move(point.x,point.y,{steps:6});}
   const layer=page.locator(`.bl-radius-layer[data-state="${scenario.point||scenario.shift?'card':ready?'triggered':'potential'}"]`);await layer.waitFor();const popup=page.locator('.drag-card-feedback');
+  if(scenario.point){assert(new Set(expected.event.hits.map(h=>h.id)).size>1,'The ground shot affects several bodies');await assertGroundAim(page,point);}
   await outsideRadius(popup);
   const appearance=await popup.evaluate(el=>{const s=getComputedStyle(el.querySelector('.drag-feedback-surface')),main=getComputedStyle(el.querySelector('.drag-outcome-main')),gain=getComputedStyle(el.querySelector('.drag-gain'));return {background:s.backgroundImage,border:s.borderRadius,font:main.fontSize,color:main.color,gain:gain.backgroundImage};});
   assert(appearance.background.includes('rgb(50, 53, 79)')&&appearance.background.includes('rgb(32, 42, 61)'),'The forecast retains the navy surface');assert.equal(appearance.border,'19px');assert.equal(appearance.font,'13px');assert(appearance.gain.includes('rgb(255, 202, 223)'),'The heart gain retains its pink pill');
@@ -56,6 +59,7 @@ try{
   assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game),game,'Inspecting or cancelling spends no resources');
   {
    if(cdp){await card.tap();await fan.focus();}else{await card.click();await fan.hover();}await layer.waitFor();const selected=page.locator('#bl-card-preview');assert.equal(await selected.locator('.bl-conquest-pending').isVisible(),!ready);await outsideRadius(selected);
+   if(scenario.point)await assertGroundAim(page);
    assert(await selected.locator('.preview-face').isHidden(),'The effect forecast never falls back to a cream card and a separate result box');
    assert.deepEqual(await selected.evaluate(el=>{const s=getComputedStyle(el.querySelector('.drag-feedback-surface')),main=getComputedStyle(el.querySelector('.drag-outcome-main')),gain=getComputedStyle(el.querySelector('.drag-gain'));return {background:s.backgroundImage,border:s.borderRadius,font:main.fontSize,color:main.color,gain:gain.backgroundImage};}),appearance,'Click and drag reuse the exact same effect presentation');
    await page.waitForTimeout(350);await page.screenshot({path:`test-results/conquest-radius-selected-${scenario.name}-${width}.png`});

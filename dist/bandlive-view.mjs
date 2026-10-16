@@ -336,10 +336,11 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     }
     if(ghost)inspection.hide();else{inspection.pin(id);inspection.outcome(outcome);}
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`);
-    const targetIds=valid?[...new Set(preview.event.hits.filter(h=>h.kind!=='collision').map(h=>h.id))]:fan?[fan.id]:[];
+    // A ground card aims at one impact point; affected bodies are an area forecast.
+    const targetIds=c.target==='point'?[]:valid?[...new Set(preview.event.hits.filter(h=>h.kind!=='collision').map(h=>h.id))]:fan?[fan.id]:[];
     if(pendingChoice?.type==='duo'&&!targetIds.includes(pendingChoice.targetId))targetIds.push(pendingChoice.targetId);
     const ends=targetIds.map(id=>{const position=preview?.areas?.filter(a=>a.kind==='card').flatMap(a=>a.targets).find(t=>t.id===id)?.position,before=game.fans.find(f=>f.id===id)?.position;return position&&before&&Math.hypot(position.x-before.x,position.y-before.y)>4?stage.crowdPoint(position):pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`);}).filter(Boolean);
-    if(c.tempo){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
+    if(c.tempo&&c.target!=='point'){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
     if(game.spatialVersion){
       const center=c.target==='point'?(dragPoint?stage.point(dragPoint.x,dragPoint.y):fan?.position||{x:game.room.width/2,y:game.room.height/2}):fan?.position;
       if(c.radius&&center)showRadius(center,c.radius,c.coreRadius);
@@ -348,7 +349,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
         showRadius(position,1,0,{state:ready?'triggered':'potential',label:ready?'CONQUÊTE ! · effet déclenché':outcome.conquestPending?'Pouvoir inactif · encore '+outcome.conquestPending.remaining+' ♥':'À la conquête · rayon 1'});
       }
       if(valid)showResolvedAreas(preview,!c.radius&&outcome.conquestReady?fan?.id:null);
-      if(c.target==='point'&&center)ends.push(stage.crowdPoint(center));
+      if(c.target==='point'&&center)ends.push({...stage.crowdPoint(center),kind:c.tempo&&!Object.hasOwn(c,'power')?'tempo':undefined});
     }
     aim.draw(origin,ends,valid||!!c.twoTargets);
     if(!dragPoint&&!target)return;
@@ -493,8 +494,16 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
         if(event.effect==='spotlight'||event.effect==='chorus')for(const id of event.targets){const pos=pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`);label(event.effect==='spotlight'?'✦ SENSIBLE':'♫ '+currentSong(game).style,pos,'bl-juice-support');}
         if(sound)playSound({type:event.type==='card'?'shot':'impact'});
       }
-      const targets=event.targets||(event.hits||[]).filter(h=>h.kind!=='collision').map(h=>h.id);
-      for(const id of targets){const target=pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`);if(!target||!source)continue;const p=Math.min(1,age/.35);ctx.strokeStyle=event.effect==='chorus'?'#d3b8ee':event.effect==='spotlight'?'#fff2b6':'#f8bdcf';ctx.globalAlpha=Math.max(0,1-age);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(source.x,source.y);ctx.lineTo(source.x+(target.x-source.x)*p,source.y+(target.y-source.y)*p);ctx.stroke();ctx.beginPath();ctx.arc(target.x,target.y,8+age*55,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
+      const ground=event.type==='card'&&event.point?stage.crowdPoint(event.point):null;
+      const targets=ground?[ground]:(event.targets||(event.hits||[]).filter(h=>h.kind!=='collision').map(h=>h.id)).map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`));
+      for(const target of targets){
+        if(!target||!source)continue;const p=Math.min(1,age/.35);ctx.strokeStyle=event.effect==='chorus'?'#d3b8ee':event.effect==='spotlight'?'#fff2b6':'#f8bdcf';ctx.globalAlpha=Math.max(0,1-age);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(source.x,source.y);ctx.lineTo(source.x+(target.x-source.x)*p,source.y+(target.y-source.y)*p);ctx.stroke();
+        if(ground){
+          const definition=cardDefinition(cardById(game,event.cardId)),spread=Math.min(1,Math.max(0,(age-.35)/.6)),unit=game.room.radiusUnit;
+          if(spread){ctx.beginPath();ctx.arc(ground.x,ground.y,definition.radius*unit*spread,0,Math.PI*2);ctx.stroke();if(definition.coreRadius){ctx.strokeStyle='#ffe184';ctx.beginPath();ctx.arc(ground.x,ground.y,definition.coreRadius*unit*spread,0,Math.PI*2);ctx.stroke();}}
+        }else{ctx.beginPath();ctx.arc(target.x,target.y,8+age*55,0,Math.PI*2);ctx.stroke();}
+        ctx.globalAlpha=1;
+      }
     }
   }
   function animate(){
