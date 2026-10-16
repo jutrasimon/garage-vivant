@@ -74,14 +74,28 @@ try{
   await page.screenshot({path:`test-results/card-editor-help-${width}.png`});await editor.locator('[data-ce-action="close"]').click();assert.equal(await tips.count(),0);
   const world=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1'))),live=(await world()).performance.bandLive.game;
   const scenario=async()=>{const download=page.waitForEvent('download');await page.locator('#bl-lab-export').click();return JSON.parse(await readFile(await (await download).path(),'utf8'));};
+  const castCard=async(id,fanId)=>{
+   const card=page.locator(`[data-bl-card="${id}"]`);
+   if(width>500){await card.click();await page.locator(`[data-bl-fan="${fanId}"]`).click();}
+   else{
+    await card.scrollIntoViewIfNeeded();
+    // Revealing a hand can pan the room; choose the visible floor after that pan.
+    fanId=await page.locator('[data-bl-fan]').evaluateAll(els=>els.find(el=>{const r=el.getBoundingClientRect();return r.x+r.width/2>20&&r.x+r.width/2<innerWidth-20&&r.y+r.height/2>180&&r.y+r.height/2<innerHeight-230;})?.dataset.blFan);assert(fanId);
+    const source=await card.evaluate(el=>{const r=el.getBoundingClientRect();for(const y of [.15,.85,.05,.95,.5])for(const x of [.15,.85,.05,.95,.5]){const p={x:r.left+r.width*x,y:r.top+r.height*y};if(p.x>0&&p.x<innerWidth&&p.y>0&&p.y<innerHeight&&document.elementFromPoint(p.x,p.y)?.closest('[data-bl-card]')===el)return p;}return null;});assert(source,'A visible part of the chosen card can be grabbed in its fan');
+    const target=await page.locator(`[data-bl-fan="${fanId}"]`).boundingBox(),touch=await page.context().newCDPSession(page);
+    await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[source]});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:target.x+target.width/2,y:target.y+target.height/2}]});await page.locator('.drag-card-feedback.has-target:not(.invalid)').waitFor();await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await touch.detach();
+   }
+   await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);
+   return fanId;
+  };
   for(const instrument of ['guitar','keys','guitar']){
    await page.locator('#bl-cards').first().click();await field('category').selectOption(instrument);await editor.locator(`[data-ce-select="${instrument==='guitar'?copy.id:'keys:note'}"]`).click();await editor.locator('[data-ce-action="test"]').click();await page.locator('.bl-render-ready').waitFor();
    const data=await scenario();assert.deepEqual(restoreBandLive(data.initial),data.initial);assert.deepEqual(restoreBandLive(data.current),data.current);assert.equal(data.current.cards.filter(c=>c.kind==='lab:test').length,1,'Testing another instrument cannot leave old temporary cards behind');assert.equal(data.current.played,live.played,'Each draft test starts from the real show rather than the previous trial');
   }
-  const initialLab=(await scenario()).initial,testId=initialLab.hand[0];await page.locator(`[data-bl-card="${testId}"]`).click();
+  const initialLab=(await scenario()).initial,testId=initialLab.hand[0];
   const visibleFan=await page.locator('[data-bl-fan]').evaluateAll(els=>els.find(el=>{const r=el.getBoundingClientRect();return r.x+r.width/2>20&&r.x+r.width/2<innerWidth-20&&r.y+r.height/2>180&&r.y+r.height/2<innerHeight-230;})?.dataset.blFan);assert(visibleFan);
-  await page.locator(`[data-bl-fan="${visibleFan}"]`).click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);
-  const playedLab=(await scenario()).current,event=playedLab.events.findLast(e=>e.type==='card'),expected=previewCard(initialLab,testId,visibleFan,{point:event.point});assert(expected.ok);assert.deepEqual(playedLab,expected.game,'The composed draft really plays the previewed state in the laboratory');assert.deepEqual((await world()).performance.bandLive.game,live);
+  const labTarget=await castCard(testId,visibleFan);
+  const playedLab=(await scenario()).current,event=playedLab.events.findLast(e=>e.type==='card'),expected=previewCard(initialLab,testId,labTarget,{point:event.point});assert(expected.ok);assert.deepEqual(playedLab,expected.game,'The composed draft really plays the previewed state in the laboratory');assert.deepEqual((await world()).performance.bandLive.game,live);
   await page.locator('#bl-lab-reset').click();assert.deepEqual((await scenario()).current,initialLab);await page.locator('#bl-lab-close').click();assert.deepEqual((await world()).performance.bandLive.game,live);
   // Apply a new starting deck, then enter a genuinely new rehearsal through the UI.
   await page.locator('#bl-cards').first().click();await field('category').selectOption('guitar');
@@ -90,8 +104,8 @@ try{
   assert.deepEqual((await world()).performance.bandLive.game,live,'Applying a catalog keeps the current combat frozen');await page.locator('#bl-cancel').click();await page.locator('#bandlive-nav').click();await page.locator('#bl-start').click();await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();
   const rehearsal=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-bandlive-v1')).game);let next=await rehearsal();assert.deepEqual(restoreBandLive(next),next);const authored=next.cards.filter(c=>c.kind===copy.id);assert.equal(authored.length,5,'The next show uses the applied starting quantities');assert(authored.every(c=>c.definition.program[0].strikes===6&&c.definition.program[1].amount===12));
   if(!authored.some(c=>next.hand.includes(c.id))){await page.locator('#bl-end').click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);next=await rehearsal();}
-  const playable=authored.find(c=>next.hand.includes(c.id));assert(playable,'The authored card is drawn into the new rehearsal');await page.locator(`[data-bl-card="${playable.id}"]`).click();await page.locator('[data-bl-fan]').first().click();await page.waitForFunction(()=>!document.querySelector('#bl-end')?.disabled);
-  const after=await rehearsal(),cast=after.events.findLast(e=>e.type==='card'),forecast=previewCard(next,playable.id,'f0',{point:cast.point});assert(forecast.ok);assert.deepEqual(after,forecast.game);assert.equal(after.tempo,10,'The edited tempo effect is active in the next show');assert.deepEqual(restoreBandLive(after),after);await page.screenshot({path:`test-results/card-full-flow-${width}.png`});
+  const playable=authored.find(c=>next.hand.includes(c.id));assert(playable,'The authored card is drawn into the new rehearsal');const nextTarget=await castCard(playable.id,'f0');
+  const after=await rehearsal(),cast=after.events.findLast(e=>e.type==='card'),forecast=previewCard(next,playable.id,nextTarget,{point:cast.point});assert(forecast.ok);assert.deepEqual(after,forecast.game);assert.equal(after.tempo,10,'The edited tempo effect is active in the next show');assert.deepEqual(restoreBandLive(after),after);await page.screenshot({path:`test-results/card-full-flow-${width}.png`});
   assert.deepEqual(errors,[]);await page.close();
  }
  console.log('Card workshop passed: typography, field help, hover/keyboard/touch, stable form scroll/focus, numeric errors, +12 tempo and 6 strikes, import/export, repeated cross-instrument lab trials, actual draft play/reset and edited starting deck played in a new rehearsal.');
