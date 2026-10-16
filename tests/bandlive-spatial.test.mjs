@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {crowdStressFixture} from './bandlive-crowd-stress-fixture.mjs';
 import {createWorld,restore} from '../dist/engine.mjs';
 import {createBandLive,chooseSong,playCard,previewCard,restoreBandLive,impactCrowd} from '../dist/bandlive.mjs';
 import {createCatalog,validateCatalog,compileCard,newEffect,duplicateCard,retireCard,offeredCards} from '../dist/bandlive-catalog.mjs';
@@ -63,6 +65,14 @@ test('a radius following a pushed target exposes both ordered centers instead of
  const actual=playCard(g,c.id,'f0');assert.deepEqual(actual.areas,preview.areas);assert.deepEqual(g,preview.game);
 });
 function collisionLine(game){for(const [i,f] of game.fans.entries())moveSpectator(game,f.id,i<3?{x:300+i*120,y:180}:{x:740+(i%3)*100,y:60+Math.floor((i-3)/3)*90});}
+test('collision optimization preserves complete reference trajectories for 12 and 50 spectators',()=>{
+ // Recorded from 0568515 before optimizing: frames, contacts and final positions.
+ const references={12:{push:'01f5dad34ca5dc9694b9e06665a48373b44785ab36d144e7e6b416c0c37a59de',pull:'c59e1ede3f561fbfa413208d48a18fdedb87a6128bfe0df7bc24481f855043f2',vortex:'f52c5d8102cb8477dac1e2cf39e3cbf6caad8ae9d25afdbd8de91e0fadc3501c',jump:'a1a6f20063305a8ac0f11ab098cc3bc8c48cd1b967b9b5054ab83c721900788b',return:'cb92df0b800d89c94d4ec92e7132e34cacbbb9b54193d038253c7d575b527bbd'},50:{push:'049eabb6773ffafa1f4d04695a07c6ab9d07ce300a111b020cf115cfec4e1f14',pull:'dbcaf63006041dc9addfa597d1786363f803c65577116522ff08a78e25972d4b',vortex:'d689d8a5c376a1c4171d031ef4c0532af8666e5143e66e55675cef5630944f8b',jump:'42ef32c4456c7ffeb39533b81bedd7023e83a6a95f258ebe161b84d0adb6f2c7',return:'b8a5c46f409ad851799cdbee477d65b923e12a9b36c50cfb8d65842e9a891947'}};
+ for(const count of [12,50])for(const kind of Object.keys(references[count])){
+  const {game}=crowdStressFixture(count),center={x:430,y:180},motion=simulateImpulse(game,{center,targets:inRadius(game,center,1.2,{alive:false}).map(f=>f.id),kind,strength:1.3});
+  const digest=createHash('sha256').update(JSON.stringify({motion,positions:game.fans.map(f=>f.position)})).digest('hex');assert.equal(digest,references[count][kind],count+' spectators, '+kind);
+ }
+});
 test('strong contacts transmit through several spectators and award hearts only to the struck bodies',()=>{
  const {g}=fixture();collisionLine(g);const args={center:{x:200,y:180},targets:['f0'],strength:2},copy=structuredClone(g),r=impactCrowd(g,args),other=impactCrowd(copy,args);assert.deepEqual(r,other);assert.deepEqual(g,copy);
  assert.equal(g.fans[0].hp,100,'The moving spectator does not earn hearts merely by hitting someone');assert.equal(g.fans[1].hp,98);assert.equal(g.fans[2].hp,98,'A struck body can hit the next body in turn');assert(g.fans[2].position.x>540);

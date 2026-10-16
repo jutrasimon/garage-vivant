@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 export async function assertGroundAim(page,pointer){
+ if(pointer)await page.waitForFunction(({x,y})=>{const r=document.querySelector('.bl-radius-center')?.getBoundingClientRect();return r&&Math.hypot(r.x+r.width/2-x,r.y+r.height/2-y)<1;},pointer);
  assert.equal(await page.locator('.bl-aim.visible .bl-aim-line').count(),1,'A ground card has exactly one arc, including mixed power/tempo cards');
  assert.equal(await page.locator('.bl-aim.visible .bl-aim-ring').count(),1,'Affected spectators never get individual aim rings');
  const ring=await page.locator('.bl-aim.visible .bl-aim-ring').boundingBox(),center=await page.locator('.bl-radius-center').boundingBox();

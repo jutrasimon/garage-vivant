@@ -75,10 +75,10 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   const root=document.querySelector('#bandlive-view'),nav=document.querySelector('#bandlive-nav'),toggle=document.querySelector('#bandlive-enabled');
   const versionButton=document.querySelector('#version'),versionHome=versionButton?.parentElement,versionNext=versionButton?.nextSibling;
   const restoreVersion=()=>{if(versionButton&&versionHome)versionHome.insertBefore(versionButton,versionNext?.parentElement===versionHome?versionNext:null);};
-  let enabled=true,game=null,preparing=false,draft={groupId:'',memberIds:null,seed:2040,audienceSize:RULES.minAudience},selectedCard=null,activeCard=null,dragPointer=null,dragPoint=null,dragFrame=null,ghost=null,animation=null,sound=false,storageProblem=false;
+  let enabled=true,game=null,preparing=false,draft={groupId:'',memberIds:null,seed:2040,audienceSize:RULES.minAudience},selectedCard=null,activeCard=null,dragPointer=null,dragPoint=null,dragFrame=null,ghost=null,animation=null,sound=false,storageProblem=false,aimGeometry=null,previewFrame=null;
   try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){enabled=true;if(saved.draft)draft=saved.draft;if(saved.game)game=restoreBandLive(saved.game);}}catch{notify('La répétition BandLive enregistrée ne peut pas être reprise. Le quartier est disponible.');}
   let labOriginal=null,labBaseline=null,labKind='push',labStrength=1,labShoot=false,theme='midnight';
-  const stage=createBandLiveStage({root,getReducedEffects,onLayout:syncLayoutTools,onPositions:()=>{previewMemo=null;persist();}});
+  const stage=createBandLiveStage({root,getReducedEffects,onLayout:()=>{aimGeometry=null;syncLayoutTools();},onPositions:()=>{aimGeometry=null;previewMemo=null;persist();}});
   const cardEditor=createCardEditor({getWorld,onSave:onCatalogSave,onTest:startLab,onApplyCurrent:applyCurrentCard,canApplyCurrent:()=>{const current=labOriginal?.game||game;return !!current?.spatialVersion&&['choose','play'].includes(current.phase);}});
   const aim=createBandLiveAim();
   let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null,previewMemo=null,touchGrab=null,ignoreClick=false,quietPointer=null,lastPointer=null;
@@ -264,6 +264,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     return `<div class="bl-arena ${!!game.conquestVersion?'bl-conquest-board':''} ${choosing?'bl-is-choosing':''}"><section class="bl-show-screen"><div class="bl-hud"><div class="bl-show-title"><span class="eyebrow">${eyebrow}</span><h2>${groupLinkHTML(getWorld().groups.find(g=>g.id===game.groupId),game.groupName)}</h2><p>${song?`${esc(song.title)} · ${esc(song.style)} · ${sectionName(game)} · passage ${game.usedSongs.length}/2`:'Deux passages pour conquérir le public.'}</p></div>${songProgressHTML()}<div class="bl-resources"><span><small>TOUR</small><b>${game.turn||1}</b></span><span><small>CONQUIS</small><b>${game.fans.filter(f=>f.hp===0).length} / ${game.fans.length}</b></span>${game.relayBoosts?.length?`<span class="bl-boost"><b>+${game.relayBoosts.reduce((n,b)=>n+b.power,0)}</b> Relais · autre musicien</span>`:''}${game.boost?`<span class="bl-boost"><b>+${game.boost}</b> Prochaine puissance · ce tour</span>`:''}</div>${topControlsHTML(finished,live)}</div>${choosing?`<div class="bl-song-overlay" role="dialog" aria-modal="true" aria-label="Choisir la toune"><div class="bl-song-choice"><span class="eyebrow">LE PUBLIC CE SOIR</span><div class="bl-crowd-overview">${[...new Set(game.fans.map(favoriteStyle))].map(style=>`<span>${styleIcon(style)} ${esc(style)} <b>${game.fans.filter(f=>favoriteStyle(f)===style).length}</b></span>`).join('')}</div><p class="bl-crowd-moods">${Object.entries(REACTIONS).map(([id,r])=>{const n=game.fans.filter(f=>!f.conquered&&!f.reactionUsed&&f.intent===id).length;return n?`${n} ${r.name}`:'';}).filter(Boolean).join(' · ')}</p><b>${game.songOrder?(game.turn?'Deuxième passage de la setlist · −2 tempo au départ':'Setlist réservée · première chanson'):game.turn?(game.songs.length===1?'Reprise de la chanson · −2 tempo au départ':'Choisis la deuxième chanson · −2 tempo au départ'):'Choisis la première chanson'}</b>${availableSongs(game).map(s=>`<button data-bl-song="${esc(s.id)}"><strong>${esc(s.title)}</strong>${styleIcon(s.style)}<small>${esc(s.style)} · ${game.version>=4?songTurns(s):3} tours · finale : 3 puissance sur tout le public</small><span class="bl-song-match">♥ ${game.fans.filter(f=>!f.conquered&&favoriteStyle(f)===s.style).length} fans partagent ce style</span></button>`).join('')}</div></div>`:''}<div class="bl-playfield"><div class="bl-viewport"><div class="bl-world bl-minuit" style="--bl-players:${game.actors.length};--bl-fans:${game.fans.length>6?Math.ceil(game.fans.length/2):game.fans.length}"><canvas class="bl-effects" aria-hidden="true"></canvas><div class="bl-stage-sign" aria-hidden="true"><span>GARAGE VIVANT</span><b>LIVE SESSION</b></div><div class="bl-musicians">${game.actors.map(actor=>`<section class="bl-musician" data-bl-musician="${esc(actor.id)}"><div class="bl-musician-info" data-bl-actor="${esc(actor.id)}" tabindex="0" aria-label="Informations de ${esc(actor.name)}"><span class="bl-status-icon" aria-label="Statistiques et action de ${esc(actor.name)}">${animation?.event?.actorId===actor.id?'♫':'ⓘ'}<small>${animation?.event?.actorId===actor.id?esc(animation.event.name):'Prêt'} · ${Math.round(actor.needs.energy??0)} ⚡</small></span><span class="bl-performer">${cubeHTML(actor,'actor')}${instrumentArt(actor.instrument,'rhythm')}</span><div class="bl-name"><b>${esc(actor.name)}</b>${styleIcon(actor.genre)}</div><small>${INSTRUMENTS[actor.instrument]}</small></div>${!choosing&&!finished?handHTML(actor):''}</section>`).join('')}</div><div class="bl-audience-viewport" tabindex="0" role="region" aria-label="Public du concert"><div class="bl-audience" data-bl-target="audience" tabindex="0" role="group" aria-label="Zone du public. Dépose ici une carte collective ou de préparation."><span class="bl-zone-label">Public</span><div class="bl-fans" ${!!game.conquestVersion?`style="grid-template-columns:repeat(${audienceColumns(game)},minmax(0,1fr))"`:""}>${game.fans.map(fan=>fanHTML(game,fan)).join('')}</div><span class="bl-drop-hint">Cartes collectives et préparations → dépose dans cette zone</span></div></div></div></div></div>${resourceDockHTML(game)}${game.phase==='play'?`<div class="bl-turn-dock"><button id="bl-end" class="primary ${game.hand.some(id=>canPlay(game,id))?'':'bl-turn-ready'}" ${animation?'disabled':''}>Fin du tour <span>➜</span></button></div>`:''}</section><section class="bl-show-details">${live?eveningHTML(live,finished):''}${report}${finished&&live?`<section class="bl-xp-report">${(getWorld().showHistory.find(r=>r.id===live.id)?.individualXp||[]).map(x=>`<div>${personCard(getWorld().people.find(p=>p.id===x.id))}<b class="${x.levelAfter>x.levelBefore?'bl-level-up':''}">+${x.gain} XP ${x.levelAfter>x.levelBefore?`✦ NIVEAU ${x.levelAfter} !`:''}</b></div>`).join('')}</section>`+rewardHTML(live):''}${choiceHTML()}<div class="bl-controls">${layoutToolsHTML()}<p id="bl-help" role="status">${finished?(won?'Tout le public est conquis !':'Le show est terminé. Il reste du public à conquérir.'):choosing?'Choisis une chanson pour piger ta main.':pendingChoice?.type==='duo'?'Choisis le deuxième spectateur, différent du premier.':pendingChoice?.type==='discard'?'Choisis la carte à défausser ci-dessus.':selectedCard?'Choisis un spectateur ou la zone du public.':'Glisse une carte vers le public, ou sélectionne-la puis choisis sa cible.'}</p>${live&&!finished?'<button id="bl-cancel" class="text-button">Interrompre le show</button>':''}${finished?`<button id="bl-return" class="primary">${live?.bandLive.reward?.status==='pending'?(waiting?'Continuer la soirée sans échange →':'Continuer sans échange →'):waiting?'Continuer la soirée →':'Retour au quartier · continuer'}</button>${live?'':'<button id="bl-replay">Rejouer la répétition</button>'}`:''}</div><details class="bl-log"><summary>Déroulement du show · ${game.played} cartes jouées</summary><div>${game.logs.map(line=>`<p>${esc(line)}</p>`).join('')}</div></details></section></div>`;
   }
   function render(){
+    aimGeometry=null;
     previewMemo=null;
     const previousResources=readResourceValues(root);
     const previousViewport=root.querySelector('.bl-viewport'),previousAudience=root.querySelector('.bl-audience-viewport');
@@ -299,6 +300,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
   }
   function clearDrag(){
     previewMemo=null;
+    if(previewFrame!==null)cancelAnimationFrame(previewFrame);previewFrame=null;aimGeometry=null;
     const pointer=dragPointer;selectedCard=null;pendingChoice=null;choiceTouch=null;activeCard=null;dragPointer=null;touchGrab=null;dragPoint=null;if(pointer!==null&&root.hasPointerCapture(pointer))root.releasePointerCapture(pointer);if(dragFrame!==null)cancelAnimationFrame(dragFrame);dragFrame=null;ghost?.remove();ghost=null;root.classList.remove('bl-dragging');inspection.hide();clearPreview();root.querySelector('.bl-card-choice')?.remove();root.querySelectorAll('.bl-drop-active,.bl-drop-valid,.bl-tempo-target').forEach(el=>el.classList.remove('bl-drop-active','bl-drop-valid','bl-tempo-target'));syncCardSelection();
   }
   function startDrag(id){
@@ -380,30 +382,39 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
       node?.setAttribute('data-bl-impact-kind',kind);
       if(node&&!direct){const label=document.createElement('span');label.className='bl-impact-kind';label.textContent=(collision?'Choc':chain?'En chaîne':'Réaction')+(fan.hp>after.hp?' +'+(fan.hp-after.hp)+' ♥':'');node.append(label);}
       if(out&&anchor){
-        const r=anchor.getBoundingClientRect(),clip=anchor.closest('.bl-audience-viewport').getBoundingClientRect();
+        const {fans,clip}=readAimGeometry(),r=fans.get(fan.id).rect;
         if(r.bottom<Math.max(clip.top,0)||r.top>Math.min(clip.bottom,innerHeight)||r.right<0||r.left>innerWidth)continue;
         const remaining=fan.max-after.hp,single=c.target==='single';
         out.classList.toggle('bl-preview-single',single);out.hidden=false;
         out.innerHTML=`<strong>${esc(fan.name)} · ${power?`+${fan.hp-after.hp} conquête`:'Style / effet'}</strong><span>Conquête : ${remaining} / ${fan.max}</span>${fanStatus(after)!==fanStatus(fan)?`<small>${esc(fanStatus(after))}</small>`:''}`;
         out.setAttribute('aria-label',`${fan.name} : conquête ${remaining} sur ${fan.max}.`);
-        out.style.left=Math.max(6,Math.min(innerWidth-out.offsetWidth-6,r.left+r.width/2-out.offsetWidth/2))+'px';
-        out.style.top=Math.max(6,Math.min(innerHeight-out.offsetHeight-6,r.top+6))+'px';
+        // The shared effect panel owns these summaries; no per-fan popup needs measuring.
       }
     }
+  }
+  function readAimGeometry(){
+    if(aimGeometry)return aimGeometry;
+    const world=root.querySelector('.bl-world'),rect=world.getBoundingClientRect(),scale=Number(world.dataset.scale)||1,clip=root.querySelector('.bl-audience-viewport').getBoundingClientRect();
+    const fans=new Map([...root.querySelectorAll('[data-bl-fan]')].map(element=>[element.dataset.blFan,{element,rect:element.getBoundingClientRect()}]));
+    return aimGeometry={rect,scale,clip,fans,points:new Map()};
+  }
+  function schedulePreview(){
+    if(previewFrame!==null)return;
+    previewFrame=requestAnimationFrame(()=>{previewFrame=null;if(activeCard||selectedCard)highlightDrop(dragPoint?dropAtPoint(dragPoint.x,dragPoint.y):null);});
   }
   function dropAtPoint(x,y){
     const element=document.elementFromPoint(x,y);if(element?.closest('.bl-hand'))return null;
     const target=element?.closest('[data-bl-target]');
     // Returning to a hand is an explicit cancellation, including above the crowd.
-    const clip=root.querySelector('.bl-audience-viewport')?.getBoundingClientRect();
+    const {clip,fans}=readAimGeometry();
     if(clip&&x>=Math.max(0,clip.left)&&x<=Math.min(innerWidth,clip.right)&&y>=Math.max(0,clip.top)&&y<=Math.min(innerHeight,clip.bottom)){
-      const fan=[...root.querySelectorAll('[data-bl-fan]')].find(el=>{const r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;});
-      if(fan)return fan;
+      const fan=[...fans.values()].find(({rect:r})=>x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom);
+      if(fan)return fan.element;
     }
     return target&&root.contains(target)?target:null;
   }
   function moveDrag(x,y){
-    dragPoint={x,y};highlightDrop(dropAtPoint(x,y));
+    dragPoint={x,y};schedulePreview();
     aim.movePointer(dragPoint);
     moveDragFeedback(ghost,dragPoint);
     if(dragFrame!==null)return;
@@ -420,18 +431,19 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
         const vx=velocity(x,left,right);if(vx)viewport.scrollLeft+=vx*step;
         const audienceTop=Math.max(top,a.top),audienceBottom=Math.min(bottom,a.bottom);
         if(y>=audienceTop&&y<=audienceBottom){const vy=velocity(y,audienceTop,audienceBottom);if(vy)audience.scrollTop+=vy*step;}
-        if(beforeX!==viewport.scrollLeft||beforeY!==audience.scrollTop){previewMemo=null;highlightDrop(dropAtPoint(x,y));}
+        if(beforeX!==viewport.scrollLeft||beforeY!==audience.scrollTop){aimGeometry=null;previewMemo=null;schedulePreview();}
       }
       dragFrame=requestAnimationFrame(scrollFrame);
     }
     dragFrame=requestAnimationFrame(scrollFrame);
   }
   function pointFor(selector){
-    const world=root.querySelector('.bl-world').getBoundingClientRect(),el=root.querySelector(selector),r=el?.getBoundingClientRect();
+    const cached=activeCard||selectedCard?readAimGeometry():null;if(cached?.points.has(selector))return cached.points.get(selector);
+    const world=cached?.rect||root.querySelector('.bl-world').getBoundingClientRect(),el=root.querySelector(selector),r=el?.getBoundingClientRect();
     if(!r)return null;
-    const clip=el.closest('.bl-audience-viewport')?.getBoundingClientRect(),centerY=r.top+r.height/2;
+    const clip=el.closest('.bl-audience-viewport')?(cached?.clip||el.closest('.bl-audience-viewport').getBoundingClientRect()):null,centerY=r.top+r.height/2;
     if(clip&&(centerY<clip.top||centerY>clip.bottom))return null;
-    const scale=Number(root.querySelector('.bl-world').dataset.scale)||1;return {x:(r.left+r.width/2-world.left)/scale,y:(centerY-world.top)/scale};
+    const scale=cached?.scale||Number(root.querySelector('.bl-world').dataset.scale)||1,point={x:(r.left+r.width/2-world.left)/scale,y:(centerY-world.top)/scale};cached?.points.set(selector,point);return point;
   }
   function perform(id,targetId,options={}){
     if(animation||stage.editing)return false;
@@ -465,14 +477,11 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(!animation)return;
     const elapsed=performance.now()-animation.started,reduced=getReducedEffects()||matchMedia('(prefers-reduced-motion: reduce)').matches;
     const label=(text,pos,kind='')=>{if(!pos)return;const el=document.createElement('span');el.className='bl-juice-label '+kind;el.textContent=text;el.style.left=pos.x+'px';el.style.top=pos.y+'px';if(reduced)el.style.animation='none';world.append(el);setTimeout(()=>el.remove(),1000);};
-    const motions=animation.motions||[],totalFrames=motions.reduce((n,m)=>n+m.frames.length,0),motionFrame=reduced?totalFrames:Math.floor(Math.min(1,elapsed/Math.min(1800,animation.duration))*totalFrames);let offset=0;
-    for(const [mi,motion] of motions.entries()){
-      for(const [ci,contact] of motion.contacts.entries()){
-        const key=`contact:${mi}:${ci}`;if(offset+contact.frame>motionFrame||animation.cued.has(key))continue;animation.cued.add(key);
-        const point=stage.crowdPoint(contact.point);label('✦ IMPACT',point,'bl-juice-support bl-juice-collision');
-        for(const hit of contact.hits||[]){const pos=pointFor(`[data-bl-fan="${CSS.escape(hit.id)}"] .bl-cube`);label('+'+hit.gain+' ♥',pos?{x:pos.x,y:pos.y-30}:point,'bl-juice-collision');if(hit.after===0)label('✦ CONQUIS !',pos||point);}
-      }
-      offset+=motion.frames.length;
+    if(!animation.contactTimeline){let offset=0;const contacts=[];for(const motion of animation.motions||[]){for(const contact of motion.contacts)contacts.push({frame:offset+contact.frame,contact});offset+=motion.frames.length;}animation.contactTimeline={total:offset,contacts,next:0};}
+    const timeline=animation.contactTimeline,motionFrame=reduced?timeline.total:Math.floor(Math.min(1,elapsed/Math.min(1800,animation.duration))*timeline.total);
+    while(timeline.next<timeline.contacts.length&&timeline.contacts[timeline.next].frame<=motionFrame){
+      const {contact}=timeline.contacts[timeline.next++],point=stage.crowdPoint(contact.point);label('✦ IMPACT',point,'bl-juice-support bl-juice-collision');
+      for(const hit of contact.hits||[]){const pos=pointFor(`[data-bl-fan="${CSS.escape(hit.id)}"] .bl-cube`);label('+'+hit.gain+' ♥',pos?{x:pos.x,y:pos.y-30}:point,'bl-juice-collision');if(hit.after===0)label('✦ CONQUIS !',pos||point);}
     }
     for(const [i,event] of animation.events.filter(e=>e.type!=='motion').entries()){
       const age=(elapsed-i*420)/1000;if(age<0||age>1)continue;
@@ -527,7 +536,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     lastPointer={x:event.clientX,y:event.clientY};
     if(dragPointer===event.pointerId&&!root.hasPointerCapture(event.pointerId)){cancelCard({pointer:lastPointer,suppressClick:true});return;}
     if(touchGrab?.pointerId===event.pointerId&&Math.hypot(event.clientX-touchGrab.x,event.clientY-touchGrab.y)>=8){const id=touchGrab.id;touchGrab=null;if(startDrag(id)){event.preventDefault();dragPointer=event.pointerId;root.setPointerCapture(event.pointerId);ghost=makeDragGhost(id);document.body.append(ghost);}}
-    if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};highlightDrop(dropAtPoint(event.clientX,event.clientY));inspection.move(dragPoint);aim.movePointer(dragPoint);}
+    if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};schedulePreview();inspection.move(dragPoint);aim.movePointer(dragPoint);}
     if(labOriginal&&labShoot&&!stage.editing){const spot=stage.point(event.clientX,event.clientY);if(spot&&spot.y>=0&&spot.y<=game.room.height)showRadius(spot,1,.4);}
     if(dragPointer!==event.pointerId)return;
     event.preventDefault();moveDrag(event.clientX,event.clientY);
@@ -580,7 +589,8 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     else if(target.id==='bl-cancel-choice'){cancelCard({pointer:{x:event.clientX,y:event.clientY}});}
     else if(target.dataset.blSong){chooseSong(game,target.dataset.blSong);persist();render();}
     else if(target.dataset.blCard){selectCard(target.dataset.blCard,{x:event.clientX,y:event.clientY});}
-    else if(target.dataset.blTarget&&selectedCard)perform(selectedCard,target.dataset.blTarget,{point:stage.point(event.clientX,event.clientY)});
+    // Mouse click coordinates can be rounded; keep the precise pointer point used by the preview.
+    else if(target.dataset.blTarget&&selectedCard)perform(selectedCard,target.dataset.blTarget,event.detail>0&&lastPointer?{point:stage.point(lastPointer.x,lastPointer.y)}:{});
     else if(target.id==='bl-start'){
       const plan=initializeDraft();if(!plan.ready){notify(plan.reason);return render();}
       game=createBandLiveFromWorld(getWorld(),draft);getWorld().cardCatalog??=structuredClone(game.catalog);onCatalogSave();preparing=false;persist();render();
@@ -636,6 +646,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     onOpen();
   });
   const hideOnScroll=()=>{
+    aimGeometry=null;
     previewMemo=null;
     hideTip();if(!activeCard)clearPreview();
     const focused=document.activeElement;
