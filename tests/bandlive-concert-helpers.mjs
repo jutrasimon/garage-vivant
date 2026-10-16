@@ -2,10 +2,11 @@ import {readFileSync} from 'node:fs';
 import {createWorld,createGroup,decide,relationship,restore} from '../dist/engine.mjs';
 import {command,advanceToBooking} from '../dist/life.mjs';
 import {selectBands} from '../dist/calendar.mjs';
+import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
 import {newBag} from '../dist/v7.mjs';
 
 const template=restore(JSON.parse(readFileSync(new URL('v071-world.json',import.meta.url)))).songs[0];
-export function preparedConcert({instruments=['guitar','drums','bass','sax'],setlistLength=2,intention='tight',venue='g1',large=false,following=false,followingComposed=false}={}) {
+export function preparedConcert({instruments=['guitar','drums','bass','sax'],setlistLength=2,intention='tight',venue='g1',large=false,following=false,followingComposed=false,legacyBandLive=false}={}) {
   const world=createWorld(39,Math.max(8,instruments.length));
   for(const [i,p] of world.people.entries()){
     if(instruments[i])p.instrument=instruments[i];
@@ -36,6 +37,7 @@ export function preparedConcert({instruments=['guitar','drums','bass','sax'],set
   if(large)selectBands(world,opportunity);
   const arrived=advanceToBooking(world,booked.bookingId);
   if(!arrived.ok||world.performance?.groupId!==group.id)throw Error('Musicians did not arrive at their concert.');
+  if(legacyBandLive)beginBandLiveConcert(world,{spatial:false});
   restore(world);
   return {world,groupId:group.id,bookingId:booked.bookingId,opportunityId:opportunity.id};
 }

@@ -8,7 +8,7 @@ import {chooseSong,restoreBandLive,previewCard} from '../dist/bandlive.mjs';
 
 const world=preparedConcert({instruments:['drums','guitar','percussion']}).world;
 world.people.find(p=>p.instrument==='percussion').bandLiveDecks={percussion:['new2','note','note','special','special']};
-beginBandLiveConcert(world);const game=world.performance.bandLive.game;
+beginBandLiveConcert(world,{spatial:false});const game=world.performance.bandLive.game;
 chooseSong(game,game.songs[0].id);game.tempo=4;
 for(const fan of game.fans){fan.hp=fan.max=100;fan.intent='bored';}
 Object.assign(game.fans[1],{hp:0,conquered:true});

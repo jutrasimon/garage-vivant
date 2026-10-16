@@ -16,7 +16,7 @@ try{
   {name:'six-musiciens-bord',width:1440,height:900,large:false,distribution:[2,1,1,1,0,0],instruments:['drums','drums','percussion','guitar','sax','voice']},
  ]){
   const page=await browser.newPage({viewport:{width:scenario.width,height:scenario.height}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  const world=preparedConcert(scenario).world;
+  const world=preparedConcert({...scenario,legacyBandLive:true}).world;
   if(scenario.legacy||scenario.fullHand||scenario.distribution){beginBandLiveConcert(world);const game=world.performance.bandLive.game;if(scenario.legacy)delete game.gridColumns;if(scenario.fullHand||scenario.distribution){const ids=scenario.distribution?game.actors.flatMap((actor,i)=>game.cards.filter(c=>c.actorId===actor.id).slice(0,scenario.distribution[i]).map(c=>c.id)):game.cards.filter(c=>c.actorId===game.actors[1].id).map(c=>c.id);game.deck=[...game.deck.filter(id=>!ids.includes(id)),...ids];}}
   await page.addInitScript(w=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(w));},world);await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   if(scenario.fullHand)assert((await page.locator('.bl-hand').evaluateAll(els=>els.map(el=>el.querySelectorAll('[data-bl-card]').length))).includes(5),'The musician actually holds five cards in the restored game');

@@ -1,3 +1,4 @@
+import {catalogCard,compileCard,catalogStarter,offeredCards} from './bandlive-catalog.mjs?v=0.9.0';
 export const INSTRUMENTS = Object.freeze({guitar:'Guitare',drums:'Batterie',bass:'Basse',voice:'Chant',keys:'Clavier',sax:'Saxophone',trumpet:'Trompette',percussion:'Percussions'});
 export const SPECIALS = Object.freeze(Object.fromEntries(Object.entries({
   guitar:{name:'Solo',cost:2,target:'single',power:8,useTempo:true,solo:true,description:'8 puissance + tout le tempo sur un spectateur. Consomme le tempo.'},
@@ -23,24 +24,26 @@ export const NEW_SPECIALS = Object.freeze({
 });
 export const CARD_KINDS=Object.freeze(['note','special','new1','new2']);
 export const starterDeck=()=>['note','note','note','special','special'];
-export const specialChoices=instrument=>['special','new1','new2'].map(kind=>({kind,...definitionFor(instrument,kind)}));
-export function definitionFor(instrument,kind){return kind==='note'?NOTE:kind==='special'?SPECIALS[instrument]:NEW_SPECIALS[instrument]?.[kind==='new1'?0:kind==='new2'?1:-1];}
-export function validateDeck(deck){if(!Array.isArray(deck)||deck.length!==5||deck.some(k=>!CARD_KINDS.includes(k)))throw Error('Deck BandLive invalide.');return deck;}
-export function validatePersonDecks(person){
+export const specialChoices=(instrument,catalog,level=1,seed='')=>catalog?offeredCards(catalog,instrument,level,seed):['special','new1','new2'].map(kind=>({kind,...definitionFor(instrument,kind)}));
+export function definitionFor(instrument,kind,catalog){if(catalog){const c=catalogCard(catalog,instrument,kind);if(c)return compileCard(c);}return kind==='note'?NOTE:kind==='special'?SPECIALS[instrument]:NEW_SPECIALS[instrument]?.[kind==='new1'?0:kind==='new2'?1:-1];}
+export function validateDeck(deck){if(!Array.isArray(deck)||deck.length!==5||deck.some(k=>typeof k!=='string'||!CARD_KINDS.includes(k)&&!/^[-a-z0-9]+:[-a-z0-9:]{1,70}$/.test(k)))throw Error('Deck BandLive invalide.');return deck;}
+export function validatePersonDecks(person,catalog){
   if(person.bandLiveDecks===undefined)return;
   const decks=person.bandLiveDecks;
   if(!decks||typeof decks!=='object'||Array.isArray(decks)||Object.keys(decks).some(k=>!Object.hasOwn(INSTRUMENTS,k)))throw Error('Collection de decks BandLive invalide.');
   Object.values(decks).forEach(validateDeck);
+  for(const [instrument,deck] of Object.entries(decks))for(const kind of deck)if((catalog||!CARD_KINDS.includes(kind))&&!catalogCard(catalog||{cards:[]},instrument,kind))throw Error('Carte du deck absente du catalogue.');
+  for(const reward of person.levelRewards||[])if(reward.status==='claimed')for(const kind of [reward.before,reward.after])if((catalog||!CARD_KINDS.includes(kind))&&!catalogCard(catalog||{cards:[]},reward.instrument,kind))throw Error('Carte déjà améliorée absente du catalogue. Conserve sa définition et retire-la plutôt que de la supprimer.');
 }
-export function musicianDeck(person,instrument=person.instrument){
+export function musicianDeck(person,instrument=person.instrument,catalog){
   if(!Object.hasOwn(INSTRUMENTS,instrument))throw Error('Instrument BandLive invalide.');
-  validatePersonDecks(person);
-  return [...validateDeck(person.bandLiveDecks?.[instrument]||starterDeck())];
+  validatePersonDecks(person,catalog);
+  return [...validateDeck(person.bandLiveDecks?.[instrument]||(catalog?catalogStarter(catalog,instrument):starterDeck()))];
 }
-export function rememberInstrumentDeck(person,instrument=person.instrument){
-  const deck=musicianDeck(person,instrument);person.bandLiveDecks??={};person.bandLiveDecks[instrument]=deck;return deck;
+export function rememberInstrumentDeck(person,instrument=person.instrument,catalog){
+  const deck=musicianDeck(person,instrument,catalog);person.bandLiveDecks??={};person.bandLiveDecks[instrument]=deck;return deck;
 }
-export function changeBandLiveInstrument(person,instrument){
+export function changeBandLiveInstrument(person,instrument,catalog){
   if(!Object.hasOwn(INSTRUMENTS,instrument))throw Error('Instrument BandLive invalide.');
-  rememberInstrumentDeck(person);rememberInstrumentDeck(person,instrument);person.instrument=instrument;
+  rememberInstrumentDeck(person,person.instrument,catalog);rememberInstrumentDeck(person,instrument,catalog);person.instrument=instrument;
 }

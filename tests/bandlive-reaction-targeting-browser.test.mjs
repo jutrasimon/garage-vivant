@@ -14,7 +14,7 @@ try{
   {reaction:'rhythm',kind:'special'}, {reaction:'following',instrument:'voice',kind:'special'},
   {reaction:'attentive',chain:true}, {reaction:'distracted',touch:true}, {reaction:'attentive',chain:true,touch:true}
  ]){
-  const world=preparedConcert({instruments:['drums','guitar','voice']}).world;beginBandLiveConcert(world);
+  const world=preparedConcert({legacyBandLive:true,instruments:['drums','guitar','voice']}).world;beginBandLiveConcert(world);
   const game=world.performance.bandLive.game;chooseSong(game,game.songs[0].id);
   for(const fan of game.fans)Object.assign(fan,{hp:100,max:100,intent:'bored',reactionUsed:false,conquered:false});
   const fan=game.fans[0],card=game.cards.find(c=>c.instrument===(scenario.instrument||'drums')&&c.kind===(scenario.kind||'note'));
@@ -39,8 +39,8 @@ try{
    await page.locator('.drag-card-feedback.has-target:not(.invalid)').waitFor({timeout:2500});return point;
   }
   async function checkOutcome(container,selected=false){
-   assert((await container.locator(selected?'.outcome-name':'.drag-outcome-name').textContent()).includes(fan.name));
-   assert((await container.locator(selected?'.outcome-trigger':'.drag-trigger').textContent()).includes('Réaction déclenchée'));
+   assert((await container.locator('.drag-outcome-name').textContent()).includes(fan.name));
+   assert((await container.locator('.drag-trigger').textContent()).includes('Réaction déclenchée'));
    const banner=container.locator('.bl-conquest-preview');assert.equal(await banner.isVisible(),!!power,'Only a real conquest power gets the conquest announcement');
    if(power){assert.equal(await banner.locator('.bl-conquest-preview-name').textContent(),power.name);assert((await banner.locator('.bl-conquest-preview-chain').textContent()).includes('2'),'The chain counts conquest powers, never reactions');}
   }

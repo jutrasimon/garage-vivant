@@ -10,7 +10,7 @@ try{
  browser=await chromium.launch();await mkdir('test-results',{recursive:true});
  for(const [width,height] of [[1898,900],[390,844]]){
   const page=await browser.newPage({viewport:{width,height},hasTouch:width<500}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.addInitScript(world=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(world));window.copiedLayout='';Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedLayout=text;}}});},preparedConcert({large:true,instruments:['drums','keys','percussion','guitar','sax','voice']}).world);
+  await page.addInitScript(world=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(world));window.copiedLayout='';Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedLayout=text;}}});},preparedConcert({legacyBandLive:true,large:true,instruments:['drums','keys','percussion','guitar','sax','voice']}).world);
   await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   const saved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')).performance.bandLive.game),before=await saved();
   if(width>500){

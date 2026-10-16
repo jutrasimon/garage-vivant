@@ -1,4 +1,4 @@
-import {RULES} from './bandlive.mjs?v=0.8.15';
+import {RULES} from './bandlive.mjs?v=0.9.0';
 
 export const TEMPO_ICON_PATH='M9 18V5l11-2v12M9 18c0 4-6 4-6 0s6-4 6 0M20 15c0 4-6 4-6 0s6-4 6 0';
 

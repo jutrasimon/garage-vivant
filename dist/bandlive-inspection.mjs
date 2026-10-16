@@ -1,24 +1,34 @@
-import {cardFace} from './card-view.mjs?v=0.8.15';
-import {conquestPreviewHTML,updateConquestPreview} from './bandlive-conquest-preview.mjs?v=0.8.15';
-export function createBandLiveInspection({root,lookup,blocked}){
+import {cardFace} from './card-view.mjs?v=0.9.0';
+import {createDragFeedback,updateDragFeedback,fitFeedback,moveDragFeedback} from './bandlive-drag-feedback.mjs?v=0.9.0';
+export function createBandLiveInspection({root,lookup,blocked,onShow=()=>{}}){
   const panel=document.createElement('aside');panel.id='bl-card-preview';panel.className='bl-inspection';panel.setAttribute('aria-label','Détails de la carte');panel.setAttribute('aria-live','polite');panel.hidden=true;
-  panel.innerHTML='<div class="preview-caption">DÉTAIL DE LA CARTE</div><div class="preview-face"><div class="preview-head"><span class="preview-cost"></span><strong class="preview-title"></strong></div><div class="preview-art"></div><div class="preview-owner"></div><p class="preview-description"></p><div class="preview-target"></div></div><div class="preview-outcome" hidden><strong class="outcome-name"></strong><div class="outcome-main"></div><div class="outcome-meta"></div><div class="outcome-reaction"></div><div class="outcome-conquest"></div><div class="outcome-trigger"></div></div><div class="preview-targets"></div>';
-  panel.querySelector('.outcome-meta').insertAdjacentHTML('beforebegin',conquestPreviewHTML);
-  document.body.append(panel);let pinned=false,source=null,timer=null;
-  function hide(){clearTimeout(timer);pinned=false;panel.hidden=true;source=null;root.querySelectorAll('.bl-inspecting').forEach(el=>el.classList.remove('bl-inspecting'));}
+  panel.innerHTML='<div class="preview-caption">DÉTAIL DE LA CARTE</div><div class="preview-face"></div><div class="preview-outcome" hidden></div><div class="preview-targets"></div>';
+  document.body.append(panel);let pinned=false,source=null,timer=null,hovered=null;
+  function hide(){clearTimeout(timer);hovered=null;pinned=false;panel.hidden=true;source=null;panel._placement=null;panel.classList.remove('bl-radius-compact','bl-effect-preview','drag-card-feedback');panel.style.removeProperty('left');panel.style.removeProperty('right');root.querySelectorAll('.bl-inspecting').forEach(el=>el.classList.remove('bl-inspecting'));}
   function show(id,lock=false){
     clearTimeout(timer);if(blocked())return hide();const data=lookup(id);if(!data)return hide();const unchanged=source===id&&pinned===lock&&!panel.hidden;source=id;pinned=lock;
-    const {card,owner,instrumentKey}=data;panel.hidden=false;
-    const top=Math.max(96,(root.querySelector('.bl-viewport')?.getBoundingClientRect().top||84)+12);panel.style.top=top+'px';panel.style.maxHeight=Math.max(160,innerHeight-top-14)+'px';
+    const {card,owner,instrumentKey,icon='♫',accent='#b6e8cf'}=data;onShow();panel.hidden=false;
     if(unchanged)return;
+    const top=Math.max(96,(root.querySelector('.bl-viewport')?.getBoundingClientRect().top||84)+12);panel.style.top=top+'px';panel.style.maxHeight=Math.max(160,innerHeight-top-14)+'px';
+    panel._placement=null;panel.style.removeProperty('left');panel.style.removeProperty('right');panel.classList.remove('bl-radius-compact','bl-effect-preview','drag-card-feedback');
     panel.querySelector('.preview-face').innerHTML=cardFace({card,owner,instrument:instrumentKey});
+    panel.querySelector('.bl-full-program')?.remove();if(card.summary){const full=document.createElement('p');full.className='bl-full-program';full.textContent=card.description;panel.querySelector('.preview-face').after(full);}
     root.querySelectorAll('.bl-inspecting').forEach(el=>el.classList.remove('bl-inspecting'));root.querySelector('[data-bl-card="'+CSS.escape(id)+'"]')?.classList.add('bl-inspecting');
-    if(!lock)panel.querySelector('.preview-outcome').hidden=true;
+    const box=panel.querySelector('.preview-outcome');box.hidden=true;
+    if(lock){
+      const feedback=createDragFeedback({card,owner,icon,accent});
+      panel.style.setProperty('--drag-accent',accent);
+      box.replaceChildren(...feedback.childNodes);panel.classList.add('bl-effect-preview','drag-card-feedback');panel.classList.toggle('is-tempo',feedback.classList.contains('is-tempo'));panel.classList.toggle('is-tempo-only',feedback.classList.contains('is-tempo-only'));
+      box.querySelector('.drag-release').textContent='↗ Clique pour jouer';
+      outcome({name:'Choisis ta cible',main:'Vise une cible pour voir les effets.',meta:card.description,valid:false});
+    }
   }
-  function hover(e){const card=e.target.closest('[data-bl-card]');if(card&&!pinned&&card.dataset.blCard!==source){clearTimeout(timer);timer=setTimeout(()=>show(card.dataset.blCard),100);}}
-  root.addEventListener('pointerover',hover);root.addEventListener('focusin',e=>{const c=e.target.closest('[data-bl-card]');if(c&&!pinned)show(c.dataset.blCard);});
-  root.addEventListener('pointerout',e=>{if(!pinned&&e.target.closest('[data-bl-card]')&&!e.relatedTarget?.closest?.('[data-bl-card]')){clearTimeout(timer);timer=setTimeout(hide,90);}});
-  function outcome(value){const box=panel.querySelector('.preview-outcome');box.hidden=false;box.classList.toggle('invalid',!value.valid);for(const key of ['name','main','meta','reaction','conquest','trigger'])box.querySelector('.outcome-'+key).textContent=value[key]||'';const conquest=value.valid?value.conquestReady:null;updateConquestPreview(box.querySelector('.bl-conquest-preview'),conquest);box.querySelector('.outcome-conquest').hidden=!!conquest;}
+  function hover(e){const card=e.target.closest('[data-bl-card]');if(!card||pinned||blocked())return;const id=card.dataset.blCard;if(id===source||id===hovered)return;clearTimeout(timer);hovered=id;timer=setTimeout(()=>{if(hovered===id&&card.isConnected)show(id);},100);}
+  root.addEventListener('pointerover',hover);root.addEventListener('pointermove',hover);root.addEventListener('focusin',e=>{const c=e.target.closest('[data-bl-card]');if(c&&!pinned)show(c.dataset.blCard);});
+  root.addEventListener('pointerout',e=>{if(!pinned&&e.target.closest('[data-bl-card]')!==e.relatedTarget?.closest?.('[data-bl-card]')){clearTimeout(timer);hovered=null;timer=setTimeout(hide,90);}});
+  panel.addEventListener('pointerenter',()=>clearTimeout(timer));panel.addEventListener('pointerleave',()=>{if(!pinned)timer=setTimeout(hide,90);});
+  function outcome(value){if(panel.hidden)return;panel.querySelector('.preview-outcome').hidden=false;updateDragFeedback(panel,value,value.name!=='Choisis ta cible');}
+  function place(options){if(panel.hidden)return;panel._placement=fitFeedback(panel,{...options,preferredSide:panel._placement?.side});panel.style.left='var(--ghost-x)';panel.style.right='auto';panel.style.top='var(--ghost-y)';moveDragFeedback(panel,options.pointer);}
   window.addEventListener('blur',hide);document.addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
-  return {show,pin:id=>show(id,true),hide,outcome,targets:panel.querySelector('.preview-targets'),panel};
+  return {show,pin:id=>show(id,true),hide,outcome,place,move:pointer=>moveDragFeedback(panel,pointer),targets:panel.querySelector('.preview-targets'),panel};
 }

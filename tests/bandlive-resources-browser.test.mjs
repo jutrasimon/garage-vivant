@@ -6,7 +6,7 @@ import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
 import {chooseSong} from '../dist/bandlive.mjs';
 
-const world=preparedConcert({instruments:['drums','trumpet','guitar']}).world;
+const world=preparedConcert({legacyBandLive:true,instruments:['drums','trumpet','guitar']}).world;
 beginBandLiveConcert(world);
 const game=world.performance.bandLive.game;
 chooseSong(game,game.songs[0].id);game.tempo=7;

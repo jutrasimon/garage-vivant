@@ -1,20 +1,37 @@
-import {conquestPreviewHTML,updateConquestPreview} from './bandlive-conquest-preview.mjs?v=0.8.15';
-// Follow the pointer while protecting the character being aimed at.
-export function placeDragFeedback({pointer,width,height,bounds,target,preferredSide}) {
+import {conquestPreviewHTML,updateConquestPreview} from './bandlive-conquest-preview.mjs?v=0.9.0';
+// Screen-space ellipses keep the whole visible effect clear, regardless of scene scale.
+export function placeDragFeedback({pointer,width,height,bounds,target,preferredSide,zones=[]}) {
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
   const clear=target||{left:pointer.x-12,right:pointer.x+12,top:pointer.y-12,bottom:pointer.y+12};
+  const area=zones.reduce((r,z)=>({left:Math.min(r.left,z.cx-z.rx),right:Math.max(r.right,z.cx+z.rx),top:Math.min(r.top,z.cy-z.ry),bottom:Math.max(r.bottom,z.cy+z.ry)}),{left:clear.left,right:clear.right,top:clear.top,bottom:clear.bottom});
   const candidates=[
-    [Math.max(pointer.x+24,clear.right+12),pointer.y-height/2,'right'],
-    [Math.min(pointer.x-width-24,clear.left-width-12),pointer.y-height/2,'left'],
-    [pointer.x-width/2,clear.top-height-12,'above'],
-    [pointer.x-width/2,clear.bottom+12,'below'],
+    [Math.max(pointer.x+24,area.right+12),pointer.y-height/2,'right'],
+    [Math.min(pointer.x-width-24,area.left-width-12),pointer.y-height/2,'left'],
+    [pointer.x-width/2,area.top-height-12,'above'],
+    [pointer.x-width/2,area.bottom+12,'below'],
+    ...(zones.length?[[bounds.left,bounds.top,'top-left'],[bounds.right-width,bounds.top,'top-right'],[bounds.left,bounds.bottom-height,'bottom-left'],[bounds.right-width,bounds.bottom-height,'bottom-right']]:[]),
   ].map(([x,y,side])=>({x:clamp(x,bounds.left,Math.max(bounds.left,bounds.right-width)),y:clamp(y,bounds.top,Math.max(bounds.top,bounds.bottom-height)),side}));
-  const score=({x,y,side})=>{
-    const overlap=Math.max(0,Math.min(x+width,clear.right)-Math.max(x,clear.left))*Math.max(0,Math.min(y+height,clear.bottom)-Math.max(y,clear.top));
+  const score=p=>{const {x,y,side}=p;
+    p.targetOverlap=Math.max(0,Math.min(x+width,clear.right)-Math.max(x,clear.left))*Math.max(0,Math.min(y+height,clear.bottom)-Math.max(y,clear.top));
+    p.zoneOverlap=zones.reduce((sum,z)=>{
+      const rx=z.rx+12,ry=z.ry+12,dx=(clamp(z.cx,x,x+width)-z.cx)/rx,dy=(clamp(z.cy,y,y+height)-z.cy)/ry,d=dx*dx+dy*dy;
+      if(d>=1)return sum;
+      const w=Math.max(0,Math.min(x+width,z.cx+rx)-Math.max(x,z.cx-rx)),h=Math.max(0,Math.min(y+height,z.cy+ry)-Math.max(y,z.cy-ry));
+      return sum+w*h*(1-d);
+    },0);
     const distance=Math.hypot(Math.max(x-pointer.x,0,pointer.x-x-width),Math.max(y-pointer.y,0,pointer.y-y-height));
-    return (overlap?1e9+overlap*1e4:0)+distance+(['above','below'].includes(side)?120:0)+(preferredSide&&side!==preferredSide?1000:0);
+    return (p.targetOverlap?1e12+p.targetOverlap*1e8:0)+(p.zoneOverlap?1e9+p.zoneOverlap*1e4:0)+distance+(['above','below'].includes(side)?120:0)+(preferredSide&&side!==preferredSide?1000:0);
   };
   return candidates.reduce((best,p)=>score(p)<score(best)?p:best);
+}
+
+export function fitFeedback(element,options){
+  element.classList.remove('bl-radius-compact');element.style.maxHeight=Math.max(80,options.bounds.bottom-options.bounds.top)+'px';
+  let placement={...options,width:element.offsetWidth,height:element.offsetHeight},position=placeDragFeedback(placement);
+  if(options.zones?.length&&position.zoneOverlap>0){
+    element.classList.add('bl-radius-compact');placement={...placement,width:element.offsetWidth,height:element.offsetHeight};position=placeDragFeedback(placement);
+  }
+  return {...placement,side:position.side,position};
 }
 
 export function moveDragFeedback(ghost,pointer) {
@@ -39,7 +56,7 @@ export function createDragFeedback({card,owner,icon,accent}) {
   return ghost;
 }
 
-export function showDragFeedback(ghost,{outcome,pointer,target,bounds}) {
+export function updateDragFeedback(ghost,outcome,target=null) {
   ghost.classList.toggle('has-target',!!target);ghost.classList.toggle('invalid',!outcome.valid);
   const local=ghost.querySelector('.drag-local-outcome');local.hidden=false;
   const hasGain=outcome.valid&&Number.isFinite(outcome.gain);
@@ -52,7 +69,7 @@ export function showDragFeedback(ghost,{outcome,pointer,target,bounds}) {
   ghost.querySelector('.drag-outcome-meta').textContent=outcome.meta;
   for(const [selector,key] of [['.drag-reaction','reaction'],['.drag-conquest-rule','conquest'],['.drag-trigger','trigger']])ghost.querySelector(selector).textContent=outcome[key]||'';
   const conquest=outcome.valid?outcome.conquestReady:null;
-  updateConquestPreview(ghost.querySelector('.bl-conquest-preview'),conquest);
+  updateConquestPreview(ghost.querySelector('.bl-conquest-preview'),conquest,outcome.valid?outcome.conquestPending:null);
   ghost.classList.toggle('has-conquest-effect',!!conquest);
   ghost.querySelector('.drag-conquest-rule').hidden=!!conquest;
   const key=target?outcome.name+'|'+outcome.main+'|'+outcome.valid:'';
@@ -60,8 +77,11 @@ export function showDragFeedback(ghost,{outcome,pointer,target,bounds}) {
     ghost.querySelector('.drag-impact').animate?.([{transform:'translateY(3px) scale(.93)',opacity:.65},{transform:'translateY(-1px) scale(1.045)',opacity:1,offset:.65},{transform:'none',opacity:1}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});
   }
   ghost._feedbackKey=key;
-  ghost.style.maxHeight=Math.max(80,bounds.bottom-bounds.top)+'px';
+}
+
+export function showDragFeedback(ghost,{outcome,pointer,target,bounds,zones=[]}) {
+  updateDragFeedback(ghost,outcome,target);
   // Measure after content changes, then move using cached geometry only.
-  ghost._placement={width:ghost.offsetWidth,height:ghost.offsetHeight,bounds,target};
+  ghost._placement=fitFeedback(ghost,{pointer,bounds,target,zones,preferredSide:ghost._placement?.side});
   moveDragFeedback(ghost,pointer);
 }
