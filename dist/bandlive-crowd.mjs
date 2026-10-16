@@ -1,11 +1,20 @@
 // Combat coordinates are independent of CSS, zoom and decorative dancing.
+// room.bodyRadius remains in early snapshots; physics.collisionRadius controls current contacts.
 export const ROOM=Object.freeze({width:1120,height:360,margin:52,bodyRadius:23,radiusUnit:180});
-export const PHYSICS=Object.freeze({force:230,grip:5,rebound:.28,collisionPower:0});
+export const PHYSICS=Object.freeze({force:420,grip:3,rebound:.28,collisionPower:2,collisionThreshold:60,collisionRadius:32,hitStrength:.75});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=x=>Math.round(x*1000)/1000;
 export function physicsSettings(value={}){
- const ranges={force:[30,650],grip:[1,12],rebound:[0,.85],collisionPower:[0,10]};
- return Object.fromEntries(Object.entries(ranges).map(([k,[a,b]])=>[k,Number.isFinite(value[k])?clamp(value[k],a,b):PHYSICS[k]]));
+ const ranges={force:[30,650],grip:[1,12],rebound:[0,.85],collisionPower:[0,10],collisionThreshold:[0,400],collisionRadius:[16,48],hitStrength:[0,2]};
+ return Object.fromEntries(Object.entries(ranges).map(([k,[a,b]])=>{const n=Number.isFinite(value[k])?clamp(value[k],a,b):PHYSICS[k];return [k,k==='collisionPower'?Math.round(n):n];}));
+}
+export function upgradePhysics(game){
+ if(!game.spatialVersion)return;
+ const old=game.physics;
+ if(!Object.hasOwn(old,'collisionThreshold')){
+  // Early, unpublished physical shows used an inactive collisionPower field.
+  game.physics=physicsSettings({...old,collisionPower:old.collisionPower||PHYSICS.collisionPower,...(old.force===230&&old.grip===5?{force:PHYSICS.force,grip:PHYSICS.grip}:{})});
+ }else game.physics=physicsSettings(old);
 }
 export function initializeCrowd(game){
  game.spatialVersion=1;game.room={...ROOM};game.physics={...PHYSICS};
@@ -23,10 +32,11 @@ export const nearby=(game,a,b,radius=1)=>a!==b&&distance(a.position,b.position)<
 export function clampPosition(game,p){const r=game.room;return {x:round(clamp(p.x,r.margin,r.width-r.margin)),y:round(clamp(p.y,r.margin,r.height-r.margin))};}
 export function moveSpectator(game,id,position){const f=game.fans.find(f=>f.id===id);if(!game.spatialVersion||!f||!Number.isFinite(position?.x)||!Number.isFinite(position?.y))return false;f.position=clampPosition(game,position);return true;}
 export function separateCrowd(game,heldId=null){
+ const min=physicsSettings(game.physics).collisionRadius*2;
  for(let pass=0;pass<20;pass++){
   let changed=false;
   for(let i=0;i<game.fans.length;i++)for(let j=i+1;j<game.fans.length;j++){
-   const a=game.fans[i],b=game.fans[j],dx=b.position.x-a.position.x,dy=b.position.y-a.position.y,d=Math.hypot(dx,dy),min=game.room.bodyRadius*2;if(d>=min-.01)continue;changed=true;
+   const a=game.fans[i],b=game.fans[j],dx=b.position.x-a.position.x,dy=b.position.y-a.position.y,d=Math.hypot(dx,dy);if(d>=min-.01)continue;changed=true;
    const nx=d?dx/d:1,ny=d?dy/d:0,shift=min-d+.02,ma=a.id===heldId?0:b.id===heldId?1:.5;
    a.position=clampPosition(game,{x:a.position.x-nx*shift*ma,y:a.position.y-ny*shift*ma});b.position=clampPosition(game,{x:b.position.x+nx*shift*(1-ma),y:b.position.y+ny*shift*(1-ma)});
   }
@@ -37,12 +47,12 @@ export function validateCrowd(game){
  if(game.spatialVersion===undefined)return;
  const r=game.room;
  if(game.spatialVersion!==1||!r||r.width!==ROOM.width||r.height!==ROOM.height||r.margin!==ROOM.margin||r.bodyRadius!==ROOM.bodyRadius||!Number.isFinite(r.radiusUnit)||r.radiusUnit<60||r.radiusUnit>240)throw Error('Salle physique invalide.');
- if(!game.physics||Object.keys(game.physics).some(k=>!Object.hasOwn(PHYSICS,k))||Object.keys(PHYSICS).some(k=>physicsSettings(game.physics)[k]!==game.physics[k]))throw Error('Physique invalide.');
+ if(!game.physics||['force','grip','rebound','collisionPower'].some(k=>!Object.hasOwn(game.physics,k))||Object.hasOwn(game.physics,'collisionThreshold')&&Object.keys(PHYSICS).some(k=>!Object.hasOwn(game.physics,k))||Object.keys(game.physics).some(k=>!Object.hasOwn(PHYSICS,k)||physicsSettings(game.physics)[k]!==game.physics[k]))throw Error('Physique invalide.');
  for(const f of game.fans)if(!f.position||!Number.isFinite(f.position.x)||!Number.isFinite(f.position.y)||f.position.x<r.margin||f.position.x>r.width-r.margin||f.position.y<r.margin||f.position.y>r.height-r.margin)throw Error('Position de spectateur invalide.');
 }
 // Fixed-step, bounded impulses; sleeping bodies cost no work between actions.
 // This pure simulation is shared by the preview, lab, actual play and replay.
-export function simulateImpulse(game,{center,targets,kind='push',strength=1,strengthById={},collisionPower=0,recordFrames=true}){
+export function simulateImpulse(game,{center,targets,kind='push',strength=1,strengthById={},collisionPower=0,recordFrames=true,onContact=()=>{}}){
  const settings=physicsSettings(game.physics),r=game.room,selected=new Set(targets),bodies=game.fans.map(f=>({id:f.id,x:f.position.x,y:f.position.y,vx:0,vy:0,spin:0}));
  const before=Object.fromEntries(bodies.map(b=>[b.id,{x:b.x,y:b.y}])),contacts=new Set(),hits=[];
  for(const b of bodies)if(selected.has(b.id)){
@@ -52,25 +62,37 @@ export function simulateImpulse(game,{center,targets,kind='push',strength=1,stre
   b.vx=dx*speed;b.vy=dy*speed;b.spin=kind==='vortex'?5:kind==='jump'?1:.4;
  }
  const frames=[];
- for(let step=0;step<150;step++){
+ for(let step=0;step<300;step++){
   let speed=0;
-  for(const b of bodies){if(kind==='return'&&step>20&&selected.has(b.id)){b.vx+=(before[b.id].x-b.x)*18/60;b.vy+=(before[b.id].y-b.y)*18/60;}b.x+=b.vx/60;b.y+=b.vy/60;b.vx*=Math.exp(-settings.grip/60);b.vy*=Math.exp(-settings.grip/60);
+  for(const b of bodies){if(kind==='return'&&step>40&&selected.has(b.id)){b.vx+=(before[b.id].x-b.x)*18/120;b.vy+=(before[b.id].y-b.y)*18/120;}b.x+=b.vx/120;b.y+=b.vy/120;b.vx*=Math.exp(-settings.grip/120);b.vy*=Math.exp(-settings.grip/120);
    if(b.x<r.margin||b.x>r.width-r.margin){b.x=clamp(b.x,r.margin,r.width-r.margin);b.vx*=-settings.rebound;}
    if(b.y<r.margin||b.y>r.height-r.margin){b.y=clamp(b.y,r.margin,r.height-r.margin);b.vy*=-settings.rebound;}
    speed=Math.max(speed,Math.hypot(b.vx,b.vy));
   }
   for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
-   const a=bodies[i],b=bodies[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=r.bodyRadius*2;if(d>=min)continue;
+   const a=bodies[i],b=bodies[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=settings.collisionRadius*2;if(d>=min)continue;
    const nx=d?dx/d:1,ny=d?dy/d:0,overlap=(min-d)/2+.01;
    a.x-=nx*overlap;a.y-=ny*overlap;b.x+=nx*overlap;b.y+=ny*overlap;
-   const impact=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
-   if(impact>0){const impulse=impact*(1+settings.rebound)/2;a.vx-=nx*impulse;a.vy-=ny*impulse;b.vx+=nx*impulse;b.vy+=ny*impulse;}
-   const key=a.id+':'+b.id;if(impact>25&&!contacts.has(key)){contacts.add(key);hits.push({a:a.id,b:b.id,speed:round(impact),power:Math.floor(collisionPower)});}
+   const va=a.vx*nx+a.vy*ny,vb=b.vx*nx+b.vy*ny,impact=va-vb;
+   if(impact>0){const impulse=impact*(1+settings.rebound)/2;a.vx-=nx*impulse;a.vy-=ny*impulse;b.vx+=nx*impulse;b.vy+=ny*impulse;a.spin=Math.max(a.spin,.8);b.spin=Math.max(b.spin,.8);}
+   const key=a.id+':'+b.id;
+   if(impact>0&&impact>=settings.collisionThreshold&&!contacts.has(key)){
+    contacts.add(key);
+    const contact={a:a.id,b:b.id,speed:round(impact),power:settings.collisionPower+Math.floor(clamp(collisionPower,0,10)),recipients:[...(va>0?[b.id]:[]),...(vb<0?[a.id]:[])],frame:Math.floor(step/6),point:clampPosition(game,{x:(a.x+b.x)/2,y:(a.y+b.y)/2})};
+    // Reactions to a collision read the positions at that contact, not the final rest positions.
+    for(const body of bodies)game.fans.find(f=>f.id===body.id).position=clampPosition(game,body);
+    onContact(contact);hits.push(contact);
+   }
   }
-  if(recordFrames&&step%3===0)frames.push(bodies.map(b=>({id:b.id,...clampPosition(game,b),angle:round(b.spin*Math.sin(step/8)*Math.exp(-step/35)),lift:kind==='jump'&&selected.has(b.id)?round(Math.max(0,Math.sin(Math.min(1,step/35)*Math.PI))*40):0})));
-  if(speed<.5&&step>(kind==='jump'?40:kind==='return'?50:20))break;
+  if(recordFrames&&step%6===0)frames.push(bodies.map(b=>({id:b.id,...clampPosition(game,b),angle:round(b.spin*Math.sin(step/16)*Math.exp(-step/70)),lift:kind==='jump'&&selected.has(b.id)?round(Math.max(0,Math.sin(Math.min(1,step/70)*Math.PI))*40):0})));
+  if(speed<.5&&step>(kind==='jump'?80:kind==='return'?100:40))break;
  }
  for(const b of bodies)game.fans.find(f=>f.id===b.id).position=clampPosition(game,b);
  separateCrowd(game);if(recordFrames&&frames.length)frames[frames.length-1]=game.fans.map(f=>({id:f.id,...f.position,angle:0,lift:0}));
- return {type:'motion',kind,center:{...center},targets:[...targets],before,after:Object.fromEntries(game.fans.map(f=>[f.id,{...f.position}])),frames,contacts:hits};
+ return {type:'motion',name:kind==='hit'?'Impact musical':({push:'Repousser',pull:'Attirer',vortex:'Tourbillon',jump:'Bond',return:'Retour élastique'})[kind]||'Impact',kind,center:{...center},targets:[...targets],before,after:Object.fromEntries(game.fans.map(f=>[f.id,{...f.position}])),frames,contacts:hits};
+}
+export function applyCollisionContact(game,contact,onConquer){
+ const hits=[];
+ for(const id of contact.recipients){const fan=game.fans.find(f=>f.id===id);if(!fan?.hp||!contact.power)continue;const before=fan.hp;fan.hp=Math.max(0,before-contact.power);hits.push({id,before,after:fan.hp,gain:before-fan.hp,power:contact.power,kind:'collision',sourceId:id===contact.a?contact.b:contact.a});onConquer(fan);}
+ contact.hits=hits;return hits;
 }

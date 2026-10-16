@@ -14,7 +14,11 @@ Les anciennes rangées des cartes deviennent des zones de rayon 1,5. Onde de cho
 
 Les effets d’une carte sont exécutés dans l’ordre affiché. Les conditions de tempo et d’alternance lisent le début de la carte; les conditions de conquête lisent ses conquêtes directes déjà produites. La réaction Se laisse entraîner se déclenche immédiatement à proximité d’une conquête. Les pouvoirs de conquête en chaîne sont résolus après les effets de la carte, aux positions alors obtenues. Une pioche conserve une main d’au plus cinq cartes. Énergie et tempo restent plafonnés à 3 et 10.
 
-Les collisions déplacent les personnages. Une carte peut ajouter explicitement de la conquête aux collisions : chaque corps touché reçoit au plus une fois cette puissance par effet physique. Ces conquêtes ne comptent pas comme les conquêtes directes d’un effet de puissance pour ses récompenses conditionnelles.
+Chaque effet de puissance repousse ses cibles, même avec une carte ordinaire. La force dépend de la puissance de la frappe; une carte de zone repousse depuis son centre, une frappe individuelle depuis le musicien. Les spectateurs percutés reçoivent de la vitesse et peuvent en percuter d’autres. Les spectateurs déjà conquis restent des corps physiques.
+
+Un choc dont la vitesse relative atteint le seuil donne par défaut **+2 cœurs au spectateur percuté**. Le lanceur ne reçoit pas automatiquement de cœur en frappant quelqu’un; lors d’un choc frontal, les deux peuvent en recevoir. Une paire ne récompense qu’une fois par impulsion, même si les corps restent au contact. Une autre paire touchée en chaîne peut donner un autre gain. Le gain est plafonné à la conquête restante et peut déclencher la conquête et ses réactions. Les conditions de voisinage immédiates lisent la position au moment du choc. Les conquêtes par collision ne comptent pas comme des conquêtes directes pour les récompenses conditionnelles de la carte.
+
+Le paramètre de collision d’une carte ajoute son bonus au gain de base de la foule. L’aperçu inclut les cœurs des chocs et leur total; les indications **IMPACT** et **+X ♥** apparaissent pendant les contacts. Le laboratoire utilise exactement la même règle sur sa copie.
 
 ## Disposition et laboratoire
 
@@ -22,7 +26,9 @@ La barre inférieure contient **Disposition**, **Laboratoire** et **Cartes**. Le
 
 Disposition permet de déplacer la foule et de régler les tailles. Déplacer un spectateur change réellement les voisins de combat; les corps se séparent au contact. **Annuler** restaure aussi les positions. Les réglages de taille et de mains de l’ancien profil sont repris; les positions de combat du show restent la référence de la nouvelle foule.
 
-Trois paramètres règlent les impacts : force de lancement, adhérence au sol et rebond. L’unité de rayon se règle aussi. Les corps restent dans la zone du public, à l’écart de la scène. Les variations de taille des personnages sont visuelles : les corps de collision du moteur gardent leur rayon de 23 unités.
+Les paramètres exposés dans **Disposition → Foule physique** sont : force de lancement, adhérence au sol, rebond, force des frappes, rayon de contact, seuil du choc en unités par seconde et cœurs au contact. Les valeurs initiales sont respectivement 420, 3, 0,28, 0,75, 32, 60 et 2. Mettre la force des frappes à zéro supprime le recul automatique; mettre les cœurs au contact à zéro supprime le gain de base (une carte peut encore apporter son bonus explicite). L’unité de rayon des zones se règle séparément.
+
+Les corps restent dans la zone du public, à l’écart de la scène. Les tailles visuelles ne changent pas automatiquement le rayon de contact : ce réglage distinct permet de l’adapter. Les premières sauvegardes physiques reçoivent les nouveaux paramètres; leurs anciennes valeurs par défaut trop faibles sont actualisées. Les réglages personnalisés et les cartes, positions et cœurs sont conservés.
 
 **Laboratoire** utilise une copie du show, avec ses cartes et sa foule. On peut y tester un impact faible, moyen ou fort : repousser, attirer, tourbillonner, bondir ou revenir élastiquement. Activer **Tester un impact**, puis viser le sol. Une carte envoyée depuis l’atelier se joue dans cette copie. **Recommencer le test** retrouve son état initial; **Quitter le labo** retrouve le véritable show sans dépense de carte, d’énergie ou d’XP.
 

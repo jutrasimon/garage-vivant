@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWorld,restore} from '../dist/engine.mjs';
-import {createBandLive,chooseSong,playCard,previewCard,restoreBandLive} from '../dist/bandlive.mjs';
+import {createBandLive,chooseSong,playCard,previewCard,restoreBandLive,impactCrowd} from '../dist/bandlive.mjs';
 import {createCatalog,validateCatalog,compileCard,newEffect,duplicateCard,retireCard,offeredCards} from '../dist/bandlive-catalog.mjs';
 import {initializeCrowd,simulateImpulse,moveSpectator,inRadius,validateCrowd} from '../dist/bandlive-crowd.mjs';
 import {claimLevelReward} from '../dist/level-rewards.mjs';
@@ -34,6 +34,33 @@ test('fixed-step impacts transfer momentum, remain bounded and deterministic, an
  const copy=structuredClone(g),args={center:{x:200,y:180},targets:['f0'],strength:2,kind:'push'};
  const a=simulateImpulse(g,args),b=simulateImpulse(copy,args);assert.deepEqual(a,b);assert.deepEqual(g,copy);assert(a.contacts.some(c=>c.a==='f0'&&c.b==='f1'));assert(g.fans[1].position.x>352);assert(a.frames.length<=50);validateCrowd(g);
  for(const kind of ['pull','vortex','jump','return']){const next=structuredClone(g);const m=simulateImpulse(next,{...args,kind});assert(m.frames.length);validateCrowd(next);}
+});
+function collisionLine(game){for(const [i,f] of game.fans.entries())moveSpectator(game,f.id,i<3?{x:300+i*120,y:180}:{x:740+(i%3)*100,y:60+Math.floor((i-3)/3)*90});}
+test('strong contacts transmit through several spectators and award hearts only to the struck bodies',()=>{
+ const {g}=fixture();collisionLine(g);const args={center:{x:200,y:180},targets:['f0'],strength:2},copy=structuredClone(g),r=impactCrowd(g,args),other=impactCrowd(copy,args);assert.deepEqual(r,other);assert.deepEqual(g,copy);
+ assert.equal(g.fans[0].hp,100,'The moving spectator does not earn hearts merely by hitting someone');assert.equal(g.fans[1].hp,98);assert.equal(g.fans[2].hp,98,'A struck body can hit the next body in turn');assert(g.fans[2].position.x>540);
+ const pairs=r.motions[0].contacts.map(c=>c.a+':'+c.b);assert.equal(new Set(pairs).size,pairs.length,'No repeated rubbing rewards within one impulse');assert(r.motions[0].contacts.some(c=>c.a==='f1'&&c.b==='f2'));assert.deepEqual(restoreBandLive(g),g);
+});
+test('collision threshold, contact radius, heart gain and card bonus are independent adjustable rules',()=>{
+ const make=()=>{const {g}=fixture();collisionLine(g);return g;},args={center:{x:200,y:180},targets:['f0'],strength:1};
+ const high=make();high.physics.collisionThreshold=400;impactCrowd(high,args);assert.equal(high.fans[1].hp,100);assert(high.fans[1].position.x>420,'A small collision still transfers physical momentum');
+ const zero=make();zero.physics.collisionPower=0;impactCrowd(zero,args);assert.equal(zero.fans[1].hp,100);
+ const bonus=make();bonus.physics.collisionPower=5;impactCrowd(bonus,{...args,collisionPower:3});assert.equal(bonus.fans[1].hp,92,'The authored effect bonus adds to the crowd rule');
+ const normal=impactCrowd(make(),args),large=make();large.physics.collisionRadius=48;const early=impactCrowd(large,args);assert(early.motions[0].contacts[0].frame<normal.motions[0].contacts[0].frame,'Larger bodies meet earlier');
+ for(const mutate of [g=>g.physics.collisionPower=2.5,g=>g.physics.collisionThreshold=-1,g=>g.physics.collisionRadius=100,g=>g.physics.hitStrength=3]){const bad=make();mutate(bad);assert.throws(()=>restoreBandLive(bad));}
+});
+test('collision conquest is capped, triggers nearby following immediately and preserves the event stream',()=>{
+ const {g}=fixture();collisionLine(g);g.physics.collisionPower=5;g.fans[1].hp=3;g.fans[2].intent='following';const r=impactCrowd(g,{center:{x:200,y:180},targets:['f0'],strength:2});
+ assert(g.fans[1].conquered);assert.equal(r.hits.find(h=>h.id==='f1').gain,3);assert(g.fans[2].reactionUsed);assert(r.effects.some(e=>e.type==='reaction'&&e.fanId==='f2'));assert.equal(r.event.type,'motion');assert.deepEqual(restoreBandLive(g),g);
+});
+test('ordinary musical power causes knockback, collision hearts and an identical non-mutating preview',()=>{
+ const {g,c}=fixture({card:{effects:[newEffect('power'),{...newEffect('tempo'),when:'conquest'}]}});collisionLine(g);moveSpectator(g,'f0',{x:400,y:130});moveSpectator(g,'f1',{x:480,y:220});g.physics.hitStrength=1.5;g.fans[1].hp=1;
+ const before=structuredClone(g),preview=previewCard(g,c.id,'f0');assert(preview.ok);assert.deepEqual(g,before);const r=playCard(g,c.id,'f0');assert.deepEqual(g,preview.game);assert(r.motions.some(m=>m.kind==='hit'));assert(r.event.hits.some(h=>h.kind==='collision'&&h.id==='f1'));assert(g.fans[1].conquered);assert.equal(r.event.tempoGain,0,'A collision conquest does not masquerade as a direct musical hit');assert.deepEqual(restoreBandLive(g),g);
+ const disabled=structuredClone(before);disabled.physics.hitStrength=0;const still=playCard(disabled,c.id,'f0');assert.equal(still.motions.length,0);assert.equal(disabled.fans[1].hp,1);
+});
+test('early physical saves acquire collision settings without losing cards, positions or chosen tuning',()=>{
+ const {g}=fixture(),old=structuredClone(g);old.physics={force:230,grip:5,rebound:.28,collisionPower:0};const restored=restoreBandLive(old);assert.equal(restored.physics.collisionPower,2);assert.equal(restored.physics.collisionThreshold,60);assert.equal(restored.physics.collisionRadius,32);assert.equal(restored.physics.force,420);assert.deepEqual(restored.cards,old.cards);assert.deepEqual(restored.fans,old.fans);
+ old.physics.force=610;old.physics.grip=2;old.physics.collisionPower=4;const custom=restoreBandLive(old);assert.equal(custom.physics.force,610);assert.equal(custom.physics.grip,2);assert.equal(custom.physics.collisionPower,4);assert.deepEqual(restoreBandLive(custom),custom);
 });
 test('every proposed pair of effects executes and previews the exact committed state',()=>{
  const types=['power','tempo','energy','draw','boost','style','protect','push','pull','vortex','jump','return'];

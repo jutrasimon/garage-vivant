@@ -1,6 +1,6 @@
 import {REACTIONS,initializeReactions,clearReactionProgress,rerollReaction,reactionPower,hitReaction} from './bandlive-reactions.mjs?v=0.9.0';
 import {songTurns} from './song-rules.mjs?v=0.9.0';
-import {initializeCrowd,validateCrowd,inRadius,nearby} from './bandlive-crowd.mjs?v=0.9.0';
+import {initializeCrowd,validateCrowd,upgradePhysics,inRadius,nearby,simulateImpulse,applyCollisionContact} from './bandlive-crowd.mjs?v=0.9.0';
 import {createCatalog,validateCatalog,catalogCard,compileCard} from './bandlive-catalog.mjs?v=0.9.0';
 import {playProgram} from './bandlive-program.mjs?v=0.9.0';
 // BandLive keeps its own RNG and decks. Concert outcomes are connected separately.
@@ -196,6 +196,16 @@ export function previewCard(game,id,targetId=null,options={}){
   const after=structuredClone(game),result=playCard(after,id,targetId,{...options,preview:true});
   return result.ok?{...result,game:after}:result;
 }
+function runCrowdImpulse(game,options,queue,preview=false){
+  const hits=[],motion=simulateImpulse(game,{...options,recordFrames:!preview,onContact:contact=>hits.push(...applyCollisionContact(game,contact,fan=>conquer(game,fan,queue)))});
+  const {frames,...saved}=motion,event={id:game.events.length+1,turn:game.turn,...saved,hits:[]};game.events.push(event);
+  return {motion,hits,event};
+}
+export function impactCrowd(game,options){
+  const queue=[],start=game.events.length,{motion,hits,event}=runCrowdImpulse(game,options,queue);
+  resolveConquests(game,queue);checkVictory(game);
+  return {event,effects:game.events.slice(start).filter(e=>e!==event),motions:[motion],hits};
+}
 function checkVictory(game) {
   if(game.fans.every(fan=>fan.hp===0)){game.phase='won';log(game,'Tout le public est conquis. Show réussi !');return true;}
   return false;
@@ -204,7 +214,7 @@ export function playCard(game,id,targetId=null,options={}) {
   const {secondTargetId=null,discardId=null}=options;
   if(!canPlay(game,id))return {ok:false,message:'Cette carte ne peut pas être jouée : vérifie ta main et ton énergie.'};
   const card=cardById(game,id),d=cardDefinition(card),fan=game.fans.find(f=>f.id===targetId),second=game.fans.find(f=>f.id===secondTargetId);
-  if(d.program)return playProgram(game,card,targetId,options,{powerAgainst,hitReaction,conquer,triggerReaction,draw,currentSong,resolveConquests,checkVictory});
+  if(d.program)return playProgram(game,card,targetId,options,{powerAgainst,hitReaction,conquer,triggerReaction,draw,currentSong,resolveConquests,checkVictory,runCrowdImpulse});
   if(d.target==='single'&&(!fan||fan.hp===0))return {ok:false,message:'Choisis un spectateur encore à conquérir.'};
   if(d.twoTargets&&(!second||second===fan||second.hp===0))return {ok:false,message:'Choisis deux spectateurs distincts encore à conquérir.'};
   if(d.discard&&(!game.hand.includes(discardId)||discardId===id))return {ok:false,message:'Choisis une autre carte de ta main à défausser.'};
@@ -287,7 +297,7 @@ export function restoreBandLive(input) {
   const fail=()=>{throw Error('Répétition BandLive invalide.');};
   if(!input||![1,2,3,4].includes(input.version)||!['choose','play','won','lost'].includes(input.phase)||!Array.isArray(input.actors)||!Array.isArray(input.songs))fail();
   const game=structuredClone(input);
-  validateCrowd(game);if(game.catalog)validateCatalog(game.catalog);
+  validateCrowd(game);upgradePhysics(game);if(game.catalog)validateCatalog(game.catalog);
   if(game.version>=2&&!game.conquestVersion&&!game.reactionVersion&&game.actors.length>6)fail();
   const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
   if(game.actors.some(a=>!a||!object(a.identity)||!object(a.personality)||!object(a.needs)||!Number.isFinite(a.skill)||typeof a.genre!=='string'||typeof a.color!=='string'))fail();

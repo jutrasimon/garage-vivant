@@ -218,6 +218,7 @@ for(const key of Object.keys(expected))if(typeof expected[key]==='object'?Object
     if(terminal&&(s.fans.length!==game.fans.length||s.fans.some((f,i)=>f.id!==game.fans[i].id||Math.abs(f.meter-(1-game.fans[i].hp/game.fans[i].max)*100)>.000001||f.reacted!==(game.fans[i].hp===0))))throw Error('Public BandLive incohérent.');
     if(!(Array.isArray(game.songOrder)||game.freeSetlist===true&&game.songOrder===null)||live.profile?.audienceSize!==game.fans.length||JSON.stringify(live.profile?.audienceRules)!==JSON.stringify(game.audienceRules))throw Error('Scène BandLive incohérente.');
     validatePerformance({...s,bandLive:undefined,status:'playing',applied:false,tick:0,nextCue:0,actors:s.actors.map(a=>({...a,played:[]})),fans:live.originalFans,events:[],zones:[],impacts:[]});
+    if(game.spatialVersion)live.game.physics=game.physics;
   }
   return s;
 }

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/engine.test.mjs tests/systems.test.mjs tests/v4.test.mjs tests/v5.test.mjs tests/runtime.test.mjs tests/interface.test.mjs tests/v6.test.mjs tests/show.test.mjs tests/v7.test.mjs tests/v71.test.mjs tests/docs.test.mjs tests/v72.test.mjs tests/v73.test.mjs tests/v75.test.mjs tests/bandlive.test.mjs tests/bandlive-conquest.test.mjs tests/bandlive-decks.test.mjs tests/bandlive-reactions.test.mjs tests/bandlive-auto.test.mjs tests/bandlive-concert.test.mjs tests/assets.test.mjs tests/release-tool.test.mjs tests/v710.test.mjs tests/design.test.mjs tests/update.test.mjs tests/bandlive-layout.test.mjs tests/bandlive-refonte.test.mjs tests/local-server.test.mjs tests/bandlive-spatial.test.mjs",
-    "test:browser": "node tests/design-browser.test.mjs && node tests/v710-browser.test.mjs && node tests/browser.test.mjs && node tests/show-layout.test.mjs && node tests/bandlive-browser.test.mjs && node tests/bandlive-conquest-browser.test.mjs && node tests/bandlive-decks-browser.test.mjs && node tests/bandlive-reactions-browser.test.mjs && node tests/bandlive-controls-browser.test.mjs && node tests/bandlive-concert-browser.test.mjs && node tests/cache-upgrade-browser.test.mjs && node tests/update-browser.test.mjs && node tests/bandlive-minuit-browser.test.mjs && node tests/bandlive-physical-browser.test.mjs",
+    "test:browser": "node tests/design-browser.test.mjs && node tests/v710-browser.test.mjs && node tests/browser.test.mjs && node tests/show-layout.test.mjs && node tests/bandlive-browser.test.mjs && node tests/bandlive-conquest-browser.test.mjs && node tests/bandlive-decks-browser.test.mjs && node tests/bandlive-reactions-browser.test.mjs && node tests/bandlive-controls-browser.test.mjs && node tests/bandlive-concert-browser.test.mjs && node tests/cache-upgrade-browser.test.mjs && node tests/update-browser.test.mjs && node tests/bandlive-minuit-browser.test.mjs && node tests/bandlive-physical-browser.test.mjs && node tests/bandlive-collisions-browser.test.mjs",
     "docs:build": "node scripts/build-docs.mjs",
     "audit:groups": "node scripts/audit-groups.mjs",
     "audit:simulation": "node scripts/audit-simulation.mjs",
@@ -15,7 +15,7 @@
     "release:prepare": "node scripts/release.mjs prepare",
     "release:check": "node scripts/release.mjs check",
     "test:quick": "node scripts/check-syntax.mjs && npm run release:check && npm test",
-    "test:smoke": "node tests/smoke-browser.test.mjs && node tests/cache-upgrade-browser.test.mjs && node tests/local-server-browser.test.mjs && node tests/bandlive-composition-browser.test.mjs && node tests/bandlive-performance-browser.test.mjs && node tests/level-notifications-browser.test.mjs && node tests/profile-scroll-browser.test.mjs && node tests/bandlive-resources-browser.test.mjs && node tests/bandlive-targeting-browser.test.mjs && node tests/bandlive-reaction-targeting-browser.test.mjs && node tests/bandlive-conquest-preview-browser.test.mjs && node tests/bandlive-layout-editor-browser.test.mjs && node tests/bandlive-physical-browser.test.mjs",
+    "test:smoke": "node tests/smoke-browser.test.mjs && node tests/cache-upgrade-browser.test.mjs && node tests/local-server-browser.test.mjs && node tests/bandlive-composition-browser.test.mjs && node tests/bandlive-performance-browser.test.mjs && node tests/level-notifications-browser.test.mjs && node tests/profile-scroll-browser.test.mjs && node tests/bandlive-resources-browser.test.mjs && node tests/bandlive-targeting-browser.test.mjs && node tests/bandlive-reaction-targeting-browser.test.mjs && node tests/bandlive-conquest-preview-browser.test.mjs && node tests/bandlive-layout-editor-browser.test.mjs && node tests/bandlive-physical-browser.test.mjs && node tests/bandlive-collisions-browser.test.mjs",
     "test:layout-editor": "node tests/bandlive-layout-editor-browser.test.mjs",
     "test:refonte": "node tests/bandlive-refonte-browser.test.mjs",
     "test:composition": "node tests/bandlive-composition-browser.test.mjs",
@@ -26,7 +26,7 @@
     "test:targeting": "node tests/bandlive-targeting-browser.test.mjs && node tests/bandlive-reaction-targeting-browser.test.mjs",
     "test:conquest-preview": "node tests/bandlive-conquest-preview-browser.test.mjs",
     "start": "node scripts/serve.mjs",
-    "test:physical": "node --test tests/bandlive-spatial.test.mjs && node tests/bandlive-physical-browser.test.mjs"
+    "test:physical": "node --test tests/bandlive-spatial.test.mjs && node tests/bandlive-physical-browser.test.mjs && node tests/bandlive-collisions-browser.test.mjs"
   },
   "devDependencies": {
     "playwright": "1.56.1",

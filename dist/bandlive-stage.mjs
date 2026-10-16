@@ -121,7 +121,7 @@ export function createBandLiveStage({root,getReducedEffects,onLayout=()=>{},onPo
     importProfile(profile){if(!profile||typeof profile!=='object'||Array.isArray(profile))throw Error('Disposition invalide.');history.push(capture());prefs[signature()]=structuredClone(profile);persist();layout();},
     get page(){return actorPage;},setPage(value){actorPage=Math.max(0,Math.min(Math.ceil(game.actors.length/6)-1,value));},
     commitEdit,sizeSettings:sizes,
-    tunePhysics(value){beginEdit();game.physics=physicsSettings({...game.physics,...value});onPositions();},
+    tunePhysics(value){beginEdit();game.physics=physicsSettings({...game.physics,...value});if(value.collisionRadius!==undefined){separateCrowd(game);layout();}onPositions();},
     tuneRadius(value){beginEdit();game.room.radiusUnit=Math.max(60,Math.min(240,value));onPositions();},
     point(clientX,clientY){if(!game?.spatialVersion||!host)return null;const r=host.querySelector('.bl-audience').getBoundingClientRect(),scale=Number(host.dataset.scale)||1;return {x:(clientX-r.left)/scale-(host.clientWidth-game.room.width)/2,y:(clientY-r.top)/scale-metrics.crowdPadding};},
     crowdPoint(position){return {x:position.x+(host.clientWidth-game.room.width)/2,y:metrics.stageHeight+metrics.crowdPadding+position.y};},

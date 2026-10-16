@@ -1,6 +1,6 @@
 import {createCardEditor} from './bandlive-card-editor.mjs?v=0.9.0';
 import {createCatalog,compileCard,catalogCard} from './bandlive-catalog.mjs?v=0.9.0';
-import {initializeCrowd,physicsSettings,simulateImpulse,inRadius} from './bandlive-crowd.mjs?v=0.9.0';
+import {initializeCrowd,physicsSettings,inRadius} from './bandlive-crowd.mjs?v=0.9.0';
 import {createBandLive} from './bandlive.mjs?v=0.9.0';
 import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.9.0';
 import {cardFace} from './card-view.mjs?v=0.9.0';
@@ -18,7 +18,7 @@ import {musicianDeck,definitionFor,specialChoices} from './bandlive-cards.mjs?v=
 import {drawMicroBody} from './character-view.mjs?v=0.9.0';
 import {songTurns} from './song-rules.mjs?v=0.9.0';
 import {groupLinkHTML} from './group-link.mjs?v=0.9.0';
-import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard} from './bandlive.mjs?v=0.9.0';
+import {RULES,INSTRUMENTS,SPECIALS,restoreBandLive,cardById,cardDefinition,currentSong,availableSongs,chooseSong,canPlay,playCard,endTurn,totalTurns,sectionName,CONQUEST_EFFECTS,conquestLabel,conquestDescription,audienceColumns,conquestTargets,favoriteStyle,previewCard,impactCrowd} from './bandlive.mjs?v=0.9.0';
 import {resolveBandLivePlan,createBandLiveFromWorld} from './bandlive-roster.mjs?v=0.9.0';
 import {concertLineup,createConcertReplay,resolveBandLiveConcert,unlockBandLiveRepertoire,exchangeBandLiveCard,skipBandLiveExchange} from './bandlive-concert.mjs?v=0.9.0';
 import {NEEDS,PERSONALITY} from './engine.mjs?v=0.9.0';
@@ -154,7 +154,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     labBaseline=structuredClone(game);labShoot=false;render();
   }
   function labControlsHTML(){return `<div class="bl-lab-controls" role="group" aria-label="Laboratoire physique"><strong>LABO · COPIE DU SHOW</strong><label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></div>`;}
-  function physicalPanelHTML(){return `<fieldset><legend>Foule physique</legend><p>Le placement modifie les vrais rayons du show. Le laboratoire travaille sur une copie.</p>${[['force','Force d’impact',30,650,10],['grip','Adhérence au sol',1,12,.5],['rebound','Rebond',0,.85,.05]].map(([key,label,min,max,step])=>`<label>${label}<output data-bl-physics-output="${key}">${game.physics[key]}</output><input data-bl-physics="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${game.physics[key]}"></label>`).join('')}<label>Unité de rayon<output data-bl-radius-output>${game.room.radiusUnit}</output><input id="bl-radius-unit" type="range" min="60" max="240" step="5" value="${game.room.radiusUnit}"></label><button id="bl-lab">Ouvrir le laboratoire ↗</button><button id="bl-cards">Créer et gérer les cartes ↗</button></fieldset>`;}
+  function physicalPanelHTML(){return `<fieldset><legend>Foule physique</legend><p>Toutes les frappes repoussent leur cible. Un choc assez fort donne des cœurs au spectateur percuté, une fois par paire et par impulsion. Le laboratoire travaille sur une copie.</p>${[['force','Force d’impact',30,650,10],['grip','Adhérence au sol',1,12,.5],['rebound','Rebond',0,.85,.05],['hitStrength','Force des frappes',0,2,.05],['collisionRadius','Rayon de contact',16,48,1],['collisionThreshold','Seuil du choc (unités/s)',0,400,5],['collisionPower','Cœurs au contact',0,10,1]].map(([key,label,min,max,step])=>`<label>${label}<output data-bl-physics-output="${key}">${game.physics[key]}</output><input data-bl-physics="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${game.physics[key]}"></label>`).join('')}<label>Unité de rayon<output data-bl-radius-output>${game.room.radiusUnit}</output><input id="bl-radius-unit" type="range" min="60" max="240" step="5" value="${game.room.radiusUnit}"></label><button id="bl-lab">Ouvrir le laboratoire ↗</button><button id="bl-cards">Créer et gérer les cartes ↗</button></fieldset>`;}
   function showRadius(center,radius=1,core=0,{state='card',label=''}={}){
     const world=root.querySelector('.bl-world');if(!game?.spatialVersion||!world||!center)return;
     let layer=world.querySelector('.bl-radius-layer');if(!layer){layer=document.createElementNS('http://www.w3.org/2000/svg','svg');layer.classList.add('bl-radius-layer');layer.setAttribute('aria-hidden','true');world.append(layer);}
@@ -269,6 +269,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     if(valid){
       const next=preview.game,after=fan&&next.fans.find(f=>f.id===fan.id),gains=game.fans.map((f,i)=>f.hp-next.fans[i].hp),total=gains.reduce((a,b)=>a+b,0),conquests=game.fans.filter((f,i)=>f.hp>0&&next.fans[i].hp===0).length;
       const resources=['Énergie '+game.energy+' → '+next.energy];if(game.tempo!==next.tempo)resources.push('Tempo '+game.tempo+' → '+next.tempo);if(game.boost!==next.boost)resources.push('Bonus '+game.boost+' → '+next.boost);
+      const collisionGain=preview.event.hits.filter(h=>h.kind==='collision').reduce((n,h)=>n+h.gain,0);if(collisionGain)resources.push('Chocs : +'+collisionGain+' ♥');
       if(c.target==='audience'||preview.effects.length)resources.push('Total +'+total+' ♥');if(conquests)resources.push(conquests+' conquis');
       const meter=after?(fan.max-fan.hp)+'/'+fan.max+' → '+(after.max-after.hp)+'/'+after.max:'';
       const movement=preview.effects.filter(e=>e.type==='motion').reduce((n,e)=>n+e.targets.length,0);
@@ -385,7 +386,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     clearDrag();
     if(!r.ok){announce(r.message);return false;}
     selectedCard=null;pendingChoice=null;
-    animation={motions:r.motions,started:performance.now(),origin,events:[r.event,...r.effects],cued:new Set(),duration:(1+r.effects.length)*420+500};
+    animation={motions:r.motions,started:performance.now(),origin,events:[r.event,...r.effects],cued:new Set(),duration:(1+r.effects.filter(e=>e.type!=='motion').length)*420+500};
     if(sound)playSound({type:'card',instrument:card.instrument});
     persist();render();if(r.motions?.length)stage.showMotion(r.motions,0);requestAnimationFrame(animate);return true;
   }
@@ -403,7 +404,16 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     if(!animation)return;
     const elapsed=performance.now()-animation.started,reduced=getReducedEffects()||matchMedia('(prefers-reduced-motion: reduce)').matches;
     const label=(text,pos,kind='')=>{if(!pos)return;const el=document.createElement('span');el.className='bl-juice-label '+kind;el.textContent=text;el.style.left=pos.x+'px';el.style.top=pos.y+'px';if(reduced)el.style.animation='none';world.append(el);setTimeout(()=>el.remove(),1000);};
-    for(const [i,event] of animation.events.entries()){
+    const motions=animation.motions||[],totalFrames=motions.reduce((n,m)=>n+m.frames.length,0),motionFrame=reduced?totalFrames:Math.floor(Math.min(1,elapsed/Math.min(1800,animation.duration))*totalFrames);let offset=0;
+    for(const [mi,motion] of motions.entries()){
+      for(const [ci,contact] of motion.contacts.entries()){
+        const key=`contact:${mi}:${ci}`;if(offset+contact.frame>motionFrame||animation.cued.has(key))continue;animation.cued.add(key);
+        const point=stage.crowdPoint(contact.point);label('✦ IMPACT',point,'bl-juice-support bl-juice-collision');
+        for(const hit of contact.hits||[]){const pos=pointFor(`[data-bl-fan="${CSS.escape(hit.id)}"] .bl-cube`);label('+'+hit.gain+' ♥',pos?{x:pos.x,y:pos.y-30}:point,'bl-juice-collision');if(hit.after===0)label('✦ CONQUIS !',pos||point);}
+      }
+      offset+=motion.frames.length;
+    }
+    for(const [i,event] of animation.events.filter(e=>e.type!=='motion').entries()){
       const age=(elapsed-i*420)/1000;if(age<0||age>1)continue;
       const source=event.fanId?pointFor(`[data-bl-fan="${CSS.escape(event.fanId)}"] .bl-cube`):event.actorId?pointFor(`[data-bl-actor="${CSS.escape(event.actorId)}"] .bl-cube`):animation.origin||{x:w/2,y:180};
       if(!animation.cued.has(i)){
@@ -414,6 +424,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
         if(event.tempoSpent)label('♫ −'+event.tempoSpent+' TEMPO',source?{x:source.x,y:source.y-25}:source,'bl-juice-support bl-juice-tempo');
         if(event.type==='card'&&!event.hits.length&&!event.tempoGain&&!event.boostGain)label(event.boost?'✦ +'+event.boost+' SOUTIEN':'♫ '+event.name,source,'bl-juice-support');
         for(const hit of event.hits||[]){
+          if(hit.kind==='collision')continue;
           const pos=pointFor(`[data-bl-fan="${CSS.escape(hit.id)}"] .bl-cube`);if(!pos)continue;
           label((hit.gain>=0?'+':'')+hit.gain+' ♥',{x:pos.x,y:pos.y-35},hit.gain<0?'bl-juice-loss':'');
           if(hit.after===0&&hit.before>0){label('✦ CONQUIS !',{x:pos.x,y:pos.y+40});const ring=document.createElement('i');ring.className='bl-juice-ring bl-juice-effect-'+(event.effect||event.type);ring.style.left=pos.x+'px';ring.style.top=pos.y+'px';world.append(ring);setTimeout(()=>ring.remove(),800);}
@@ -422,7 +433,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
         if(event.effect==='spotlight'||event.effect==='chorus')for(const id of event.targets){const pos=pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`);label(event.effect==='spotlight'?'✦ SENSIBLE':'♫ '+currentSong(game).style,pos,'bl-juice-support');}
         if(sound)playSound({type:event.type==='card'?'shot':'impact'});
       }
-      const targets=event.targets||(event.hits||[]).map(h=>h.id);
+      const targets=event.targets||(event.hits||[]).filter(h=>h.kind!=='collision').map(h=>h.id);
       for(const id of targets){const target=pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`);if(!target||!source)continue;const p=Math.min(1,age/.35);ctx.strokeStyle=event.effect==='chorus'?'#d3b8ee':event.effect==='spotlight'?'#fff2b6':'#f8bdcf';ctx.globalAlpha=Math.max(0,1-age);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(source.x,source.y);ctx.lineTo(source.x+(target.x-source.x)*p,source.y+(target.y-source.y)*p);ctx.stroke();ctx.beginPath();ctx.arc(target.x,target.y,8+age*55,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
     }
   }
@@ -475,7 +486,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     if(target.id==='bl-lab-shoot'){if(stage.editing)stage.toggle();labShoot=!labShoot;render();return;}
     if(target.id==='bl-lab-import'){root.querySelector('#bl-lab-file').click();return;}
     if(target.id==='bl-lab-export'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({format:'garage-vivant-bandlive-lab',version:1,initial:labBaseline,current:game,layout:JSON.parse(stage.exportCode())},null,2)],{type:'application/json'}));a.href=url;a.download='BandLive-scenario.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
-    if(labOriginal&&labShoot&&target.dataset.blTarget&&!animation){const point=stage.point(event.clientX,event.clientY);if(point&&point.y>=game.room.margin&&point.y<=game.room.height-game.room.margin){const motion=simulateImpulse(game,{center:point,targets:inRadius(game,point,1,{alive:false}).map(f=>f.id),strengthById:Object.fromEntries(game.fans.map(f=>[f.id,Math.hypot(f.position.x-point.x,f.position.y-point.y)>.4*game.room.radiusUnit?.5:1])),kind:labKind,strength:labStrength});animation={started:performance.now(),events:[],motions:[motion],duration:1600,cued:new Set()};render();requestAnimationFrame(animate);}return;}
+    if(labOriginal&&labShoot&&target.dataset.blTarget&&!animation){const point=stage.point(event.clientX,event.clientY);if(point&&point.x>=game.room.margin&&point.x<=game.room.width-game.room.margin&&point.y>=game.room.margin&&point.y<=game.room.height-game.room.margin){const r=impactCrowd(game,{center:point,targets:inRadius(game,point,1,{alive:false}).map(f=>f.id),strengthById:Object.fromEntries(game.fans.map(f=>[f.id,Math.hypot(f.position.x-point.x,f.position.y-point.y)>.4*game.room.radiusUnit?.5:1])),kind:labKind,strength:labStrength});animation={started:performance.now(),events:[r.event,...r.effects],motions:r.motions,duration:Math.max(1600,r.effects.length*420+500),cued:new Set()};render();stage.showMotion(r.motions,0);requestAnimationFrame(animate);}return;}
     if(target.id==='bl-layout'||target.id==='bl-layout-close'){clearDrag();selectedCard=null;pendingChoice=null;stage.toggle();syncLayoutTools();if(stage.editing)root.closest('main')?.scrollTo({top:0});}
     else if(target.id==='bl-layout-undo'){stage.undo();syncLayoutTools();}
     else if(target.id==='bl-layout-reset'){stage.reset();syncLayoutTools();}

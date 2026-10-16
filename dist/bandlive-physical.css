@@ -41,5 +41,6 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 .bl-radius-label{fill:#ffe8f1;font-size:13px;font-weight:700;paint-order:stroke;stroke:#20393f;stroke-width:5px;stroke-linejoin:round}
 .bl-radius-layer[data-state=potential] .bl-radius-outer{fill:#f4bdcf09;stroke:#e8bfd9;stroke-width:2.5;stroke-dasharray:10 7}
 .bl-radius-layer[data-state=triggered] .bl-radius-outer{fill:#ffc1e521;stroke:#ffc6e3;stroke-width:3.5;stroke-dasharray:5 4}
+.bl-juice-collision{color:#ffd0e6;text-shadow:0 2px 0 #253b45,0 0 12px #ff99c9;font-weight:850}
 
 .ce-fields>[data-ce-crown]{display:contents}.ce-fields>[data-ce-crown][hidden]{display:none}

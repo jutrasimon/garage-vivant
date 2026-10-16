@@ -9,11 +9,11 @@ export const EFFECTS=Object.freeze({
  boost:{name:'Bonus de prochaine puissance',fields:{amount:number('Puissance',1,30,3),other:{label:'Musicien',options:{no:'Tous',yes:'Un autre musicien'}}}},
  style:{name:'Adopter le style de la chanson',fields:{duration:{label:'Durée',options:{turn:'Ce tour',song:'Cette chanson'}}}},
  protect:{name:'Protéger de l’ennui',fields:{}},
- push:{name:'Repousser',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Conquête par collision',0,10,0)}},
- pull:{name:'Attirer',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Conquête par collision',0,10,0)}},
- vortex:{name:'Tourbillon',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Conquête par collision',0,10,0)}},
- jump:{name:'Faire bondir',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Conquête par collision',0,10,0)}},
- return:{name:'Retour élastique',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Conquête par collision',0,10,0)}},
+ push:{name:'Repousser',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
+ pull:{name:'Attirer',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
+ vortex:{name:'Tourbillon',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
+ jump:{name:'Faire bondir',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
+ return:{name:'Retour élastique',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
 });
 export const CONDITIONS=Object.freeze({always:'Toujours',tempo:'Si le tempo initial atteint le seuil',alternate:'Si le musicien précédent est différent',neighbor:'Si un conquis est dans le rayon',conquest:'Si cette carte a conquis directement'});
 export function newEffect(type='power'){const schema=EFFECTS[type];return {type,when:'always',...Object.fromEntries(Object.entries(schema.fields).map(([k,f])=>[k,f.options?Object.keys(f.options)[0]:f.value]))};}
