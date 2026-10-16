@@ -5,15 +5,16 @@ import {chromium} from 'playwright';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {EFFECTS,CONDITIONS,validateCatalog,createCatalog} from '../dist/bandlive-catalog.mjs';
 import {restoreBandLive,previewCard} from '../dist/bandlive.mjs';
+import {restore as restoreWorld} from '../dist/engine.mjs';
 
 const child=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});let browser,page;
 try{
  const url=await new Promise((resolve,reject)=>{let out='';const timer=setTimeout(()=>reject(Error('Serveur indisponible')),5000);child.on('error',reject);child.stdout.on('data',b=>{out+=b;const match=out.match(/http:\/\/127\.0\.0\.1:\d+\//);if(match){clearTimeout(timer);resolve(match[0]);}});});
  await mkdir('test-results',{recursive:true});browser=await chromium.launch();
  for(const width of [1440,860,390]){
-  page=await browser.newPage({viewport:{width,height:900},hasTouch:width<500,isMobile:width<500});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  page=await browser.newPage({viewport:{width,height:900},hasTouch:width<500,isMobile:width<500});const errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));
   const oldWorld=preparedConcert().world;oldWorld.cardCatalog=createCatalog();for(const c of oldWorld.cardCatalog.cards)for(const e of c.effects)delete e.impactStrength;
-  await page.addInitScript(w=>localStorage.setItem('garage-vivant-v1',JSON.stringify(w)),oldWorld);
+  await page.addInitScript(w=>{if(!localStorage.getItem('garage-vivant-v1'))localStorage.setItem('garage-vivant-v1',JSON.stringify(w));},oldWorld);
   await page.goto(url);await page.locator('[data-bl-song]').first().click();await page.locator('.bl-render-ready').waitFor();await page.locator('#bl-cards').first().click();
   const editor=page.locator('.bl-card-editor'),field=key=>editor.locator(`[data-ce-field="${key}"]`),tips=editor.locator('[role="tooltip"]:visible');
   assert(await editor.locator('[data-ce-action="test"]').isVisible(),'Immediate testing remains available when the preview column is hidden');
@@ -73,11 +74,11 @@ try{
   await radiusHelp.scrollIntoViewIfNeeded();await radiusHelp.click();await tips.waitFor();box=await tips.boundingBox();assert(box.x>=0&&box.x+box.width<=width);assert(await editor.evaluate(el=>el.scrollWidth<=el.clientWidth),'The workshop does not overflow horizontally');
   if(width<500){const form=await editor.locator('main').boundingBox(),preview=await editor.locator('.ce-preview').boundingBox();assert(preview.y>=form.y+form.height-1,'The phone preview follows the full form instead of overlapping its fields');}
   await page.screenshot({path:`test-results/card-editor-help-${width}.png`});await editor.locator('[data-ce-action="close"]').click();assert.equal(await tips.count(),0);
-  const world=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1'))),live=(await world()).performance.bandLive.game;
+  const world=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('garage-vivant-v1')));let live=(await world()).performance.bandLive.game;
   const scenario=async()=>{const download=page.waitForEvent('download');await page.locator('#bl-lab-export').click();return JSON.parse(await readFile(await (await download).path(),'utf8'));};
   const castCard=async(id,fanId)=>{
    const card=page.locator(`[data-bl-card="${id}"]`);
-   if(width>500){await card.click();await page.locator(`[data-bl-fan="${fanId}"]`).click();}
+   if(width>500){if(await card.getAttribute('aria-pressed')!=='true')await card.click();await page.locator(`[data-bl-fan="${fanId}"]`).click();}
    else{
     await card.scrollIntoViewIfNeeded();
     // Revealing a hand can pan the room; choose the visible floor after that pan.
@@ -108,6 +109,19 @@ try{
   const labTarget=await castCard(testId,visibleFan);
   const playedLab=(await scenario()).current,event=playedLab.events.findLast(e=>e.type==='card'),expected=previewCard(initialLab,testId,labTarget,{point:event.point});assert(expected.ok);assert.deepEqual(playedLab,expected.game,'The composed draft really plays the previewed state in the laboratory');assert.deepEqual((await world()).performance.bandLive.game,live);
   await page.locator('#bl-lab-reset').click();assert.deepEqual((await scenario()).current,initialLab);await page.locator('#bl-lab-close').click();assert.deepEqual((await world()).performance.bandLive.game,live);
+  // Edit the real show, reload it, and play the new rules without restarting combat.
+  await page.locator('#bl-cards').first().click();await field('category').selectOption('guitar');await editor.locator('[data-ce-select="guitar:note"]').click();await field('amount').fill('7');await field('cost').fill('0');await field('impactStrength').fill('0');
+  assert(await editor.locator('[data-ce-action="apply-current"]').isEnabled());await editor.locator('[data-ce-action="apply-current"]').click();assert(await editor.isHidden());let current=(await world()).performance.bandLive.game;
+  for(const key of ['fans','physics','room','energy','tempo','turn','section','played','events','logs'])assert.deepEqual(current[key],live[key],key+' remains intact when applying to the real show');
+  assert(current.cards.filter(c=>c.instrument==='guitar'&&c.kind==='note').every(c=>c.definition.power===7&&c.definition.cost===0));assert.equal((await world()).cardCatalog.cards.find(c=>c.id==='guitar:note').effects[0].amount,6,'Live editing does not overwrite the future catalog');assert.deepEqual(restoreWorld(await world()).performance.bandLive.game,current);
+  await page.reload();await page.locator('.bl-render-ready').waitFor();assert.deepEqual((await world()).performance.bandLive.game,current,'Live edits survive a real page reload');
+  const hot=current.cards.find(c=>current.hand.includes(c.id)&&c.instrument==='guitar'&&c.kind==='note'),hotTarget=await castCard(hot.id,'f0'),afterHot=(await world()).performance.bandLive.game;assert.deepEqual(afterHot,previewCard(current,hot.id,hotTarget).game);live=afterHot;
+  // The same command works from the lab and returns to the actual show.
+  await page.locator('#bl-cards').first().click();await field('category').selectOption('guitar');await editor.locator(`[data-ce-select="${copy.id}"]`).click();await editor.locator('[data-ce-action="test"]').click();await page.locator('#bl-lab-close').waitFor();await page.locator('#bl-cards').first().click();await field('target').selectOption('single');await field('formula').selectOption('fixed');await field('amount').fill('5');await field('cost').fill('0');await field('impactStrength').fill('0');await editor.locator('[data-ce-action="apply-current"]').click();
+  assert.equal(await page.locator('.bl-lab-controls').count(),0,'Applying from the lab returns to the real show');current=(await world()).performance.bandLive.game;
+  for(const key of ['fans','physics','room','energy','tempo','turn','section','played','events','logs'])assert.deepEqual(current[key],live[key]);
+  const injected=current.cards.find(c=>c.kind===copy.id);assert(injected&&current.hand.includes(injected.id));assert.equal(injected.definition.power,5);assert.equal(injected.definition.cost,0);assert.equal(current.cards.length,live.cards.length);assert.deepEqual(restoreWorld(await world()).performance.bandLive.game,current);assert.equal((await world()).cardCatalog.cards.find(c=>c.id===copy.id).effects[0].amount,6);live=current;
+  await page.screenshot({path:`test-results/card-live-apply-${width}.png`});
   // Apply a new starting deck, then enter a genuinely new rehearsal through the UI.
   await page.locator('#bl-cards').first().click();await field('category').selectOption('guitar');
   for(const id of ['guitar:note','guitar:special']){await editor.locator(`[data-ce-select="${id}"]`).click();await field('starter').fill('0');}

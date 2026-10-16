@@ -1,6 +1,6 @@
 import {inRadius,physicsSettings} from './bandlive-crowd.mjs?v=0.9.0';
 export function playProgram(game,card,targetId,options,hooks){
- const d=card.definition,fan=game.fans.find(f=>f.id===targetId),second=game.fans.find(f=>f.id===options.secondTargetId),point=options.point;
+ const d=card.definition,fan=game.fans.find(f=>f.id===targetId),second=game.fans.find(f=>f.id===options.secondTargetId),point=d.target==='point'?options.point:undefined;
  if(d.target==='single'&&(!fan||fan.hp===0))return {ok:false,message:'Choisis un spectateur encore à conquérir.'};
  if(d.twoTargets&&(!second||second===fan||!second.hp))return {ok:false,message:'Choisis deux spectateurs distincts.'};
  if(d.target==='point'&&(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y)||point.x<game.room.margin||point.x>game.room.width-game.room.margin||point.y<game.room.margin||point.y>game.room.height-game.room.margin))return {ok:false,message:'Vise le sol dans la zone du public.'};

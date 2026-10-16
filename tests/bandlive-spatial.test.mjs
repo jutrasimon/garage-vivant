@@ -8,6 +8,9 @@ import {claimLevelReward} from '../dist/level-rewards.mjs';
 import {chooseAutomaticMove,simulateBandLive} from '../dist/bandlive-auto.mjs';
 import {validatePersonDecks} from '../dist/bandlive-cards.mjs';
 import {replaceLabCard} from '../dist/bandlive-lab-card.mjs';
+import {applyShowCard} from '../dist/bandlive-show-card.mjs';
+import {preparedConcert} from './bandlive-concert-helpers.mjs';
+import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
 function fixture({card=null,catalog=createCatalog(),spatial=true}={}){
  const people=createWorld(55,4).people;people[0].instrument='drums';
  if(card){const c=duplicateCard(catalog,'drums:note');Object.assign(c,card,{id:c.id,instrument:'drums',starter:0});people[0].bandLiveDecks={drums:[c.id,'note','note','special','special']};}
@@ -148,6 +151,34 @@ test('laboratory replacement is atomic, retains a valid card partition and works
  const {g}=fixture();g.hand=g.cards.filter(c=>c.actorId===g.actors[0].id).map(c=>c.id);g.deck=g.cards.filter(c=>!g.hand.includes(c.id)).map(c=>c.id);while(g.catalog.cards.length<256)duplicateCard(g.catalog,'sax:note');validateCatalog(g.catalog);
  const before=structuredClone(g),entry=structuredClone(g.catalog.cards.find(c=>c.id==='keys:note')),next=replaceLabCard(g,entry,{original:g});assert.deepEqual(g,before);assert.equal(next.catalog.cards.length,256);assert.equal(next.hand.length,5);assert.equal(new Set([...next.hand,...next.deck,...next.discard]).size,next.cards.length);assert.deepEqual(restoreBandLive(next),next);
  entry.effects[0].strikes=101;assert.throws(()=>replaceLabCard(g,entry,{original:g}),/Frappes/);assert.deepEqual(g,before,'A rejected draft cannot partially replace the card or its catalog');
+});
+test('live card edits update every copy without rewriting the crowd, turn or previous casts',()=>{
+ const {g,c}=fixture();g.physics.hitStrength=0;assert(playCard(g,c.id,'f0').ok);g.tempo=7;g.boost=4;g.physics.force=610;const before=structuredClone(g),entry=structuredClone(g.catalog.cards.find(c=>c.id==='drums:note'));entry.name='Note en direct';entry.cost=0;entry.effects[0].amount=12;entry.starter=0;
+ const result=applyShowCard(g,entry),next=result.game;assert.deepEqual(g,before);assert.equal(result.updated,before.cards.filter(c=>c.instrument==='drums'&&c.kind==='note').length);assert(!result.inserted);assert(next.hand.includes(result.cardId));
+ for(const key of ['fans','physics','room','energy','tempo','turn','section','boost','relayBoosts','played','events','logs'])assert.deepEqual(next[key],before[key],key+' stays unchanged by a live edit');
+ assert(next.cards.filter(c=>c.instrument==='drums'&&c.kind==='note').every(c=>c.definition.name==='Note en direct'&&c.definition.power===12&&c.definition.cost===0));assert.equal(next.catalog.cards.find(c=>c.id===entry.id).starter,3,'Current starter metadata stays valid independently of the draft');
+ const preview=previewCard(next,result.cardId,'f0');assert(preview.ok);assert(playCard(next,result.cardId,'f0').ok);assert.deepEqual(next,preview.game);assert.equal(next.events.at(-1).name,'Note en direct');assert.deepEqual(restoreBandLive(next),next);
+});
+test('new and neutral live cards enter the current hand without growing decks or refunding resources',()=>{
+ for(const instrument of ['keys','neutral']){
+  const {g}=fixture();g.hand=g.cards.filter(c=>c.actorId===g.actors[0].id).map(c=>c.id);g.deck=g.cards.filter(c=>!g.hand.includes(c.id)).map(c=>c.id);g.energy=1;g.tempo=4;
+  const entry=structuredClone(g.catalog.cards.find(c=>c.id==='keys:note'));Object.assign(entry,{id:'neutral:live-copy',instrument,cost:0,starter:5});delete entry.legacyKind;
+  const before=structuredClone(g),result=applyShowCard(g,entry),next=result.game;assert.deepEqual(g,before);assert(result.inserted);assert.equal(next.hand.length,5);assert.equal(next.cards.length,g.cards.length);assert.equal(next.energy,1);assert.equal(next.tempo,4);assert(next.hand.includes(result.cardId));assert.equal(next.catalog.cards.find(c=>c.id===entry.id).starter,0);assert.equal(new Set([...next.hand,...next.deck,...next.discard]).size,next.cards.length);assert.deepEqual(restoreBandLive(next),next);
+ }
+});
+test('live card edits can prepare a copy before the song starts',()=>{
+ const world=createWorld(55,4);world.people[0].instrument='drums';const game=createBandLive({people:world.people,songs:[{id:'a',title:'A',style:'Jazz'}],spatial:true}),card=structuredClone(game.catalog.cards.find(c=>c.id==='keys:note'));card.effects[0].amount=12;
+ const edited=applyShowCard(game,card).game;assert.equal(edited.phase,'choose');assert.equal(edited.hand.length,0);chooseSong(edited,'a');assert(edited.hand.some(id=>edited.cards.find(c=>c.id===id).definition.power===12),'The chosen copy is ready when the song begins');assert.deepEqual(restoreBandLive(edited),edited);assert.equal(game.catalog.cards.find(c=>c.id===card.id).effects[0].amount,6);
+});
+test('live card edits and injected cards resume inside the real world without changing future decks',()=>{
+ const world=preparedConcert().world;beginBandLiveConcert(world);const game=world.performance.bandLive.game;chooseSong(game,game.songs[0].id);const catalog=structuredClone(world.cardCatalog);
+ const entry=duplicateCard(structuredClone(catalog),'guitar:note');entry.effects[0].amount=4;entry.effects[0].impactStrength=0;entry.cost=0;const result=applyShowCard(game,entry);Object.assign(game,result.game);
+ assert.deepEqual(restore(world).performance.bandLive.game,game);assert.deepEqual(world.cardCatalog,catalog);assert(playCard(game,result.cardId,'f0').ok);assert.deepEqual(restore(world).performance.bandLive.game,game);assert.deepEqual(world.cardCatalog,catalog);
+});
+test('live card edits reject incompatible instruments, invalid effects and finished or legacy shows atomically',()=>{
+ const {g}=fixture(),before=structuredClone(g),entry=structuredClone(g.catalog.cards.find(c=>c.id==='drums:note'));entry.instrument='keys';assert.throws(()=>applyShowCard(g,entry),/instrument compatible/);assert.deepEqual(g,before);
+ entry.instrument='drums';entry.effects[0].strikes=101;assert.throws(()=>applyShowCard(g,entry),/Frappes/);entry.effects[0].strikes=1;assert.throws(()=>applyShowCard({...g,phase:'won'},entry),/show physique en cours/);assert.throws(()=>applyShowCard({...g,spatialVersion:undefined},entry),/show physique en cours/);assert.deepEqual(g,before);
+ const full=structuredClone(g);while(full.catalog.cards.length<256)duplicateCard(full.catalog,'sax:note');const extra={...entry,id:'drums:live-copy',starter:0};delete extra.legacyKind;const result=applyShowCard(full,extra);assert.equal(result.game.catalog.cards.length,256);assert.deepEqual(restoreBandLive(result.game),result.game);
 });
 test('every proposed pair of effects executes and previews the exact committed state',()=>{
  const types=['power','tempo','energy','draw','boost','style','protect','push','pull','vortex','jump','return'];

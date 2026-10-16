@@ -1,5 +1,6 @@
 import {createCardEditor} from './bandlive-card-editor.mjs?v=0.9.0';
 import {replaceLabCard} from './bandlive-lab-card.mjs?v=0.9.0';
+import {applyShowCard} from './bandlive-show-card.mjs?v=0.9.0';
 import {createCatalog,compileCard,catalogCard} from './bandlive-catalog.mjs?v=0.9.0';
 import {initializeCrowd,physicsSettings,inRadius} from './bandlive-crowd.mjs?v=0.9.0';
 import {createBandLive} from './bandlive.mjs?v=0.9.0';
@@ -78,7 +79,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){enabled=true;if(saved.draft)draft=saved.draft;if(saved.game)game=restoreBandLive(saved.game);}}catch{notify('La répétition BandLive enregistrée ne peut pas être reprise. Le quartier est disponible.');}
   let labOriginal=null,labBaseline=null,labKind='push',labStrength=1,labShoot=false,theme='midnight';
   const stage=createBandLiveStage({root,getReducedEffects,onLayout:syncLayoutTools,onPositions:()=>{previewMemo=null;persist();}});
-  const cardEditor=createCardEditor({getWorld,onSave:onCatalogSave,onTest:startLab});
+  const cardEditor=createCardEditor({getWorld,onSave:onCatalogSave,onTest:startLab,onApplyCurrent:applyCurrentCard,canApplyCurrent:()=>{const current=labOriginal?.game||game;return !!current?.spatialVersion&&['choose','play'].includes(current.phase);}});
   const aim=createBandLiveAim();
   let rehearsalGame=game,liveId=null,lastReport=null,pendingChoice=null,rewardChoice={},choiceTouch=null,previewMemo=null;
   const liveShow=()=>{const s=getWorld().performance;return !labOriginal&&liveId&&s?.id===liveId&&s.bandLive&&getWorld().showEventId?s:null;};
@@ -157,6 +158,13 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     game.energy=3;preparing=false;animation=null;clearDrag();selectedCard=null;pendingChoice=null;
     if(card)game=replaceLabCard(game,card,{original:labOriginal.game});
     labBaseline=structuredClone(game);labShoot=false;render();
+  }
+  function applyCurrentCard(card){
+    const current=labOriginal?.game||game,result=applyShowCard(current,card);
+    if(stage.editing)stage.toggle();animation=null;clearDrag();pendingChoice=null;
+    if(labOriginal){preparing=labOriginal.preparing;labOriginal=null;labBaseline=null;labShoot=false;}
+    Object.assign(current,result.game);game=current;selectedCard=result.cardId;persist();render();
+    notify('« '+card.name+' » appliquée au show en cours.');
   }
 function labControlsHTML(){return `<div class="bl-lab-controls" role="group" aria-label="Laboratoire physique"><strong>LABO · COPIE DU SHOW</strong>${game.cards.some(c=>c.kind==='lab:test')?`<button id="bl-lab-replay-card" ${animation?'disabled':''}>Rejouer la carte</button>`:''}<label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></div>`;}
   function physicalPanelHTML(){return `<fieldset><legend>Foule physique</legend><p>Toutes les frappes repoussent leur cible. Un choc assez fort donne des cœurs au spectateur percuté, une fois par paire et par impulsion. Le laboratoire travaille sur une copie.</p>${[['force','Force d’impact',30,650,10],['grip','Adhérence au sol',1,12,.5],['rebound','Rebond',0,.85,.05],['hitStrength','Force des frappes',0,2,.05],['collisionRadius','Rayon de contact',16,48,1],['collisionThreshold','Seuil du choc (unités/s)',0,400,5],['collisionPower','Cœurs au contact',0,10,1]].map(([key,label,min,max,step])=>`<label>${label}<output data-bl-physics-output="${key}">${game.physics[key]}</output><input data-bl-physics="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${game.physics[key]}"></label>`).join('')}<label>Unité de rayon<output data-bl-radius-output>${game.room.radiusUnit}</output><input id="bl-radius-unit" type="range" min="60" max="240" step="5" value="${game.room.radiusUnit}"></label><button id="bl-lab">Ouvrir le laboratoire ↗</button><button id="bl-cards">Créer et gérer les cartes ↗</button></fieldset>`;}
@@ -518,7 +526,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
       game=createBandLiveFromWorld(getWorld(),draft);getWorld().cardCatalog??=structuredClone(game.catalog);onCatalogSave();preparing=false;persist();render();
     }else if(target.id==='bl-simulate'&&!animation){clearDrag();selectedCard=null;pendingChoice=null;simulateBandLive(game,()=>persist());render();}
     else if(target.id==='bl-end'&&!animation){const start=game.events.length;endTurn(game);selectedCard=null;pendingChoice=null;persist();juice(game.events.slice(start));}
-    else if(target.id==='bl-cancel'&&liveShow()){onConcertCancel?.();syncConcert();render();}
+    else if(target.id==='bl-cancel'&&liveShow()){animation=null;clearDrag();selectedCard=null;pendingChoice=null;onConcertCancel?.();syncConcert();render();}
     else if(target.id==='bl-setup'&&!liveShow()){animation=null;clearDrag();selectedCard=null;pendingChoice=null;preparing=true;initializeDraft();render();}
     else if(target.id==='bl-resume'){preparing=false;render();}
     else if(target.id==='bl-return'&&['won','lost'].includes(game.phase)){animation=null;clearDrag();selectedCard=null;pendingChoice=null;persist();const concert=!!liveShow();if(concert){skipBandLiveExchange(getWorld());persist();}pendingChoice=null;onReturn({concert});if(concert)syncConcert();}
