@@ -68,7 +68,11 @@ export function createMinuitRenderer({getReducedEffects}){
       const r=measurements[i],x=(r.left+r.width/2-rect.left)/scale,y=(r.top+r.height/2-rect.top)/scale,plane=p.actor?1.6:1;
       p.base=floorPoint(x,y,plane);p.foot=floorPoint(x,y+r.height/scale*.34,p.actor?.6:0);p.foot.y-=.035;
       p.axisX=floorPoint(x+1,y,plane).sub(p.base);p.axisY=floorPoint(x,y+1,plane).sub(p.base);
-      p.sprite.scale.set(r.width/scale/unit,r.height/scale/unit,1);p.shadow.scale.setScalar(r.width/scale/unit*.30);
+      // A rotated DOM rectangle expands even though the character has not grown.
+      // Use its authored size; layout scale still applies, impact rotation does not.
+      const personScale=Number(p.element.style.getPropertyValue('--bl-person-scale'))||1;
+      const spriteWidth=p.image.offsetWidth*personScale,spriteHeight=p.image.offsetHeight*personScale;
+      p.sprite.scale.set(spriteWidth/unit,spriteHeight/unit,1);p.shadow.scale.setScalar(spriteWidth/unit*.30);
       if(p.instrument)p.instrument.scale.setScalar(1.25*Number(p.element.dataset.blInstrumentScale||1));
       p.sprite.visible=p.shadow.visible=p.actor||r.top+r.height/2>crowd.top+10&&r.top+r.height/2<crowd.bottom-10;
     }

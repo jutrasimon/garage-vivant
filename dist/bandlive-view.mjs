@@ -183,18 +183,19 @@ function labControlsHTML(){return `<dialog class="bl-lab-controls" aria-label="L
     layer.innerHTML=`<ellipse class="bl-radius-outer" cx="${p.x}" cy="${p.y}" rx="${radius*unit*sx}" ry="${radius*unit}"/>${core?`<ellipse class="bl-radius-core" cx="${p.x}" cy="${p.y}" rx="${core*unit*sx}" ry="${core*unit}"/>`:''}<circle class="bl-radius-center" cx="${p.x}" cy="${p.y}" r="5"/>${label?`<text class="bl-radius-label" x="${p.x}" y="${p.y-radius*unit+20}" text-anchor="middle">${esc(label)}</text>`:''}`;
   }
   function radiusZones(){return [...root.querySelectorAll('.bl-radius-outer,.bl-radius-chain')].map(el=>{const r=el.getBoundingClientRect();return {cx:r.left+r.width/2,cy:r.top+r.height/2,rx:r.width/2,ry:r.height/2};});}
-  function showSplitLine(center){
+  function showSplitLine(center,strength=1){
     const world=root.querySelector('.bl-world');if(!world||!center)return;
     let layer=world.querySelector('.bl-radius-layer');
     if(!layer){layer=document.createElementNS('http://www.w3.org/2000/svg','svg');layer.classList.add('bl-radius-layer');layer.setAttribute('aria-hidden','true');layer.dataset.state='card';layer.setAttribute('viewBox',`0 0 ${world.clientWidth} ${world.clientHeight}`);world.append(layer);}
     const top=stage.crowdPoint({x:center.x,y:game.room.margin}),bottom=stage.crowdPoint({x:center.x,y:game.room.height-game.room.margin}),mid=(top.y+bottom.y)/2;
     layer.querySelector('.bl-split-preview')?.remove();
-    layer.insertAdjacentHTML('beforeend',`<g class="bl-split-preview"><path class="bl-split-line" d="M ${top.x} ${top.y} V ${bottom.y}"/><path class="bl-split-arrows" d="M ${top.x-14} ${mid} h -40 l 10 -8 m -10 8 l 10 8 M ${top.x+14} ${mid} h 40 l -10 -8 m 10 8 l -10 8"/><text class="bl-radius-label" x="${top.x}" y="${top.y-12}" text-anchor="middle">← Pousser →</text></g>`);
+    const reach=24+strength*24,power=Number(strength).toLocaleString('fr-CA');
+    layer.insertAdjacentHTML('beforeend',`<g class="bl-split-preview" data-strength="${strength}"><path class="bl-split-line" style="stroke-width:${3+strength}" d="M ${top.x} ${top.y} V ${bottom.y}"/><path class="bl-split-arrows" d="M ${top.x-14} ${mid} h -${reach} l 10 -8 m -10 8 l 10 8 M ${top.x+14} ${mid} h ${reach} l -10 -8 m 10 8 l -10 8"/><text class="bl-radius-label" x="${top.x}" y="${top.y-12}" text-anchor="middle">← Pousser · Force ${power} →</text></g>`);
   }
   function showResolvedAreas(preview,primarySource=null){
     const areas=preview?.areas||[],seen=new Set(),markers=new Set();
     for(const area of areas){
-      if(area.shape==='line'){showSplitLine(area.center);for(const t of area.targets)root.querySelector(`[data-bl-fan="${CSS.escape(t.id)}"]`)?.classList.add('bl-forecast');continue;}
+      if(area.shape==='line'){showSplitLine(area.center,area.strength);for(const t of area.targets)root.querySelector(`[data-bl-fan="${CSS.escape(t.id)}"]`)?.classList.add('bl-forecast');continue;}
       const key=[area.kind,area.sourceId,area.center.x,area.center.y,area.radius].join(':');if(seen.has(key))continue;seen.add(key);
       let layer=root.querySelector('.bl-radius-layer');
       const main=area.kind==='conquest'&&area.sourceId===primarySource;
@@ -573,7 +574,7 @@ function labControlsHTML(){return `<dialog class="bl-lab-controls" aria-label="L
     if(dragPointer===event.pointerId&&!root.hasPointerCapture(event.pointerId)){cancelCard({pointer:lastPointer,suppressClick:true});return;}
     if(touchGrab?.pointerId===event.pointerId&&Math.hypot(event.clientX-touchGrab.x,event.clientY-touchGrab.y)>=8){const id=touchGrab.id;touchGrab=null;if(startDrag(id)){event.preventDefault();dragPointer=event.pointerId;root.setPointerCapture(event.pointerId);ghost=makeDragGhost(id);document.body.append(ghost);}}
     if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};schedulePreview();inspection.move(dragPoint);aim.movePointer(dragPoint);}
-    if(labOriginal&&labShoot&&!stage.editing){const spot=labPoint(event);root.querySelector('.bl-radius-layer')?.remove();if(spot){if(labKind==='split')showSplitLine(spot);else showRadius(spot,1,.4);}}
+    if(labOriginal&&labShoot&&!stage.editing){const spot=labPoint(event);root.querySelector('.bl-radius-layer')?.remove();if(spot){if(labKind==='split')showSplitLine(spot,labStrength);else showRadius(spot,1,.4);}}
     if(dragPointer!==event.pointerId)return;
     event.preventDefault();moveDrag(event.clientX,event.clientY);
   });

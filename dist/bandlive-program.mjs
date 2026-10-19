@@ -15,7 +15,7 @@ export function playProgram(game,card,targetId,options,hooks){
   const condition=e.when==='always'||e.when==='tempo'&&initialTempo>=e.conditionValue||e.when==='alternate'&&previous&&previous.actorId!==card.actorId||e.when==='neighbor'&&neighbor||e.when==='conquest'&&direct.size>0;if(!condition)continue;
   const selected=targets();
   // Preview geometry must describe positions when the effect lands, before its recoil.
-  if(e.type==='split')areas.push({kind:'card',shape:'line',sourceId:card.actorId,center:{...origin()},radius:0,coreRadius:0,targets:game.fans.map(f=>({id:f.id,position:{...f.position}}))});
+  if(e.type==='split')areas.push({kind:'card',shape:'line',strength:e.strength,sourceId:card.actorId,center:{...origin()},radius:0,coreRadius:0,targets:game.fans.map(f=>({id:f.id,position:{...f.position}}))});
   if(d.radius&&!['split','tempo','energy','draw','boost'].includes(e.type)){
    const affected=['power','protect','style'].includes(e.type)?selected:inRadius(game,origin(),d.radius,{alive:false});
    areas.push({kind:'card',sourceId:card.actorId,center:{...origin()},radius:d.radius,coreRadius:d.coreRadius||0,targets:affected.map(f=>({id:f.id,position:{...f.position}}))});
