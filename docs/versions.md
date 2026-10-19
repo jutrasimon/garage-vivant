@@ -2,6 +2,8 @@
 
 ## V0.9.0 — Foule physique et atelier de cartes {#v090}
 
+- **Cœurs plus discrets :** une jauge compacte de la largeur du personnage, avec les chiffres contrastés et la progression prévue toujours visible.
+
 14 octobre 2026.
 
 - **Impact « Pousser · gauche / droite » :** place une ligne verticale pour écarter horizontalement toute la foule, conquis inclus. Disponible dans le labo et l’atelier avec force et bonus de collision réglables. Cet impact ignore le rayon; les autres effets combinés gardent leur propre zone. Avec une cible au sol, la ligne suit le curseur.

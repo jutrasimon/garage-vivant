@@ -139,6 +139,11 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 .bl-lab-dismiss{margin-left:auto;background:#cae6ad!important;color:#203c36!important;font-weight:800}
 .bl-lab-controls>strong{order:-1;margin-right:auto}
 .bl-conquered .bl-resistance[hidden]{display:none!important}
+.bl-spatial .bl-minuit .bl-fan:not(.bl-conquered) .bl-resistance{left:20px;width:46px;min-width:0;height:18px;bottom:8px;padding:14px 0 0;border:0;border-radius:3px;background:#152e354d;box-shadow:none}
+.bl-spatial .bl-minuit .bl-resistance:before{left:3px;top:1px;font-size:8px;color:#ee9bb9}
+.bl-spatial .bl-minuit .bl-resistance>i{display:block;height:3px;border-radius:2px;background:#ec90ad}
+.bl-spatial .bl-minuit .bl-fan .bl-hp{left:29px;right:auto;bottom:13px;width:35px;text-align:center;font-size:10px;line-height:11px;color:#fff8e9;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #122b32}
+.bl-spatial .bl-minuit .bl-forecast .bl-resistance:after{left:0;top:14px;height:3px;width:var(--bl-forecast);max-width:100%;border-radius:2px}
 .bl-spatial .bl-style-muted .bl-style{opacity:.2;filter:saturate(.25)}
 .bl-spatial .bl-style-matches .bl-style{opacity:1;background:#ffe8a1;color:#314139;border-color:#fff1b7;box-shadow:0 0 12px #ffe394aa}
 .bl-spatial .bl-conquest-bonus{color:var(--bl-effect-color);border-color:var(--bl-effect-color)}
