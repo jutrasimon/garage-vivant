@@ -131,3 +131,15 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 .ce-validation,.ce-preview-invalid{padding:12px;border:1px solid #dba89a;border-radius:9px;background:#fff2e5;color:#81372d;font-size:13px;line-height:1.5}
 .ce-field-error[hidden],.ce-validation[hidden],.ce-tooltip[hidden]{display:none}
 @media(max-width:650px){.ce-body{display:block}.bl-card-editor input,.bl-card-editor select{font-size:16px}.ce-effect-head>.ce-field{flex-basis:100%}.bl-card-editor .ce-help{width:30px;height:30px;min-width:30px;min-height:30px}.ce-tooltip{font-size:14px}.ce-body .ce-card-list button{min-width:155px}.bl-card-editor>footer button{font-size:12px}.ce-body>aside:not(.ce-preview){max-height:220px}.ce-preview-invalid p{display:block!important}}
+/* Test controls live in the browser's modal layer, outside the playable field. */
+.bl-spatial dialog.bl-lab-controls{position:fixed;inset:0;margin:auto;width:min(860px,calc(100vw - 32px));height:fit-content;max-height:calc(100dvh - 48px);box-sizing:border-box;padding:24px;border:1px solid #b9ca9a;border-radius:22px;background:#203c46;color:#fff7da;box-shadow:0 24px 80px #071e2ccc;overflow:auto;gap:14px}
+.bl-spatial dialog.bl-lab-controls:not([open]){display:none}
+.bl-spatial dialog.bl-lab-controls[open]{display:flex}
+.bl-lab-controls::backdrop{background:#102831b8;backdrop-filter:blur(4px)}
+.bl-lab-dismiss{margin-left:auto;background:#cae6ad!important;color:#203c36!important;font-weight:800}
+.bl-lab-controls>strong{order:-1;margin-right:auto}
+.bl-conquered .bl-resistance[hidden]{display:none!important}
+.bl-spatial .bl-style-muted .bl-style{opacity:.2;filter:saturate(.25)}
+.bl-spatial .bl-style-matches .bl-style{opacity:1;background:#ffe8a1;color:#314139;border-color:#fff1b7;box-shadow:0 0 12px #ffe394aa}
+.bl-spatial .bl-conquest-bonus{color:var(--bl-effect-color);border-color:var(--bl-effect-color)}
+.bl-spatial .bl-conquered .bl-conquest-bonus{opacity:1;filter:none}

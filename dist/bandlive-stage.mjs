@@ -33,16 +33,17 @@ export function createBandLiveStage({root,getReducedEffects,onLayout=()=>{},onPo
     if(!host||!game)return;
     const members=visibleActors(),c=config(),selected=new Set(game.hand),hands=members.map(a=>{const h=c.hands[a.id]||{};return fanGeometry({count:game.cards.filter(card=>card.actorId===a.id&&selected.has(card.id)).length,scale:valid(h.scale,1.25),fan:valid(h.fan,26)});});
     const size=sizes();metrics=layoutMetrics(members.length,size,Math.max(0,...hands.map(h=>h.height)));
-    if(game.spatialVersion){metrics.crowdPadding=8+Math.max(0,56*(size.spectators-1));metrics.actorOffset+=50;metrics.clearance=Math.max(80,80*size.musicians*size.instruments);metrics.stageHeight=400+Math.max(0,metrics.clearance-80)+Math.max(0,...hands.map(h=>h.height-240))+Math.floor((members.length-1)/6)*metrics.rowStride;}
+    if(game.spatialVersion){metrics.crowdPadding=64+Math.max(0,56*(size.spectators-1));metrics.actorOffset+=50;metrics.clearance=Math.max(80,80*size.musicians*size.instruments);metrics.stageHeight=400+Math.max(0,metrics.clearance-80)+Math.max(0,...hands.map(h=>h.height-240))+Math.floor((members.length-1)/6)*metrics.rowStride;}
     const rowWidths=Array.from({length:Math.ceil(members.length/6)},(_,row)=>{const packs=hands.slice(row*6,row*6+6).filter(h=>h.cards.length);return packs.reduce((sum,h)=>sum+h.width,0)+Math.max(0,packs.length-1)*16+32;});
     const viewport=host.parentElement,screen=host.closest('.bl-show-screen'),rows=Math.ceil(game.fans.length/audienceColumns(game)),stageHeight=metrics.stageHeight,height=stageHeight+(game.spatialVersion?game.room.height+2*metrics.crowdPadding:rows*metrics.cellHeight);
     const main=screen?.closest('main'),screenHeight=Math.max(470,innerHeight-Math.max(0,main?.getBoundingClientRect().top||0));
     if(screen)screen.style.height=screenHeight+'px';
     const footer=screen?parseFloat(getComputedStyle(screen).getPropertyValue('--bl-footer-height'))||94:94;
-    const available=Math.max(260,screenHeight-(screen?.querySelector('.bl-hud')?.offsetHeight||86)-footer),width=Math.max(1120,...rowWidths,Math.min(6,members.length)*ACTOR_BODY.w*size.musicians+(Math.min(6,members.length)-1)*8+192);
+    const available=Math.max(260,screenHeight-(screen?.querySelector('.bl-hud')?.offsetHeight||86)-footer),width=Math.max(game.spatialVersion?game.room.width+128*Math.max(1,size.spectators):1120,...rowWidths,Math.min(6,members.length)*ACTOR_BODY.w*size.musicians+(Math.min(6,members.length)-1)*8+192);
     let playWidth=viewport.clientWidth,scale=Math.min(1,available/height,Math.max(740,playWidth-32)/width);
     host.querySelector('.bl-audience-viewport').style.top=stageHeight+'px';host.querySelector('.bl-musicians').style.height=stageHeight+'px';host.dataset.scale=scale;host.style.transform=`scale(${scale})`;host.style.transformOrigin='top left';
     host.dataset.playWidth=playWidth;host.dataset.rowStride=metrics.rowStride;host.style.width=width+'px';host.style.minWidth='0';host.style.height=height+'px';host.style.left=Math.max(0,(playWidth-width*scale)/2)+'px';viewport.style.height=available+'px';
+    host.dataset.crowdPadding=metrics.crowdPadding||0;
   }
   function layout(){
     fit();
@@ -81,7 +82,8 @@ export function createBandLiveStage({root,getReducedEffects,onLayout=()=>{},onPo
     const fans=host.querySelector('.bl-fans');fans.style.height=geometry.crowdHeight+'px';
     for(const [i,f] of game.fans.entries()){
       const element=host.querySelector('[data-bl-fan="'+CSS.escape(f.id)+'"]'),wrap=element.closest('.bl-fan-wrap'),slot=game.spatialVersion?{left:0,right:width,top:0,bottom:geometry.crowdHeight}:geometry.slots[i],p=c.fans[f.id]||{},initial=game.spatialVersion?{x:f.position.x+(width-game.room.width)/2,y:f.position.y+metrics.crowdPadding}:defaultFanPosition(slot,i);
-      wrap.style.cssText=`left:${slot.left}px;top:${slot.top}px;width:${slot.right-slot.left}px;height:${slot.bottom-slot.top}px`;
+      Object.assign(wrap.style,{left:`${slot.left}px`,top:`${slot.top}px`,width:`${slot.right-slot.left}px`,height:`${slot.bottom-slot.top}px`});
+      wrap.style.zIndex=f.hp===0?'1':'2';
       wrap.dataset.blSlot=`R${Math.floor(i/audienceColumns(game))+1} · ${i%audienceColumns(game)+1}`;
       element.style.setProperty('--bl-person-scale',size.spectators);
       const body={id:f.id,type:'fan',element,w:FAN_BODY.w*size.spectators,h:FAN_BODY.h*size.spectators,slot,x:game.spatialVersion?initial.x:valid(p.dx,null)===null?initial.x:(slot.left+slot.right)/2+p.dx,y:game.spatialVersion?initial.y:valid(p.dy,null)===null?initial.y:(slot.top+slot.bottom)/2+p.dy};if(!game.spatialVersion)clampSlot(body,slot);bodies.push(body);fanBodies.set(f.id,body);

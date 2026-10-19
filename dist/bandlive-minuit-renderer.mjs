@@ -41,7 +41,7 @@ export function createMinuitRenderer({getReducedEffects}){
       const actor=i<game.actors.length,element=host.querySelector(actor?'[data-bl-actor="'+CSS.escape(person.id)+'"]':'[data-bl-fan="'+CSS.escape(person.id)+'"]'),image=element.querySelector('.bl-cube');
       if(element.closest('[hidden]'))continue;
       const texture=new T.CanvasTexture(image);texture.colorSpace=T.SRGBColorSpace;texture.magFilter=T.NearestFilter;
-      const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));sprite.renderOrder=4;scene.add(sprite);
+      const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));sprite.renderOrder=actor?4:person.hp===0?2:3;scene.add(sprite);
       const shadow=disk(scene,0,0,0,.4,0x102e28,.17),model=actor?instrument(person.instrument):null;if(model)scene.add(model);
       entries.push({person,actor,element,image,texture,sprite,shadow,instrument:model,index:i,phase:i*2.31});
       if(actor){const color=[0xcbe9a2,0xf4b2c4,0xa6d9e8,0xf5da94][i%4],geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(new Float32Array(9),3));geometry.setIndex([0,1,2]);

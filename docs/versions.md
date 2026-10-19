@@ -4,6 +4,8 @@
 
 14 octobre 2026.
 
+- **Labo dégagé et foule lisible :** les réglages s’ouvrent en fenêtre modale, avec retour au jeu et fermeture par Échap. Une marge protège les bords du terrain. Les spectateurs conquis passent derrière les autres et ne gardent que leur effet de conquête; leur couleur identifie cet effet. L’icône de style s’illumine quand elle correspond à la chanson, les autres sont atténuées.
+
 - **Compteurs du show habillés comme les jauges du jeu :** énergie verte lumineuse, tempo doré avec son icône et ses dix segments, conquête rose et tour dans leurs propres capsules. Les icônes, valeurs et jauges restent visibles sur téléphone; les gains et dépenses gardent leur animation habituelle.
 
 - **Tests complets du show :** le laboratoire propose de 3 à 50 spectateurs, des raccourcis 6/12/25/50, un redémarrage au tour 1 avec graine reproductible ou aléatoire, le réglage énergie/tempo, une nouvelle main et une scène à mémoriser/restaurer. Les scénarios à 50 spectateurs s’exportent et se réimportent. Masquer les tests libère la vue; quitter le labo retrouve le show d’origine.

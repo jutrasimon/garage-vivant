@@ -46,7 +46,9 @@ const STYLE_PATHS={
 export function styleIcon(style){return `<span class="bl-style" data-bl-style="${esc(style)}" tabindex="0" aria-label="${esc(style)}"><svg viewBox="-2 0 26 24" aria-hidden="true"><path d="${STYLE_PATHS[style]||STYLE_PATHS.Indie}"/></svg></span>`;}
 const reaction=fan=>['explosion','trance','emotion'][Number(fan.id.slice(1))%3];
 function cubeHTML(actor,type){return `<canvas class="bl-cube" width="144" height="144" data-bl-cube="${esc(actor.id)}" data-bl-cube-type="${type}" aria-hidden="true"></canvas>`;}
+const EFFECT_COLORS={shock:'#e1b957',spotlight:'#83bfc9',chorus:'#b195cf'};
 function drawCube(canvas,actor,conquered=false){
+  if(actor.effect&&EFFECT_COLORS[actor.effect])actor={...actor,color:EFFECT_COLORS[actor.effect]};
   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,144,144);
   const box=(x,y,size)=>{ctx.fillStyle=actor.color||'#82a98b';ctx.beginPath();ctx.roundRect(x,y,size,size,7);ctx.fill();ctx.fillStyle='#ffffff35';ctx.fillRect(x,y,size,9);ctx.fillStyle='#223932';ctx.fillRect(x+size*.32,y+size*.32,size*.09,size*.09);ctx.fillRect(x+size*.58,y+size*.32,size*.09,size*.09);};
   if(conquered&&reaction(actor)==='explosion'){for(let i=0;i<9;i++)box(16+i%3*38,20+Math.floor(i/3)*38,29);}
@@ -63,12 +65,12 @@ function compactIntent(fan){return fan.intent==='bored'?'☾ −3':fan.intent===
 
 function fanHTML(game,fan){
   const conquered=fan.hp===0,amount=fan.max-fan.hp;
-  return `<div class="bl-fan-wrap"><button class="bl-fan ${conquered?'bl-conquered bl-reaction-'+reaction(fan):''}" data-bl-fan="${esc(fan.id)}" data-bl-target="${esc(fan.id)}" aria-label="${esc(fan.name)} · ${amount}/${fan.max} · ${conquered?'Conquis':esc(reactionText(game,fan))}">
+  return `<div class="bl-fan-wrap" style="z-index:${conquered?1:2};--bl-effect-color:${EFFECT_COLORS[fan.effect]||fan.color}"><button class="bl-fan ${conquered?'bl-conquered bl-reaction-'+reaction(fan):''}" data-bl-fan="${esc(fan.id)}" data-bl-target="${esc(fan.id)}" aria-label="${esc(fan.name)} · ${amount}/${fan.max} · ${conquered?'Conquis':esc(reactionText(game,fan))}">
     ${conquered?'<span class="bl-conquered-glow" aria-hidden="true"></span>':game.spatialVersion&&fan.reactionUsed?'':`<span class="bl-intent">${esc(game.spatialVersion?compactIntent(fan):reactionText(game,fan))}</span>`}
-    ${cubeHTML(fan,'fan')}<span class="bl-name"><b>${esc(fan.name)}</b>${styleIcon(favoriteStyle(fan))}</span>
-    <span class="bl-resistance" role="progressbar" aria-label="Conquête de ${esc(fan.name)}" aria-valuemin="0" aria-valuemax="${fan.max}" aria-valuenow="${amount}" ${conquered?'aria-valuetext="Conquis"':''}>
+    ${cubeHTML(fan,'fan')}${conquered?'':`<span class="bl-name ${favoriteStyle(fan)===currentSong(game)?.style?'bl-style-matches':'bl-style-muted'}"><b>${esc(fan.name)}</b>${styleIcon(favoriteStyle(fan))}</span>`}
+    <span class="bl-resistance" ${conquered?'hidden':''} role="progressbar" aria-label="Conquête de ${esc(fan.name)}" aria-valuemin="0" aria-valuemax="${fan.max}" aria-valuenow="${amount}" ${conquered?'aria-valuetext="Conquis"':''}>
       ${conquered?'<span class="bl-conquered-seal" aria-hidden="true"><span class="bl-conquered-heart">♥<i>✓</i></span><b>CONQUIS</b></span>':`<i style="width:${amount/fan.max*100}%"></i>`}
-    </span>${conquered?'':`<span class="bl-hp">${amount}/${fan.max}</span>${conquestBadge(game,fan)}`}
+    </span>${conquered?'':`<span class="bl-hp">${amount}/${fan.max}</span>`}${conquestBadge(game,fan)}
     <output class="bl-damage-preview" data-bl-preview="${esc(fan.id)}" hidden></output>
   </button></div>`;
 }
@@ -161,7 +163,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     if(['won','lost'].includes(game.phase)){game.phase='play';for(const f of game.fans){f.hp=f.max;f.conquered=false;f.reactionUsed=false;}}
     game.energy=3;preparing=false;animation=null;clearDrag();selectedCard=null;pendingChoice=null;
     if(card)game=replaceLabCard(game,card,{original:labOriginal.game});
-    labBaseline=structuredClone(game);labShoot=false;render();
+    labBaseline=structuredClone(game);labShoot=false;if(card)labPanelOpen=false;render();
   }
   function applyCurrentCard(card){
     const current=labOriginal?.game||game,result=applyShowCard(current,card);
@@ -171,7 +173,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     notify('« '+card.name+' » appliquée au show en cours.');
   }
   function testShowControlsHTML(){return `<div class="bl-test-show"><strong>TESTS DU SHOW</strong><label title="Nombre de spectateurs du prochain essai. Utilise Redémarrer le show pour appliquer.">Spectateurs<input id="bl-test-count" type="number" min="3" max="50" step="1" value="${game.fans.length}"></label>${[6,12,25,50].map(n=>`<button data-bl-test-count="${n}">${n}</button>`).join('')}<label title="Même graine et mêmes paramètres : même main de départ et même foule.">Graine<input id="bl-test-seed" type="number" min="0" max="4294967295" step="1" value="${game.seed}"></label><button id="bl-test-restart">Redémarrer le show · tour 1</button><button id="bl-test-new">Nouvel essai aléatoire</button><label title="Énergie disponible pour jouer les cartes : de 0 à 3.">Énergie<input id="bl-test-energy" type="number" min="0" max="3" step="1" value="${game.energy}"></label><label title="Tempo actuel du show : de 0 à 10.">Tempo<input id="bl-test-tempo" type="number" min="0" max="10" step="1" value="${game.tempo}"></label><button id="bl-test-resources">Appliquer les ressources</button><button id="bl-test-hand" title="Remplace la main par les cinq cartes suivantes, sans avancer le tour ni modifier les ressources.">Nouvelle main</button><button id="bl-test-save">Mémoriser la scène</button><span id="bl-test-message" role="status">Recommencer le test restaure la scène mémorisée. Quitter retrouve le show d’origine.</span></div>`;}
-function labControlsHTML(){return `<div class="bl-lab-controls" role="group" aria-label="Laboratoire physique"><strong>LABO · COPIE DU SHOW</strong>${game.cards.some(c=>c.kind==='lab:test')?`<button id="bl-lab-replay-card" ${animation?'disabled':''}>Rejouer la carte</button>`:''}${testShowControlsHTML()}<label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></div>`;}
+function labControlsHTML(){return `<dialog class="bl-lab-controls" aria-label="Laboratoire physique"><button id="bl-lab-dismiss" class="bl-lab-dismiss" autofocus>Retour au jeu ×</button><strong>LABO · COPIE DU SHOW</strong>${game.cards.some(c=>c.kind==='lab:test')?`<button id="bl-lab-replay-card" ${animation?'disabled':''}>Rejouer la carte</button>`:''}${testShowControlsHTML()}<label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></dialog>`;}
   function physicalPanelHTML(){return `<fieldset><legend>Foule physique</legend><p>Toutes les frappes repoussent leur cible. Un choc assez fort donne des cœurs au spectateur percuté, une fois par paire et par impulsion. Le laboratoire travaille sur une copie.</p>${[['force','Force d’impact',30,650,10],['grip','Adhérence au sol',1,12,.5],['rebound','Rebond',0,.85,.05],['hitStrength','Force des frappes',0,2,.05],['collisionRadius','Rayon de contact',16,48,1],['collisionThreshold','Seuil du choc (unités/s)',0,400,5],['collisionPower','Cœurs au contact',0,10,1]].map(([key,label,min,max,step])=>`<label>${label}<output data-bl-physics-output="${key}">${game.physics[key]}</output><input data-bl-physics="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${game.physics[key]}"></label>`).join('')}<label>Unité de rayon<output data-bl-radius-output>${game.room.radiusUnit}</output><input id="bl-radius-unit" type="range" min="60" max="240" step="5" value="${game.room.radiusUnit}"></label><button id="bl-lab">Ouvrir le laboratoire ↗</button><button id="bl-cards">Créer et gérer les cartes ↗</button></fieldset>`;}
   function showRadius(center,radius=1,core=0,{state='card',label=''}={}){
     const world=root.querySelector('.bl-world');if(!game?.spatialVersion||!world||!center)return;
@@ -199,11 +201,12 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
       }
     }
   }
+  function closeLabPanel(){labPanelOpen=false;root.querySelector('.bl-lab-controls')?.close();root.querySelector('#bl-test-toggle')?.focus();}
   function physicalChrome(){
     if(!game?.spatialVersion||preparing)return;
     const arena=root.querySelector('.bl-arena');arena.classList.add('bl-spatial');arena.dataset.theme=theme;
     const screen=root.querySelector('.bl-show-screen'),footer=document.createElement('div');footer.className='bl-lab-footer';
-    footer.innerHTML=`<div class="bl-footer-tools"><button id="bl-neighborhood">← Quartier</button><button id="bl-cards">Cartes</button><button id="bl-lab">Laboratoire</button></div>${labOriginal?labControlsHTML():''}`;screen.append(footer);if(labOriginal){footer.querySelector('.bl-lab-controls').hidden=!labPanelOpen;const toggle=document.createElement('button');toggle.id='bl-test-toggle';toggle.textContent=labPanelOpen?'Masquer les tests':'Tests du show';footer.querySelector('.bl-footer-tools').append(toggle);}
+    footer.innerHTML=`<div class="bl-footer-tools"><button id="bl-neighborhood">← Quartier</button><button id="bl-cards">Cartes</button><button id="bl-lab">Laboratoire</button></div>${labOriginal?labControlsHTML():''}`;screen.append(footer);if(labOriginal){const dialog=footer.querySelector('.bl-lab-controls');dialog.addEventListener('cancel',event=>{event.preventDefault();closeLabPanel();});dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeLabPanel();}});if(labPanelOpen)dialog.showModal();const toggle=document.createElement('button');toggle.id='bl-test-toggle';toggle.textContent='Tests du show';footer.querySelector('.bl-footer-tools').append(toggle);}
     const tools=footer.querySelector('.bl-footer-tools');if(versionButton)tools.append(versionButton);if(game.actors.length>6){tools.insertAdjacentHTML('beforeend',`<div class="bl-formation-pages"><button id="bl-page-prev" ${stage.page===0||animation?'disabled':''}>◀</button><span>Musiciens ${stage.page*6+1}–${Math.min(game.actors.length,stage.page*6+6)}/${game.actors.length}</span><button id="bl-page-next" ${stage.page===Math.ceil(game.actors.length/6)-1||animation?'disabled':''}>▶</button></div>`);}
     for(const el of [root.querySelector('#bl-layout'),root.querySelector('.bl-top-controls')])if(el)tools.append(el);
     const song=root.querySelector('.bl-song-progress');if(song){const details=document.createElement('details');details.className='bl-song-details';details.innerHTML='<summary>Chansons</summary>';details.append(song);tools.append(details);}
@@ -589,8 +592,9 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(target.id==='bl-cards'){clearDrag();cardEditor.open();return;}
     if(target.id==='bl-neighborhood'){if(labOriginal){animation=null;clearDrag();const original=labOriginal;labOriginal=null;game=original.game;preparing=original.preparing;labShoot=false;}onReturn();return;}
     if(target.dataset.blTheme){theme=target.dataset.blTheme;render();return;}
-    if(target.id==='bl-lab'){startLab();return;}
-    if(target.id==='bl-test-toggle'){labPanelOpen=!labPanelOpen;root.querySelector('.bl-lab-controls').hidden=!labPanelOpen;target.textContent=labPanelOpen?'Masquer les tests':'Tests du show';return;}
+    if(target.id==='bl-lab'){if(labOriginal){labPanelOpen=true;root.querySelector('.bl-lab-controls').showModal();}else startLab();return;}
+    if(target.id==='bl-lab-dismiss'){closeLabPanel();return;}
+    if(target.id==='bl-test-toggle'){labPanelOpen=true;root.querySelector('.bl-lab-controls').showModal();return;}
     if(labOriginal&&(target.dataset.blTestCount||target.id.startsWith('bl-test-'))){
       if(target.dataset.blTestCount){root.querySelector('#bl-test-count').value=target.dataset.blTestCount;return;}
       if(!['bl-test-restart','bl-test-new','bl-test-resources','bl-test-hand','bl-test-save'].includes(target.id))return;
@@ -610,7 +614,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(target.id==='bl-lab-close'){animation=null;clearDrag();const original=labOriginal;labOriginal=null;game=original.game;preparing=original.preparing;labShoot=false;render();return;}
     if(target.id==='bl-lab-replay-card'&&!animation){const card=game.catalog.cards.find(c=>c.id==='lab:test');if(card)startLab(card);return;}
     if(target.id==='bl-lab-reset'){animation=null;clearDrag();game=structuredClone(labBaseline);labShoot=false;render();return;}
-    if(target.id==='bl-lab-shoot'){if(stage.editing)stage.toggle();labShoot=!labShoot;render();return;}
+    if(target.id==='bl-lab-shoot'){if(stage.editing)stage.toggle();labShoot=!labShoot;labPanelOpen=false;render();return;}
     if(target.id==='bl-lab-import'){root.querySelector('#bl-lab-file').click();return;}
     if(target.id==='bl-lab-export'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({format:'garage-vivant-bandlive-lab',version:1,initial:labBaseline,current:game,layout:JSON.parse(stage.exportCode())},null,2)],{type:'application/json'}));a.href=url;a.download='BandLive-scenario.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
     if(labOriginal&&labShoot&&target.dataset.blTarget&&!animation){const point=stage.point(event.clientX,event.clientY);if(point&&point.x>=game.room.margin&&point.x<=game.room.width-game.room.margin&&point.y>=game.room.margin&&point.y<=game.room.height-game.room.margin){const r=impactCrowd(game,{center:point,targets:inRadius(game,point,1,{alive:false}).map(f=>f.id),strengthById:Object.fromEntries(game.fans.map(f=>[f.id,Math.hypot(f.position.x-point.x,f.position.y-point.y)>.4*game.room.radiusUnit?.5:1])),kind:labKind,strength:labStrength});animation={started:performance.now(),events:[r.event,...r.effects],motions:r.motions,duration:Math.max(1600,r.effects.length*420+500),cued:new Set()};render();stage.showMotion(r.motions,0);requestAnimationFrame(animate);}return;}
