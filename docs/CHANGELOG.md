@@ -1,5 +1,7 @@
 # V0.9.0 — 14 octobre 2026
 
+Bandeau du show : jauges lumineuses d’énergie et de tempo, icônes visibles, compteurs de tour et conquête distincts, adaptés aux petits écrans.
+
 Panneau de tests du show : 3 à 50 spectateurs, redémarrage reproductible ou aléatoire, ressources, nouvelle main, point de reprise et export/import du scénario.
 
 Les impacts attendent l’arrivée de leur projectile. La prévision des cartes à rayon utilise un seul arc et des montants de cœurs sur les spectateurs surlignés.

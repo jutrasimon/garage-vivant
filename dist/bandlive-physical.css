@@ -49,6 +49,46 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 .bl-spatial [data-bl-impact-kind=direct] .bl-impact-kind{top:68px;background:#f8bdcf;color:#542d46;border-color:#ffe3f0;font-size:12px}
 .bl-test-show{display:flex;align-items:center;flex-wrap:wrap;gap:7px;flex-basis:100%;border-bottom:1px solid #e9cb7844;padding-bottom:9px}.bl-test-show input{width:62px;padding:6px;border:1px solid #8aa99b;border-radius:5px;background:#fffbed;color:#203c3c;font:inherit}.bl-test-show #bl-test-seed{width:100px}.bl-test-show [role=status]{flex-basis:100%;color:#e8d9ae}.bl-lab-controls{max-height:260px;overflow:auto}
 .bl-lab-controls[hidden]{display:none}
+
+/* Keep the game's illuminated meters in the compact top HUD. */
+.bl-spatial .bl-hud{grid-template-columns:minmax(180px,1fr) auto minmax(420px,1fr);gap:18px}
+.bl-spatial .bl-resources{gap:9px;justify-content:flex-end;max-width:none}
+.bl-spatial .bl-resource-dock{gap:13px;padding:9px 13px;border:1px solid #a8d1b84d;border-radius:15px;background:linear-gradient(145deg,#24464d,#162f38);box-shadow:0 5px 15px #10232a40,inset 0 1px #e1ffdf17}
+.bl-spatial .bl-resource-dock .bl-resource-meter{width:86px}
+.bl-spatial .bl-resource-dock .bl-tempo-meter{width:118px;border-left:1px solid #c9dfc22b;padding-left:13px}
+.bl-spatial .bl-meter-heading{flex-direction:row;align-items:center;gap:9px;margin-bottom:7px}
+.bl-spatial .bl-meter-name{font-size:8px;letter-spacing:.9px;gap:4px}
+.bl-spatial .bl-meter-name svg{display:block;width:17px;height:17px}
+.bl-spatial .bl-meter-heading strong{font-size:29px;letter-spacing:-1px;color:var(--bl-meter-bright);text-shadow:0 0 14px var(--bl-meter-glow)}
+.bl-spatial .bl-meter-heading strong small{font-size:11px;opacity:.65;margin-left:2px}
+.bl-spatial .bl-resource-dock .is-full strong{color:var(--bl-meter-bright);text-shadow:0 0 14px var(--bl-meter-glow)}
+.bl-spatial .bl-meter-track{display:grid;height:12px;gap:4px;margin-top:0;opacity:1}
+.bl-spatial .bl-meter-track i{border-radius:3px}
+.bl-spatial .bl-tempo-meter .bl-meter-track{gap:3px}
+.bl-spatial .bl-tempo-meter .bl-meter-track i:nth-child(3n+1){height:8px}
+.bl-spatial .bl-tempo-meter .bl-meter-track i:nth-child(3n+2){height:10px}
+.bl-spatial .bl-meter-delta{left:auto;right:0;top:22px;z-index:2;font-size:20px}
+.bl-spatial .bl-resources>.bl-hud-turn,.bl-spatial .bl-resources>.bl-hud-conquered{position:relative;display:flex;flex-direction:column;justify-content:center;gap:6px;box-sizing:border-box;height:68px;padding:10px 12px;border:1px solid #b9d0c32b;border-radius:13px;background:linear-gradient(145deg,#3b5960,#29434b);box-shadow:inset 0 1px #ffffff0c}
+.bl-spatial .bl-resources>.bl-hud-turn small,.bl-spatial .bl-resources>.bl-hud-conquered small{font-size:8px;letter-spacing:1px;font-weight:800;color:#bdcfc5}
+.bl-spatial .bl-resources>.bl-hud-turn b,.bl-spatial .bl-resources>.bl-hud-conquered b{font-size:24px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bl-spatial .bl-resources>.bl-hud-conquered{border-color:#f6b9d23d;min-width:89px}
+.bl-spatial .bl-hud-conquered b{color:#ffcee2;text-shadow:0 0 12px #f894bd33}
+.bl-spatial .bl-hud-conquered b:before{content:'♥';font-size:13px;margin-right:5px;color:#f3a6c6}
+.bl-spatial .bl-hud-conquered:after{content:'';height:3px;border-radius:3px;background:linear-gradient(to right,#f3a6c6 var(--bl-conquered-percent),#6c647155 var(--bl-conquered-percent))}
+@media(min-width:651px) and (max-width:1100px){.bl-spatial .bl-hud{grid-template-columns:minmax(140px,1fr) auto}.bl-spatial .bl-resources{grid-column:2}.bl-spatial .bl-hud>.bl-theme-tabs{display:none}.bl-spatial .bl-show-title h2{font-size:18px}}
+@media(max-width:650px){
+ .bl-spatial .bl-hud{grid-template-columns:minmax(0,1fr);grid-template-rows:24px 50px;gap:5px;padding:8px 10px}
+ .bl-spatial .bl-show-title{min-width:0}.bl-spatial .bl-show-title .eyebrow{display:none}.bl-spatial .bl-show-title h2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:24px}
+ .bl-spatial .bl-resources{justify-content:space-between;gap:5px;width:100%}
+ .bl-spatial .bl-resource-dock{gap:8px;padding:5px 8px;border-radius:11px;flex:1;justify-content:space-between}
+ .bl-spatial .bl-resource-dock .bl-resource-meter{width:65px}.bl-spatial .bl-resource-dock .bl-tempo-meter{width:80px;padding-left:8px}
+ .bl-spatial .bl-meter-heading{gap:4px;margin-bottom:4px}.bl-spatial .bl-meter-heading strong{font-size:22px}.bl-spatial .bl-meter-heading strong small{font-size:9px}
+ .bl-spatial .bl-meter-name{font-size:7px;letter-spacing:.2px;gap:2px}.bl-spatial .bl-meter-name svg{width:12px;height:12px}
+ .bl-spatial .bl-meter-track{height:9px;gap:3px}.bl-spatial .bl-tempo-meter .bl-meter-track{gap:2px}.bl-spatial .bl-tempo-meter .bl-meter-track i:nth-child(3n+1){height:6px}.bl-spatial .bl-tempo-meter .bl-meter-track i:nth-child(3n+2){height:8px}
+ .bl-spatial .bl-resources>.bl-hud-turn,.bl-spatial .bl-resources>.bl-hud-conquered{height:50px;padding:5px 7px;gap:4px;min-width:0;border-radius:10px}
+ .bl-spatial .bl-resources>.bl-hud-turn small,.bl-spatial .bl-resources>.bl-hud-conquered small{font-size:7px;letter-spacing:.4px}.bl-spatial .bl-resources>.bl-hud-turn b,.bl-spatial .bl-resources>.bl-hud-conquered b{font-size:18px}.bl-spatial .bl-hud-conquered b:before{font-size:10px;margin-right:3px}.bl-spatial .bl-meter-delta{top:17px;font-size:17px}
+}
+@media(max-width:359px){.bl-spatial .bl-resource-dock{gap:6px;padding-inline:6px}.bl-spatial .bl-resource-dock .bl-energy-meter{width:53px}.bl-spatial .bl-resource-dock .bl-tempo-meter{width:65px;padding-left:6px}.bl-spatial .bl-meter-heading{gap:2px}.bl-spatial .bl-meter-name{font-size:6px;letter-spacing:0}.bl-spatial .bl-meter-heading strong{font-size:20px}}
 .bl-radius-layer[data-state=potential] .bl-radius-outer{fill:transparent;stroke:#a8c5bb88;stroke-width:1.5;stroke-dasharray:10 10}
 .bl-radius-layer[data-state=potential] .bl-radius-label{fill:#c4d5ce;font-size:12px}
 .bl-radius-layer[data-state=triggered] .bl-radius-outer{fill:#ff8db837;stroke:#ffe5f1;stroke-width:4;stroke-dasharray:none;filter:drop-shadow(0 0 7px #ff79b3);animation:bl-conquest-radius-announce .5s ease-out}

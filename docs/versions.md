@@ -4,6 +4,8 @@
 
 14 octobre 2026.
 
+- **Compteurs du show habillés comme les jauges du jeu :** énergie verte lumineuse, tempo doré avec son icône et ses dix segments, conquête rose et tour dans leurs propres capsules. Les icônes, valeurs et jauges restent visibles sur téléphone; les gains et dépenses gardent leur animation habituelle.
+
 - **Tests complets du show :** le laboratoire propose de 3 à 50 spectateurs, des raccourcis 6/12/25/50, un redémarrage au tour 1 avec graine reproductible ou aléatoire, le réglage énergie/tempo, une nouvelle main et une scène à mémoriser/restaurer. Les scénarios à 50 spectateurs s’exportent et se réimportent. Masquer les tests libère la vue; quitter le labo retrouve le show d’origine.
 
 - **Impact à l’arrivée du projectile :** les cœurs, ressources et déplacements sont appliqués après le vol de la particule, une seule fois. La visée des cartes à rayon garde un seul arc vers leur cible centrale; les spectateurs touchés sont illuminés et portent leur gain de cœurs prévu.

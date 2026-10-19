@@ -208,6 +208,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     for(const el of [root.querySelector('#bl-layout'),root.querySelector('.bl-top-controls')])if(el)tools.append(el);
     const song=root.querySelector('.bl-song-progress');if(song){const details=document.createElement('details');details.className='bl-song-details';details.innerHTML='<summary>Chansons</summary>';details.append(song);tools.append(details);}
     const resources=root.querySelector('.bl-resources'),dock=root.querySelector('.bl-resource-dock');if(dock)resources.insertBefore(dock,resources.lastElementChild);
+    for(const stat of resources.querySelectorAll(':scope>span')){const label=stat.querySelector('small')?.textContent;if(label==='TOUR')stat.classList.add('bl-hud-turn');if(label==='CONQUIS'){stat.classList.add('bl-hud-conquered');stat.style.setProperty('--bl-conquered-percent',game.fans.filter(f=>f.hp===0).length/game.fans.length*100+'%');}}
     root.querySelector('.bl-hud').insertAdjacentHTML('beforeend',`<div class="bl-theme-tabs" role="group" aria-label="Direction artistique">${[['mint','Menthe'],['midnight','Minuit'],['pop','Pop']].map(([id,label])=>`<button data-bl-theme="${id}" aria-pressed="${theme===id}">${label}</button>`).join('')}</div>`);
   }
   function topControlsHTML(finished,live){
