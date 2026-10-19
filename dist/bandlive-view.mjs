@@ -3,7 +3,7 @@ import {replaceLabCard} from './bandlive-lab-card.mjs?v=0.9.0';
 import {restartTestShow,setTestResources,redrawTestHand} from './bandlive-test-controls.mjs?v=0.9.0';
 import {applyShowCard} from './bandlive-show-card.mjs?v=0.9.0';
 import {createCatalog,compileCard,catalogCard} from './bandlive-catalog.mjs?v=0.9.0';
-import {initializeCrowd,physicsSettings,inRadius} from './bandlive-crowd.mjs?v=0.9.0';
+import {initializeCrowd,physicsSettings,inRadius,clampPosition} from './bandlive-crowd.mjs?v=0.9.0';
 import {createBandLive} from './bandlive.mjs?v=0.9.0';
 import {levelRewardsHTML,showLevelRewards} from './level-rewards.mjs?v=0.9.0';
 import {cardFace} from './card-view.mjs?v=0.9.0';
@@ -573,7 +573,7 @@ function labControlsHTML(){return `<dialog class="bl-lab-controls" aria-label="L
     if(dragPointer===event.pointerId&&!root.hasPointerCapture(event.pointerId)){cancelCard({pointer:lastPointer,suppressClick:true});return;}
     if(touchGrab?.pointerId===event.pointerId&&Math.hypot(event.clientX-touchGrab.x,event.clientY-touchGrab.y)>=8){const id=touchGrab.id;touchGrab=null;if(startDrag(id)){event.preventDefault();dragPointer=event.pointerId;root.setPointerCapture(event.pointerId);ghost=makeDragGhost(id);document.body.append(ghost);}}
     if(selectedCard&&dragPointer===null&&!stage.editing){dragPoint={x:event.clientX,y:event.clientY};schedulePreview();inspection.move(dragPoint);aim.movePointer(dragPoint);}
-    if(labOriginal&&labShoot&&!stage.editing){const spot=stage.point(event.clientX,event.clientY);if(spot&&spot.y>=0&&spot.y<=game.room.height){if(labKind==='split'){root.querySelector('.bl-radius-layer')?.remove();showSplitLine(spot);}else showRadius(spot,1,.4);}}
+    if(labOriginal&&labShoot&&!stage.editing){const spot=labPoint(event);root.querySelector('.bl-radius-layer')?.remove();if(spot){if(labKind==='split')showSplitLine(spot);else showRadius(spot,1,.4);}}
     if(dragPointer!==event.pointerId)return;
     event.preventDefault();moveDrag(event.clientX,event.clientY);
   });
@@ -594,7 +594,19 @@ function labControlsHTML(){return `<dialog class="bl-lab-controls" aria-label="L
   root.addEventListener('mouseout',event=>{if(!event.relatedTarget||!root.contains(event.relatedTarget))hideTip();});root.addEventListener('focusout',hideTip);
   root.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('.bl-audience')&&selectedCard){event.preventDefault();perform(selectedCard,'audience');}});
   root.addEventListener('click',event=>{if(ignoreClick&&event.detail>0){ignoreClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
+  function labPoint(event){
+    if(!event.target.closest('.bl-world'))return null;
+    const spot=stage.point(event.clientX,event.clientY),r=game.room;
+    return spot&&spot.x>=0&&spot.x<=r.width&&spot.y>=0&&spot.y<=r.height?clampPosition(game,spot):null;
+  }
   root.addEventListener('click',async event=>{
+    if(labOriginal&&labShoot&&!stage.editing&&!animation){
+      const point=labPoint(event);
+      if(point){
+        const r=impactCrowd(game,{center:point,targets:(labKind==='split'?game.fans:inRadius(game,point,1,{alive:false})).map(f=>f.id),strengthById:Object.fromEntries(game.fans.map(f=>[f.id,labKind!=='split'&&Math.hypot(f.position.x-point.x,f.position.y-point.y)>.4*game.room.radiusUnit?.5:1])),kind:labKind,strength:labStrength});
+        animation={started:performance.now(),events:[r.event,...r.effects],motions:r.motions,duration:Math.max(1600,r.effects.length*420+500),cued:new Set()};render();stage.showMotion(r.motions,0);requestAnimationFrame(animate);return;
+      }
+    }
     if(event.target.closest('[data-bl-style]')&&!selectedCard)return;
     const target=event.target.closest('button,[data-bl-target]');if(!target){if(selectedCard)cancelCard({pointer:{x:event.clientX,y:event.clientY}});return;}
     if(target.id==='bl-put-back'){cancelCard({pointer:{x:event.clientX,y:event.clientY}});return;}
@@ -627,7 +639,6 @@ function labControlsHTML(){return `<dialog class="bl-lab-controls" aria-label="L
     if(target.id==='bl-lab-shoot'){if(stage.editing)stage.toggle();labShoot=!labShoot;labPanelOpen=false;render();return;}
     if(target.id==='bl-lab-import'){root.querySelector('#bl-lab-file').click();return;}
     if(target.id==='bl-lab-export'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({format:'garage-vivant-bandlive-lab',version:1,initial:labBaseline,current:game,layout:JSON.parse(stage.exportCode())},null,2)],{type:'application/json'}));a.href=url;a.download='BandLive-scenario.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
-    if(labOriginal&&labShoot&&target.dataset.blTarget&&!animation){const point=stage.point(event.clientX,event.clientY);if(point&&point.x>=game.room.margin&&point.x<=game.room.width-game.room.margin&&point.y>=game.room.margin&&point.y<=game.room.height-game.room.margin){const r=impactCrowd(game,{center:point,targets:(labKind==='split'?game.fans:inRadius(game,point,1,{alive:false})).map(f=>f.id),strengthById:Object.fromEntries(game.fans.map(f=>[f.id,labKind!=='split'&&Math.hypot(f.position.x-point.x,f.position.y-point.y)>.4*game.room.radiusUnit?.5:1])),kind:labKind,strength:labStrength});animation={started:performance.now(),events:[r.event,...r.effects],motions:r.motions,duration:Math.max(1600,r.effects.length*420+500),cued:new Set()};render();stage.showMotion(r.motions,0);requestAnimationFrame(animate);}return;}
     if(target.id==='bl-layout'||target.id==='bl-layout-close'){clearDrag();selectedCard=null;pendingChoice=null;stage.toggle();syncLayoutTools();if(stage.editing)root.closest('main')?.scrollTo({top:0});}
     else if(target.id==='bl-layout-undo'){stage.undo();syncLayoutTools();}
     else if(target.id==='bl-layout-reset'){stage.reset();syncLayoutTools();}

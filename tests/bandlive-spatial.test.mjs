@@ -46,6 +46,19 @@ test('split impact moves every body horizontally away from a vertical line, with
  const onLine=structuredClone(before);onLine.fans=[{...onLine.fans[0],position:{...point}}];simulateImpulse(onLine,{center:point,targets:['f0'],kind:'split',strength:.5});assert(onLine.fans[0].position.x>point.x);assert.equal(onLine.fans[0].position.y,point.y);
 });
 
+test('split releases compressed columns at either wall, including conquered bodies and fifty spectators',()=>{
+ for(const count of [8,50])for(const right of [false,true]){
+  const {g}=fixture(),game=restartTestShow(g,{count,seed:42});
+  game.fans.forEach((f,i)=>{f.position={x:right?1050:70,y:52+i*256/(count-1)};if(i%2===0){f.hp=0;f.conquered=true;}});
+  const copy=structuredClone(game),args={center:{x:right?920:200,y:180},targets:game.fans.map(f=>f.id),kind:'split',strength:2};
+  const result=simulateImpulse(game,args),again=simulateImpulse(copy,args);assert.deepEqual(result,again);validateCrowd(game);
+  for(const [i,a] of game.fans.entries())for(const b of game.fans.slice(i+1))assert(Math.hypot(a.position.x-b.position.x,a.position.y-b.position.y)>=game.physics.collisionRadius*2-1,`No compressed pair: ${count}, ${a.id}/${b.id}`);
+  assert(Math.max(...game.fans.map(f=>f.position.x))-Math.min(...game.fans.map(f=>f.position.x))>32);
+  assert.deepEqual(result.frames.at(-1).map(({id,x,y})=>({id,x,y})),game.fans.map(f=>({id:f.id,...f.position})));
+  assert.deepEqual(restoreBandLive(game,{laboratory:true}),game);
+ }
+});
+
 test('split combined with power keeps a separate circular area for power',()=>{
  const {g,c}=fixture({card:{target:'point',radius:1,coreRadius:0,effects:[newEffect('split'),{...newEffect('power'),impactStrength:0}]}}),point={x:560,y:180};
  const preview=previewCard(g,c.id,'audience',{point});assert(preview.ok);assert.equal(preview.areas.filter(a=>a.shape==='line').length,1);assert.equal(preview.areas.filter(a=>a.kind==='card'&&a.radius===1).length,1);
@@ -96,8 +109,8 @@ test('a radius following a pushed target exposes both ordered centers instead of
 });
 function collisionLine(game){for(const [i,f] of game.fans.entries())moveSpectator(game,f.id,i<3?{x:300+i*120,y:180}:{x:740+(i%3)*100,y:60+Math.floor((i-3)/3)*90});}
 test('collision optimization preserves complete reference trajectories for 12 and 50 spectators',()=>{
- // Recorded from 0568515 before optimizing: frames, contacts and final positions.
- const references={12:{push:'01f5dad34ca5dc9694b9e06665a48373b44785ab36d144e7e6b416c0c37a59de',pull:'c59e1ede3f561fbfa413208d48a18fdedb87a6128bfe0df7bc24481f855043f2',vortex:'f52c5d8102cb8477dac1e2cf39e3cbf6caad8ae9d25afdbd8de91e0fadc3501c',jump:'a1a6f20063305a8ac0f11ab098cc3bc8c48cd1b967b9b5054ab83c721900788b',return:'cb92df0b800d89c94d4ec92e7132e34cacbbb9b54193d038253c7d575b527bbd'},50:{push:'049eabb6773ffafa1f4d04695a07c6ab9d07ce300a111b020cf115cfec4e1f14',pull:'dbcaf63006041dc9addfa597d1786363f803c65577116522ff08a78e25972d4b',vortex:'d689d8a5c376a1c4171d031ef4c0532af8666e5143e66e55675cef5630944f8b',jump:'42ef32c4456c7ffeb39533b81bedd7023e83a6a95f258ebe161b84d0adb6f2c7',return:'b8a5c46f409ad851799cdbee477d65b923e12a9b36c50cfb8d65842e9a891947'}};
+ // Recorded from 0568515; the 50-body vortex/return references include the collinear-contact fix.
+ const references={12:{push:'01f5dad34ca5dc9694b9e06665a48373b44785ab36d144e7e6b416c0c37a59de',pull:'c59e1ede3f561fbfa413208d48a18fdedb87a6128bfe0df7bc24481f855043f2',vortex:'f52c5d8102cb8477dac1e2cf39e3cbf6caad8ae9d25afdbd8de91e0fadc3501c',jump:'a1a6f20063305a8ac0f11ab098cc3bc8c48cd1b967b9b5054ab83c721900788b',return:'cb92df0b800d89c94d4ec92e7132e34cacbbb9b54193d038253c7d575b527bbd'},50:{push:'049eabb6773ffafa1f4d04695a07c6ab9d07ce300a111b020cf115cfec4e1f14',pull:'dbcaf63006041dc9addfa597d1786363f803c65577116522ff08a78e25972d4b',vortex:'aa3278d65a110422c6665e85f5d78c6f36e8c2340fcb1254fa70493c548e5f09',jump:'42ef32c4456c7ffeb39533b81bedd7023e83a6a95f258ebe161b84d0adb6f2c7',return:'6cf3f700974cc629710ac633835af2bd49e4322b4c44d4624a36d202755d7cd2'}};
  for(const count of [12,50])for(const kind of Object.keys(references[count])){
   const {game}=crowdStressFixture(count),center={x:430,y:180},motion=simulateImpulse(game,{center,targets:inRadius(game,center,1.2,{alive:false}).map(f=>f.id),kind,strength:1.3});
   const digest=createHash('sha256').update(JSON.stringify({motion,positions:game.fans.map(f=>f.position)})).digest('hex');assert.equal(digest,references[count][kind],count+' spectators, '+kind);

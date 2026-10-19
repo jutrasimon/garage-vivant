@@ -2,6 +2,8 @@
 
 ## V0.9.0 — Foule physique et atelier de cartes {#v090}
 
+- **Poussée et collisions :** les colonnes comprimées peuvent se décaler latéralement et se séparer au bord du terrain. Dans le labo, viser la marge du public place l’impact sur sa limite jouable; l’aperçu et le clic utilisent le même emplacement.
+
 - **Cœurs plus discrets :** une jauge compacte de la largeur du personnage, avec les chiffres contrastés et la progression prévue toujours visible.
 
 14 octobre 2026.

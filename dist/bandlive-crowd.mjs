@@ -4,6 +4,15 @@ export const ROOM=Object.freeze({width:1120,height:360,margin:52,bodyRadius:23,r
 export const PHYSICS=Object.freeze({force:420,grip:3,rebound:.28,collisionPower:2,collisionThreshold:60,collisionRadius:32,hitStrength:.75});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=x=>Math.round(x*1000)/1000;
+// Perfect columns need a tiny lateral normal to escape compression; otherwise
+// every correction stays vertical, even when there is free floor beside them.
+function contactNormal(dx,dy,d){
+ if(d&&Math.abs(dx)<.01&&Math.abs(dy)>0){
+  const blend=(1-Math.abs(dx)/.01)**2,nx=dx/d+.1*blend,ny=dy/d*Math.sqrt(1-.01*blend*blend),length=Math.hypot(nx,ny);
+  return {nx:nx/length,ny:ny/length};
+ }
+ return {nx:d?dx/d:1,ny:d?dy/d:0};
+}
 export function physicsSettings(value={}){
  const ranges={force:[30,650],grip:[1,12],rebound:[0,.85],collisionPower:[0,10],collisionThreshold:[0,400],collisionRadius:[16,48],hitStrength:[0,2]};
  return Object.fromEntries(Object.entries(ranges).map(([k,[a,b]])=>{const n=Number.isFinite(value[k])?clamp(value[k],a,b):PHYSICS[k];return [k,k==='collisionPower'?Math.round(n):n];}));
@@ -33,11 +42,13 @@ export function clampPosition(game,p){const r=game.room;return {x:round(clamp(p.
 export function moveSpectator(game,id,position){const f=game.fans.find(f=>f.id===id);if(!game.spatialVersion||!f||!Number.isFinite(position?.x)||!Number.isFinite(position?.y))return false;f.position=clampPosition(game,position);return true;}
 export function separateCrowd(game,heldId=null){
  const min=physicsSettings(game.physics).collisionRadius*2,limit=(min-.01)**2;
- for(let pass=0;pass<20;pass++){
+ for(let pass=0;pass<400;pass++){
+  // Keep normal crowds cheap. Only a visibly compressed pile needs extra passes.
+  if(pass>=20&&pass%20===0&&!game.fans.some((a,i)=>game.fans.slice(i+1).some(b=>distance(a.position,b.position)<min-1)))break;
   let changed=false;
   for(let i=0;i<game.fans.length;i++)for(let j=i+1;j<game.fans.length;j++){
    const a=game.fans[i],b=game.fans[j],dx=b.position.x-a.position.x,dy=b.position.y-a.position.y;if(dx*dx+dy*dy>=limit)continue;const d=Math.hypot(dx,dy);changed=true;
-   const nx=d?dx/d:1,ny=d?dy/d:0,shift=min-d+.02,ma=a.id===heldId?0:b.id===heldId?1:.5;
+   const {nx,ny}=contactNormal(dx,dy,d),shift=min-d+.02,ma=a.id===heldId?0:b.id===heldId?1:.5;
    a.position=clampPosition(game,{x:a.position.x-nx*shift*ma,y:a.position.y-ny*shift*ma});b.position=clampPosition(game,{x:b.position.x+nx*shift*(1-ma),y:b.position.y+ny*shift*(1-ma)});
   }
   if(!changed)break;
@@ -74,7 +85,7 @@ export function simulateImpulse(game,{center,targets,kind='push',strength=1,stre
    const a=bodies[i],b=bodies[j],dx=b.x-a.x,dy=b.y-a.y;
    // Reject distant pairs before the expensive exact distance; contact order stays unchanged.
    if(dx*dx+dy*dy>=minSquared)continue;const d=Math.hypot(dx,dy);
-   const nx=d?dx/d:1,ny=d?dy/d:0,overlap=(min-d)/2+.01;
+   const {nx,ny}=contactNormal(dx,dy,d),overlap=(min-d)/2+.01;
    a.x-=nx*overlap;a.y-=ny*overlap;b.x+=nx*overlap;b.y+=ny*overlap;
    const va=a.vx*nx+a.vy*ny,vb=b.vx*nx+b.vy*ny,impact=va-vb;
    if(impact>0){const impulse=impact*(1+settings.rebound)/2;a.vx-=nx*impulse;a.vy-=ny*impulse;b.vx+=nx*impulse;b.vy+=ny*impulse;a.spin=Math.max(a.spin,.8);b.spin=Math.max(b.spin,.8);}
