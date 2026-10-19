@@ -1,5 +1,6 @@
 import {createCardEditor} from './bandlive-card-editor.mjs?v=0.9.0';
 import {replaceLabCard} from './bandlive-lab-card.mjs?v=0.9.0';
+import {restartTestShow,setTestResources,redrawTestHand} from './bandlive-test-controls.mjs?v=0.9.0';
 import {applyShowCard} from './bandlive-show-card.mjs?v=0.9.0';
 import {createCatalog,compileCard,catalogCard} from './bandlive-catalog.mjs?v=0.9.0';
 import {initializeCrowd,physicsSettings,inRadius} from './bandlive-crowd.mjs?v=0.9.0';
@@ -78,7 +79,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   const restoreVersion=()=>{if(versionButton&&versionHome)versionHome.insertBefore(versionButton,versionNext?.parentElement===versionHome?versionNext:null);};
   let enabled=true,game=null,preparing=false,draft={groupId:'',memberIds:null,seed:2040,audienceSize:RULES.minAudience},selectedCard=null,activeCard=null,dragPointer=null,dragPoint=null,dragFrame=null,ghost=null,animation=null,sound=false,storageProblem=false,aimGeometry=null,previewFrame=null;
   try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){enabled=true;if(saved.draft)draft=saved.draft;if(saved.game)game=restoreBandLive(saved.game);}}catch{notify('La répétition BandLive enregistrée ne peut pas être reprise. Le quartier est disponible.');}
-  let labOriginal=null,labBaseline=null,labKind='push',labStrength=1,labShoot=false,theme='midnight';
+  let labOriginal=null,labBaseline=null,labKind='push',labStrength=1,labShoot=false,labPanelOpen=true,theme='midnight';
   const stage=createBandLiveStage({root,getReducedEffects,onLayout:()=>{aimGeometry=null;syncLayoutTools();},onPositions:()=>{aimGeometry=null;previewMemo=null;persist();}});
   const cardEditor=createCardEditor({getWorld,onSave:onCatalogSave,onTest:startLab,onApplyCurrent:applyCurrentCard,canApplyCurrent:()=>{const current=labOriginal?.game||game;return !!current?.spatialVersion&&['choose','play'].includes(current.phase);}});
   const aim=createBandLiveAim();
@@ -153,7 +154,7 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
   }
   function startLab(card=null){
     if(stage.editing)stage.toggle();
-    const entering=!labOriginal;if(entering)labOriginal={game,preparing};
+    const entering=!labOriginal;if(entering){labOriginal={game,preparing};labPanelOpen=true;}
     if(entering)game=labOriginal.game?structuredClone(labOriginal.game):createBandLive({people:getWorld().people.slice(0,4),songs:[{id:'lab',title:'Essai musical',style:'Jazz',turns:5}],audienceSize:12,spatial:true,catalog:getWorld().cardCatalog});
     if(!game.spatialVersion){initializeCrowd(game);game.catalog=createCatalog();for(const a of game.actors)a.bandLiveDeck=game.cards.filter(c=>c.actorId===a.id).map(c=>c.kind);for(const c of game.cards)c.definition=compileCard(catalogCard(game.catalog,c.instrument,c.kind));}
     if(game.phase==='choose')chooseSong(game,game.songs[0].id);
@@ -169,7 +170,8 @@ export function createBandLiveModule({getWorld,onOpen,onReturn,onDisable,canStar
     Object.assign(current,result.game);game=current;selectedCard=result.cardId;persist();render();
     notify('« '+card.name+' » appliquée au show en cours.');
   }
-function labControlsHTML(){return `<div class="bl-lab-controls" role="group" aria-label="Laboratoire physique"><strong>LABO · COPIE DU SHOW</strong>${game.cards.some(c=>c.kind==='lab:test')?`<button id="bl-lab-replay-card" ${animation?'disabled':''}>Rejouer la carte</button>`:''}<label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></div>`;}
+  function testShowControlsHTML(){return `<div class="bl-test-show"><strong>TESTS DU SHOW</strong><label title="Nombre de spectateurs du prochain essai. Utilise Redémarrer le show pour appliquer.">Spectateurs<input id="bl-test-count" type="number" min="3" max="50" step="1" value="${game.fans.length}"></label>${[6,12,25,50].map(n=>`<button data-bl-test-count="${n}">${n}</button>`).join('')}<label title="Même graine et mêmes paramètres : même main de départ et même foule.">Graine<input id="bl-test-seed" type="number" min="0" max="4294967295" step="1" value="${game.seed}"></label><button id="bl-test-restart">Redémarrer le show · tour 1</button><button id="bl-test-new">Nouvel essai aléatoire</button><label title="Énergie disponible pour jouer les cartes : de 0 à 3.">Énergie<input id="bl-test-energy" type="number" min="0" max="3" step="1" value="${game.energy}"></label><label title="Tempo actuel du show : de 0 à 10.">Tempo<input id="bl-test-tempo" type="number" min="0" max="10" step="1" value="${game.tempo}"></label><button id="bl-test-resources">Appliquer les ressources</button><button id="bl-test-hand" title="Remplace la main par les cinq cartes suivantes, sans avancer le tour ni modifier les ressources.">Nouvelle main</button><button id="bl-test-save">Mémoriser la scène</button><span id="bl-test-message" role="status">Recommencer le test restaure la scène mémorisée. Quitter retrouve le show d’origine.</span></div>`;}
+function labControlsHTML(){return `<div class="bl-lab-controls" role="group" aria-label="Laboratoire physique"><strong>LABO · COPIE DU SHOW</strong>${game.cards.some(c=>c.kind==='lab:test')?`<button id="bl-lab-replay-card" ${animation?'disabled':''}>Rejouer la carte</button>`:''}${testShowControlsHTML()}<label>Impact<select id="bl-lab-kind">${['push','pull','vortex','jump','return'].map((k,i)=>`<option value="${k}" ${labKind===k?'selected':''}>${['Repousser','Attirer','Tourbillon','Bondir','Retour élastique'][i]}</option>`).join('')}</select></label><label>Force<select id="bl-lab-strength"><option value="0.5" ${labStrength===.5?'selected':''}>Faible</option><option value="1" ${labStrength===1?'selected':''}>Moyenne</option><option value="2" ${labStrength===2?'selected':''}>Forte</option></select></label><button id="bl-lab-shoot" aria-pressed="${labShoot}">${labShoot?'✓ Vise un endroit au sol':'Tester un impact'}</button><button id="bl-lab-reset">Recommencer le test</button><button id="bl-lab-export">Exporter le scénario</button><button id="bl-lab-import">Importer un scénario</button><input id="bl-lab-file" type="file" accept="application/json" hidden><button id="bl-lab-close">Quitter le labo</button></div>`;}
   function physicalPanelHTML(){return `<fieldset><legend>Foule physique</legend><p>Toutes les frappes repoussent leur cible. Un choc assez fort donne des cœurs au spectateur percuté, une fois par paire et par impulsion. Le laboratoire travaille sur une copie.</p>${[['force','Force d’impact',30,650,10],['grip','Adhérence au sol',1,12,.5],['rebound','Rebond',0,.85,.05],['hitStrength','Force des frappes',0,2,.05],['collisionRadius','Rayon de contact',16,48,1],['collisionThreshold','Seuil du choc (unités/s)',0,400,5],['collisionPower','Cœurs au contact',0,10,1]].map(([key,label,min,max,step])=>`<label>${label}<output data-bl-physics-output="${key}">${game.physics[key]}</output><input data-bl-physics="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${game.physics[key]}"></label>`).join('')}<label>Unité de rayon<output data-bl-radius-output>${game.room.radiusUnit}</output><input id="bl-radius-unit" type="range" min="60" max="240" step="5" value="${game.room.radiusUnit}"></label><button id="bl-lab">Ouvrir le laboratoire ↗</button><button id="bl-cards">Créer et gérer les cartes ↗</button></fieldset>`;}
   function showRadius(center,radius=1,core=0,{state='card',label=''}={}){
     const world=root.querySelector('.bl-world');if(!game?.spatialVersion||!world||!center)return;
@@ -201,7 +203,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(!game?.spatialVersion||preparing)return;
     const arena=root.querySelector('.bl-arena');arena.classList.add('bl-spatial');arena.dataset.theme=theme;
     const screen=root.querySelector('.bl-show-screen'),footer=document.createElement('div');footer.className='bl-lab-footer';
-    footer.innerHTML=`<div class="bl-footer-tools"><button id="bl-neighborhood">← Quartier</button><button id="bl-cards">Cartes</button><button id="bl-lab">Laboratoire</button></div>${labOriginal?labControlsHTML():''}`;screen.append(footer);
+    footer.innerHTML=`<div class="bl-footer-tools"><button id="bl-neighborhood">← Quartier</button><button id="bl-cards">Cartes</button><button id="bl-lab">Laboratoire</button></div>${labOriginal?labControlsHTML():''}`;screen.append(footer);if(labOriginal){footer.querySelector('.bl-lab-controls').hidden=!labPanelOpen;const toggle=document.createElement('button');toggle.id='bl-test-toggle';toggle.textContent=labPanelOpen?'Masquer les tests':'Tests du show';footer.querySelector('.bl-footer-tools').append(toggle);}
     const tools=footer.querySelector('.bl-footer-tools');if(versionButton)tools.append(versionButton);if(game.actors.length>6){tools.insertAdjacentHTML('beforeend',`<div class="bl-formation-pages"><button id="bl-page-prev" ${stage.page===0||animation?'disabled':''}>◀</button><span>Musiciens ${stage.page*6+1}–${Math.min(game.actors.length,stage.page*6+6)}/${game.actors.length}</span><button id="bl-page-next" ${stage.page===Math.ceil(game.actors.length/6)-1||animation?'disabled':''}>▶</button></div>`);}
     for(const el of [root.querySelector('#bl-layout'),root.querySelector('.bl-top-controls')])if(el)tools.append(el);
     const song=root.querySelector('.bl-song-progress');if(song){const details=document.createElement('details');details.className='bl-song-details';details.innerHTML='<summary>Chansons</summary>';details.append(song);tools.append(details);}
@@ -587,6 +589,23 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(target.id==='bl-neighborhood'){if(labOriginal){animation=null;clearDrag();const original=labOriginal;labOriginal=null;game=original.game;preparing=original.preparing;labShoot=false;}onReturn();return;}
     if(target.dataset.blTheme){theme=target.dataset.blTheme;render();return;}
     if(target.id==='bl-lab'){startLab();return;}
+    if(target.id==='bl-test-toggle'){labPanelOpen=!labPanelOpen;root.querySelector('.bl-lab-controls').hidden=!labPanelOpen;target.textContent=labPanelOpen?'Masquer les tests':'Tests du show';return;}
+    if(labOriginal&&(target.dataset.blTestCount||target.id.startsWith('bl-test-'))){
+      if(target.dataset.blTestCount){root.querySelector('#bl-test-count').value=target.dataset.blTestCount;return;}
+      if(!['bl-test-restart','bl-test-new','bl-test-resources','bl-test-hand','bl-test-save'].includes(target.id))return;
+      if(animation){notify('Attends la fin de l’impact.');return;}
+      try{
+        if(target.id==='bl-test-restart'||target.id==='bl-test-new'){
+          const count=root.querySelector('#bl-test-count').valueAsNumber,seed=target.id==='bl-test-new'?crypto.getRandomValues(new Uint32Array(1))[0]:root.querySelector('#bl-test-seed').valueAsNumber;
+          const next=restartTestShow(game,{count,seed});clearDrag();game=next;labBaseline=structuredClone(game);labShoot=false;
+        }else if(target.id==='bl-test-resources'){setTestResources(game,root.querySelector('#bl-test-energy').valueAsNumber,root.querySelector('#bl-test-tempo').valueAsNumber);clearDrag();}
+        else if(target.id==='bl-test-hand'){redrawTestHand(game);clearDrag();}
+        else labBaseline=structuredClone(game);
+        render();
+        root.querySelector('#bl-test-message').textContent=target.id==='bl-test-save'?'Scène mémorisée. Recommencer le test retrouvera cet état.':target.id==='bl-test-resources'?'Ressources appliquées.':target.id==='bl-test-hand'?'Nouvelle main prête.':'Show redémarré au tour 1. Nouveau point de reprise mémorisé.';
+      }catch(error){root.querySelector('#bl-test-message').textContent=error.message;}
+      return;
+    }
     if(target.id==='bl-lab-close'){animation=null;clearDrag();const original=labOriginal;labOriginal=null;game=original.game;preparing=original.preparing;labShoot=false;render();return;}
     if(target.id==='bl-lab-replay-card'&&!animation){const card=game.catalog.cards.find(c=>c.id==='lab:test');if(card)startLab(card);return;}
     if(target.id==='bl-lab-reset'){animation=null;clearDrag();game=structuredClone(labBaseline);labShoot=false;render();return;}
@@ -638,7 +657,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
   }
   root.addEventListener('input',event=>{const input=event.target;if(game?.spatialVersion&&input.dataset.blPhysics){stage.tunePhysics({[input.dataset.blPhysics]:Number(input.value)});root.querySelector(`[data-bl-physics-output="${input.dataset.blPhysics}"]`).textContent=input.value;persist();return;}if(game?.spatialVersion&&input.id==='bl-radius-unit'){stage.tuneRadius(Number(input.value));root.querySelector('[data-bl-radius-output]').textContent=input.value;persist();return;}tuneLayout(input);});
   root.addEventListener('change',async event=>{
-    if(event.target.id==='bl-lab-file'){try{const data=JSON.parse(await event.target.files[0].text());if(data.format!=='garage-vivant-bandlive-lab'||data.version!==1)throw Error('Scénario inconnu.');const initial=restoreBandLive(data.initial),current=restoreBandLive(data.current);if(!current.spatialVersion)throw Error('Ce scénario ne contient pas de foule physique.');animation=null;clearDrag();labBaseline=initial;game=current;render();if(data.layout?.profile)stage.importProfile(data.layout.profile);}catch(error){notify(error.message);}return;}
+    if(event.target.id==='bl-lab-file'){try{const data=JSON.parse(await event.target.files[0].text());if(data.format!=='garage-vivant-bandlive-lab'||data.version!==1)throw Error('Scénario inconnu.');const initial=restoreBandLive(data.initial,{laboratory:true}),current=restoreBandLive(data.current,{laboratory:true});if(!current.spatialVersion)throw Error('Ce scénario ne contient pas de foule physique.');animation=null;clearDrag();labBaseline=initial;game=current;render();if(data.layout?.profile)stage.importProfile(data.layout.profile);}catch(error){notify(error.message);}return;}
     if(event.target.dataset.blPhysics||event.target.id==='bl-radius-unit'){stage.commitEdit();return;}
     if(event.target.id==='bl-lab-kind'){labKind=event.target.value;return;}if(event.target.id==='bl-lab-strength'){labStrength=Number(event.target.value);return;}
     if(event.target.id==='bl-layout-hand'){stage.commitEdit();syncLayoutTools();}

@@ -294,7 +294,7 @@ export function endTurn(game) {
   return {ok:true};
 }
 
-export function restoreBandLive(input) {
+export function restoreBandLive(input,{laboratory=false}={}) {
   const fail=()=>{throw Error('Répétition BandLive invalide.');};
   if(!input||![1,2,3,4].includes(input.version)||!['choose','play','won','lost'].includes(input.phase)||!Array.isArray(input.actors)||!Array.isArray(input.songs))fail();
   const game=structuredClone(input);
@@ -321,7 +321,7 @@ export function restoreBandLive(input) {
   if(game.turn>0&&(!lengths.length||game.songId!==game.usedSongs.at(-1)||game.section<1||game.section>lengths.at(-1)||game.turn!==lengths.slice(0,-1).reduce((n,x)=>n+x,0)+game.section))fail();
   if(game.phase==='choose'&&game.turn>0&&(lengths.length!==1||game.section!==lengths[0]))fail();
   if(game.phase==='play'&&(!currentSong(game)||game.turn<1||game.section<1)||game.phase==='lost'&&(game.usedSongs.length!==2||game.section!==lengths.at(-1)))fail();
-  if(!Array.isArray(game.fans)||game.fans.length<RULES.minAudience||game.fans.length>RULES.maxAudience||new Set(game.fans.map(f=>f?.id)).size!==game.fans.length||game.fans.some(f=>!f||typeof f.id!=='string'||!f.id||typeof f.name!=='string'||!Number.isInteger(f.max)||f.max<1||f.max>1000||!Number.isInteger(f.hp)||f.hp<0||f.hp>f.max||!(game.reactionVersion?Object.keys(REACTIONS):['bored','solo']).includes(f.intent)||!(game.audienceRules?.styles||game.songs.map(s=>s.style)).includes(f.favorite)||!!f.conquered!==(f.hp===0)))fail();
+  if(!Array.isArray(game.fans)||game.fans.length<RULES.minAudience||game.fans.length>(laboratory&&game.spatialVersion?50:RULES.maxAudience)||new Set(game.fans.map(f=>f?.id)).size!==game.fans.length||game.fans.some(f=>!f||typeof f.id!=='string'||!f.id||typeof f.name!=='string'||!Number.isInteger(f.max)||f.max<1||f.max>1000||!Number.isInteger(f.hp)||f.hp<0||f.hp>f.max||!(game.reactionVersion?Object.keys(REACTIONS):['bored','solo']).includes(f.intent)||!(game.audienceRules?.styles||game.songs.map(s=>s.style)).includes(f.favorite)||!!f.conquered!==(f.hp===0)))fail();
   if(game.gridColumns!==undefined&&(!Number.isInteger(game.gridColumns)||game.gridColumns<3||game.gridColumns>6||game.gridColumns>game.fans.length))fail();
   for(const f of game.fans){if(f.turnStyle!==undefined&&(game.turn===0||game.phase==='choose'||f.turnStyle!==currentSong(game)?.style)||f.noBoredom!==undefined&&(f.noBoredom!==true||game.turn===0||game.phase==='choose'))fail();}
   if(game.reactionVersion!==undefined&&![1,2].includes(game.reactionVersion))fail();

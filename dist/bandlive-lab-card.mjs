@@ -22,5 +22,5 @@ export function replaceLabCard(game,card,{original=null}={}){
  next.catalog.cards.push(recipe);owner.bandLiveDeck[Number(slot.id.split(':').at(-1))]='lab:test';slot.kind='lab:test';slot.definition=compileCard(recipe);
  const hand=next.hand.filter(id=>id!==slot.id);next.deck=next.deck.filter(id=>id!==slot.id);next.discard=next.discard.filter(id=>id!==slot.id);
  if(hand.length===5)next.deck.push(hand.pop());next.hand=[slot.id,...hand];next.energy=3;
- return restoreBandLive(next);
+ return restoreBandLive(next,{laboratory:true});
 }

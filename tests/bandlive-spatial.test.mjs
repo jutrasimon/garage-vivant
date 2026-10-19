@@ -13,6 +13,18 @@ import {replaceLabCard} from '../dist/bandlive-lab-card.mjs';
 import {applyShowCard} from '../dist/bandlive-show-card.mjs';
 import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
+import {restartTestShow,setTestResources,redrawTestHand} from '../dist/bandlive-test-controls.mjs';
+
+test('complete lab controls reproduce crowds up to 50 without changing the live show',()=>{
+ const world=preparedConcert({instruments:['drums','keys','voice']}).world,original=beginBandLiveConcert(world).game;chooseSong(original,original.songs[0].id);const before=structuredClone(original);
+ for(const count of [3,6,12,25,50]){
+  const game=restartTestShow(original,{count,seed:42});assert.equal(game.fans.length,count);assert.equal(game.turn,1);assert.equal(game.played,0);assert.equal(game.hand.length,5);validateCrowd(game);assert.equal(new Set(game.fans.map(f=>f.id)).size,count);
+  assert.deepEqual(restartTestShow(game,{count,seed:42}),game);assert.deepEqual(restoreBandLive(game,{laboratory:true}),game);if(count>12)assert.throws(()=>restoreBandLive(game));
+  assert.equal(replaceLabCard(game,game.catalog.cards[0]).fans.length,count);
+  const hand=[...game.hand];setTestResources(game,0,10);assert.equal(game.energy,0);assert.equal(game.tempo,10);redrawTestHand(game);assert.notDeepEqual(game.hand,hand);assert.equal(new Set([...game.hand,...game.deck,...game.discard]).size,game.cards.length);restoreBandLive(game,{laboratory:true});
+ }
+ for(const count of [0,2,51,3.5,NaN])assert.throws(()=>restartTestShow(original,{count}));assert.throws(()=>setTestResources(original,4,0));assert.deepEqual(original,before);
+});
 function fixture({card=null,catalog=createCatalog(),spatial=true}={}){
  const people=createWorld(55,4).people;people[0].instrument='drums';
  if(card){const c=duplicateCard(catalog,'drums:note');Object.assign(c,card,{id:c.id,instrument:'drums',starter:0});people[0].bandLiveDecks={drums:[c.id,'note','note','special','special']};}

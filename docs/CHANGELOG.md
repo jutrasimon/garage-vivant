@@ -1,5 +1,7 @@
 # V0.9.0 — 14 octobre 2026
 
+Panneau de tests du show : 3 à 50 spectateurs, redémarrage reproductible ou aléatoire, ressources, nouvelle main, point de reprise et export/import du scénario.
+
 Les impacts attendent l’arrivée de leur projectile. La prévision des cartes à rayon utilise un seul arc et des montants de cœurs sur les spectateurs surlignés.
 
 Foule physique et atelier de cartes, visée et impacts optimisés avec tests de stress à 50 spectateurs, tir unique au centre des zones au sol, rayons de chaîne explicites, aperçu d’effet commun et annulation complète des cartes à la souris et au tactile. [Notes complètes](./versions.md#v090).

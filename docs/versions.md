@@ -4,6 +4,8 @@
 
 14 octobre 2026.
 
+- **Tests complets du show :** le laboratoire propose de 3 à 50 spectateurs, des raccourcis 6/12/25/50, un redémarrage au tour 1 avec graine reproductible ou aléatoire, le réglage énergie/tempo, une nouvelle main et une scène à mémoriser/restaurer. Les scénarios à 50 spectateurs s’exportent et se réimportent. Masquer les tests libère la vue; quitter le labo retrouve le show d’origine.
+
 - **Impact à l’arrivée du projectile :** les cœurs, ressources et déplacements sont appliqués après le vol de la particule, une seule fois. La visée des cartes à rayon garde un seul arc vers leur cible centrale; les spectateurs touchés sont illuminés et portent leur gain de cœurs prévu.
 
 - **Une vraie foule pour les nouveaux shows :** placement organique, positions sauvegardées, voisins et anciennes rangées remplacés par des rayons. Les cartes peuvent viser un spectateur ou un endroit au sol, avec un cœur et une couronne à deux couleurs.
