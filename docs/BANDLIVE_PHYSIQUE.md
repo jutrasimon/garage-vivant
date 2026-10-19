@@ -4,6 +4,8 @@ Depuis la version 0.9.0, les nouveaux shows et répétitions utilisent une foule
 
 ## Jouer avec la foule
 
+Le projectile vole pendant 350 ms avant d’appliquer la carte. Pendant ce vol, les cœurs et les positions restent inchangés et les commandes de jeu sont verrouillées. À l’arrivée, la carte et son énergie sont consommées, le résultat est sauvegardé et le mouvement démarre. Recharger avant l’arrivée retrouve l’état précédant le tir; recharger après retrouve le résultat sans rejouer l’impact. Les cartes à rayon affichent un seul arc vers le centre visé, une surbrillance des spectateurs touchés et un petit montant de cœurs prévu par spectateur.
+
 La visée regroupe les mouvements reçus pendant une même image : le dernier point remplace les précédents, sans file de calculs en retard. Reposer la carte annule aussi la prévision en attente. Les rectangles des personnages sont mesurés ensemble et réutilisés jusqu’au prochain défilement, redimensionnement ou réglage de disposition. Les contacts physiques gardent leur ordre et leurs résultats; les paires éloignées évitent les calculs de distance coûteux. Pendant un impact, une image physique identique n’est pas réappliquée et chaque contact est annoncé une seule fois.
 
 Pour une carte visant **un endroit au sol**, un seul arc rejoint le centre du cercle sous le curseur ou le doigt. Il reste à cet endroit en passant au-dessus d’un spectateur. Le tir rejoint ce centre, puis une onde se propage dans le rayon et son cœur; les spectateurs reçoivent les effets de la zone. Une carte mixte avec du tempo conserve ce seul arc. L’aperçu indique toujours les personnages affectés, les collisions et les conquêtes en chaîne.

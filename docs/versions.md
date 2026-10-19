@@ -4,6 +4,8 @@
 
 14 octobre 2026.
 
+- **Impact à l’arrivée du projectile :** les cœurs, ressources et déplacements sont appliqués après le vol de la particule, une seule fois. La visée des cartes à rayon garde un seul arc vers leur cible centrale; les spectateurs touchés sont illuminés et portent leur gain de cœurs prévu.
+
 - **Une vraie foule pour les nouveaux shows :** placement organique, positions sauvegardées, voisins et anciennes rangées remplacés par des rayons. Les cartes peuvent viser un spectateur ou un endroit au sol, avec un cœur et une couronne à deux couleurs.
 - **Un seul tir pour les cartes au sol :** l’arc rejoint le centre du cercle sous le curseur ou le doigt, même au-dessus d’un spectateur et même si la carte gagne aussi du tempo. Au relâchement, le tir rejoint ce point puis une onde se propage dans le rayon et son cœur. Les spectateurs touchés restent indiqués dans l’aperçu de zone.
 - **Visée et impacts allégés :** les mouvements sont regroupés par image et seule la position la plus récente est calculée. Les mesures des personnages sont réutilisées, puis renouvelées après déplacement de la vue ou changement de disposition. Les collisions écartent rapidement les paires éloignées; les animations ne réappliquent plus une image physique identique et les contacts sont annoncés une seule fois. Une scène de stress à 50 spectateurs vérifie les prévisions, collisions et annulations à la souris et au tactile. Les trajectoires des cinq effets restent identiques au calcul précédent. Le clic conserve aussi la précision du point visé au sol.

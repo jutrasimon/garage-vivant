@@ -29,6 +29,7 @@ import {decorateCube,enableAudio,playSound} from './v5-view.mjs?v=0.9.0';
 
 const CARD_GLYPHS={guitar:'♬',bass:'↑',drums:'◉',keys:'≋',voice:'♫',sax:'♪',trumpet:'♩',percussion:'◉'};
 const STORAGE='garage-vivant-bandlive-v1';
+const SHOT_FLIGHT_MS=350;
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STYLE_PATHS={
   Indie:'M5 18V6l14-3v12M5 18c0 4-6 4-6 0s6-4 6 0M19 15c0 4-6 4-6 0s6-4 6 0',
@@ -279,6 +280,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(game&&!preparing){for(const canvas of root.querySelectorAll('[data-bl-cube]')){const actor=canvas.dataset.blCubeType==='actor'?game.actors.find(a=>a.id===canvas.dataset.blCube):game.fans.find(f=>f.id===canvas.dataset.blCube);drawCube(canvas,actor,actor.hp===0);}stage.mount(root.querySelector('.bl-world'),game);aim.attach(root.querySelector('.bl-world'));if(selectedCard)inspection.pin(selectedCard);drawEffects();}
     syncLayoutTools();if(viewport&&scroll){viewport.scrollLeft=scroll.x;if(audience)audience.scrollTop=scroll.y;}
     drawEffects();
+    if(animation?.pending)lockCardFlight();else delete root.dataset.blFlight;
     if(!game||preparing){stage.mount(null,game);inspection.hide();}
     if(liveShow()&&['won','lost'].includes(game.phase)&&!animation&&lastReport!==game){root.querySelector('.bl-concert-result')?.scrollIntoView({block:'start'});lastReport=game;}
   }
@@ -339,10 +341,10 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     if(ghost)inspection.hide();else{inspection.pin(id);inspection.outcome(outcome);}
     const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`);
     // A ground card aims at one impact point; affected bodies are an area forecast.
-    const targetIds=c.target==='point'?[]:valid?[...new Set(preview.event.hits.filter(h=>h.kind!=='collision').map(h=>h.id))]:fan?[fan.id]:[];
+    const targetIds=c.target==='point'?[]:c.target==='radius'?(fan?[fan.id]:[]):valid?[...new Set(preview.event.hits.filter(h=>h.kind!=='collision').map(h=>h.id))]:fan?[fan.id]:[];
     if(pendingChoice?.type==='duo'&&!targetIds.includes(pendingChoice.targetId))targetIds.push(pendingChoice.targetId);
     const ends=targetIds.map(id=>{const position=preview?.areas?.filter(a=>a.kind==='card').flatMap(a=>a.targets).find(t=>t.id===id)?.position,before=game.fans.find(f=>f.id===id)?.position;return position&&before&&Math.hypot(position.x-before.x,position.y-before.y)>4?stage.crowdPoint(position):pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`);}).filter(Boolean);
-    if(c.tempo&&c.target!=='point'){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
+    if(c.tempo&&c.target!=='point'&&c.target!=='radius'){const tempo=dragPoint?{pointer:dragPoint}:target?pointFor(fan?`[data-bl-fan="${CSS.escape(fan.id)}"] .bl-cube`:'.bl-audience'):null;if(tempo)ends.push({...tempo,kind:'tempo'});}
     if(game.spatialVersion){
       const center=c.target==='point'?(dragPoint?stage.point(dragPoint.x,dragPoint.y):fan?.position||{x:game.room.width/2,y:game.room.height/2}):fan?.position;
       if(c.radius&&center)showRadius(center,c.radius,c.coreRadius);
@@ -380,7 +382,7 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
       const after=preview.game.fans.find(f=>f.id===fan.id);const node=root.querySelector('[data-bl-fan="'+fan.id+'"]');node?.classList.add('bl-forecast');node?.style.setProperty('--bl-forecast',(1-after.hp/fan.max)*100+'%');const power=hits.filter(h=>h.id===fan.id).reduce((n,h)=>n+h.power,0),out=previewLayer.querySelector('[data-bl-preview="'+fan.id+'"]'),anchor=root.querySelector('[data-bl-fan="'+fan.id+'"]');
       const direct=preview.event.hits.some(h=>h.id===fan.id&&h.kind!=='collision')||preview.areas?.some(a=>a.kind==='card'&&a.targets.some(t=>t.id===fan.id)),collision=preview.event.hits.some(h=>h.id===fan.id&&h.kind==='collision'),chain=preview.effects.some(e=>e.type==='conquest'&&e.targets.includes(fan.id)),kind=direct?'direct':collision?'collision':chain?'chain':'reaction';
       node?.setAttribute('data-bl-impact-kind',kind);
-      if(node&&!direct){const label=document.createElement('span');label.className='bl-impact-kind';label.textContent=(collision?'Choc':chain?'En chaîne':'Réaction')+(fan.hp>after.hp?' +'+(fan.hp-after.hp)+' ♥':'');node.append(label);}
+      if(node){const label=document.createElement('span');label.className='bl-impact-kind';label.textContent=(direct?'':collision?'Choc ':chain?'En chaîne ':'Réaction ')+(fan.hp>after.hp?'+'+(fan.hp-after.hp)+' ♥':direct?'Effet':'');node.append(label);}
       if(out&&anchor){
         const {fans,clip}=readAimGeometry(),r=fans.get(fan.id).rect;
         if(r.bottom<Math.max(clip.top,0)||r.top>Math.min(clip.bottom,innerHeight)||r.right<0||r.left>innerWidth)continue;
@@ -455,13 +457,30 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     }
     if(c.discard&&!options.discardId){clearDrag();selectedCard=id;pendingChoice={type:'discard',id};render();root.querySelector('.bl-card-choice')?.scrollIntoView({block:'nearest'});return false;}
     if(c.target==='point'&&!options.point)options.point=dragPoint?stage.point(dragPoint.x,dragPoint.y):game.fans.find(f=>f.id===targetId)?.position||{x:game.room.width/2,y:game.room.height/2};
-    const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`),r=playCard(game,id,targetId,options);
+    const origin=pointFor(`[data-bl-actor="${CSS.escape(card.actorId)}"] .bl-cube`),next=structuredClone(game),r=playCard(next,id,targetId,options),pointer=dragPoint;
     clearDrag();
     if(!r.ok){cancelCard({suppressClick:true});announce(r.message+' Carte reposée en main.');return false;}
     selectedCard=null;pendingChoice=null;
-    animation={motions:r.motions,started:performance.now(),origin,events:[r.event,...r.effects],cued:new Set(),duration:(1+r.effects.filter(e=>e.type!=='motion').length)*420+500};
+    const direct=[...new Set(r.event.hits.filter(h=>h.kind!=='collision').map(h=>h.id))],world=root.querySelector('.bl-world'),rect=world.getBoundingClientRect(),scale=Number(world.dataset.scale)||1;
+    const targets=c.target==='point'?[stage.crowdPoint(options.point)]:c.target==='radius'?[pointFor('[data-bl-fan="'+CSS.escape(targetId)+'"] .bl-cube')]:direct.length?direct.map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`)).filter(Boolean):game.fans.some(f=>f.id===targetId)?[pointFor(`[data-bl-fan="${CSS.escape(targetId)}"] .bl-cube`)]:pointer?[{x:(pointer.x-rect.left)/scale,y:(pointer.y-rect.top)/scale}]:[pointFor('.bl-audience')];
+    animation={pending:{base:game,next,cardId:id},shots:targets.filter(Boolean),shotColor:c.tempo&&!Object.hasOwn(c,'power')?'#ffe184':'#f8bdcf',motions:r.motions,flightMs:SHOT_FLIGHT_MS,started:performance.now(),origin,events:[r.event,...r.effects],cued:new Set(),duration:SHOT_FLIGHT_MS+(1+r.effects.filter(e=>e.type!=='motion').length)*420+500};
+    const shot=animation;shot.timer=setTimeout(()=>landCardFlight(shot),SHOT_FLIGHT_MS);
     if(sound)playSound({type:'card',instrument:card.instrument});
-    persist();render();if(r.motions?.length)stage.showMotion(r.motions,0);requestAnimationFrame(animate);return true;
+    lockCardFlight();requestAnimationFrame(animate);return true;
+  }
+
+  function lockCardFlight(){
+    root.dataset.blFlight='travelling';
+    for(const button of root.querySelectorAll('[data-bl-card],#bl-end,#bl-layout,#bl-cards,#bl-lab,#bl-simulate'))button.disabled=true;
+    const card=root.querySelector(`[data-bl-card="${CSS.escape(animation.pending.cardId)}"]`);if(card)card.style.visibility='hidden';
+  }
+  function landCardFlight(shot){
+    if(animation!==shot||!shot.pending)return;
+    clearTimeout(shot.timer);
+    if(game!==shot.pending.base){animation=null;render();return;}
+    // Resolve once at delivery, keeping the live world's game reference and saved rules intact.
+    Object.assign(game,shot.pending.next);shot.pending=null;delete root.dataset.blFlight;
+    persist();render();if(shot.motions?.length)stage.showMotion(shot.motions,0);
   }
 
   function juice(events,origin=null){
@@ -478,15 +497,15 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
     const elapsed=performance.now()-animation.started,reduced=getReducedEffects()||matchMedia('(prefers-reduced-motion: reduce)').matches;
     const label=(text,pos,kind='')=>{if(!pos)return;const el=document.createElement('span');el.className='bl-juice-label '+kind;el.textContent=text;el.style.left=pos.x+'px';el.style.top=pos.y+'px';if(reduced)el.style.animation='none';world.append(el);setTimeout(()=>el.remove(),1000);};
     if(!animation.contactTimeline){let offset=0;const contacts=[];for(const motion of animation.motions||[]){for(const contact of motion.contacts)contacts.push({frame:offset+contact.frame,contact});offset+=motion.frames.length;}animation.contactTimeline={total:offset,contacts,next:0};}
-    const timeline=animation.contactTimeline,motionFrame=reduced?timeline.total:Math.floor(Math.min(1,elapsed/Math.min(1800,animation.duration))*timeline.total);
+    const timeline=animation.contactTimeline,motionElapsed=elapsed-(animation.flightMs||0),motionFrame=animation.pending||motionElapsed<0?-1:reduced?timeline.total:Math.floor(Math.min(1,motionElapsed/Math.min(1800,animation.duration-(animation.flightMs||0)))*timeline.total);
     while(timeline.next<timeline.contacts.length&&timeline.contacts[timeline.next].frame<=motionFrame){
       const {contact}=timeline.contacts[timeline.next++],point=stage.crowdPoint(contact.point);label('✦ IMPACT',point,'bl-juice-support bl-juice-collision');
       for(const hit of contact.hits||[]){const pos=pointFor(`[data-bl-fan="${CSS.escape(hit.id)}"] .bl-cube`);label('+'+hit.gain+' ♥',pos?{x:pos.x,y:pos.y-30}:point,'bl-juice-collision');if(hit.after===0)label('✦ CONQUIS !',pos||point);}
     }
     for(const [i,event] of animation.events.filter(e=>e.type!=='motion').entries()){
       const age=(elapsed-i*420)/1000;if(age<0||age>1)continue;
-      const source=event.fanId?pointFor(`[data-bl-fan="${CSS.escape(event.fanId)}"] .bl-cube`):event.actorId?pointFor(`[data-bl-actor="${CSS.escape(event.actorId)}"] .bl-cube`):animation.origin||{x:w/2,y:180};
-      if(!animation.cued.has(i)){
+      const source=event.type==='card'&&animation.origin?animation.origin:event.fanId?pointFor(`[data-bl-fan="${CSS.escape(event.fanId)}"] .bl-cube`):event.actorId?pointFor(`[data-bl-actor="${CSS.escape(event.actorId)}"] .bl-cube`):animation.origin||{x:w/2,y:180};
+      if(age>=SHOT_FLIGHT_MS/1000&&!animation.pending&&!animation.cued.has(i)){
         animation.cued.add(i);
         if(event.type!=='card')label(event.type==='finale'?'♫ FINALE':event.name,source,'bl-juice-support');
         if(event.tempoGain){label('♫ +'+event.tempoGain+' TEMPO',source,'bl-juice-support bl-juice-tempo');world.classList.add('bl-tempo-flash');setTimeout(()=>world.classList.remove('bl-tempo-flash'),500);if(!reduced)world.querySelector('.bl-scene-canvas')?.animate([{translate:'0 0'},{translate:'-3px 1px'},{translate:'3px -1px'},{translate:'0 0'}],{duration:250});}
@@ -504,19 +523,20 @@ function labControlsHTML(){return `<div class="bl-lab-controls" role="group" ari
         if(sound)playSound({type:event.type==='card'?'shot':'impact'});
       }
       const ground=event.type==='card'&&event.point?stage.crowdPoint(event.point):null;
-      const targets=ground?[ground]:(event.targets||(event.hits||[]).filter(h=>h.kind!=='collision').map(h=>h.id)).map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`));
+      const targets=ground?[ground]:event.type==='card'&&animation.shots?animation.shots:(event.targets||(event.hits||[]).filter(h=>h.kind!=='collision').map(h=>h.id)).map(id=>pointFor(`[data-bl-fan="${CSS.escape(id)}"] .bl-cube`));
       for(const target of targets){
-        if(!target||!source)continue;const p=Math.min(1,age/.35);ctx.strokeStyle=event.effect==='chorus'?'#d3b8ee':event.effect==='spotlight'?'#fff2b6':'#f8bdcf';ctx.globalAlpha=Math.max(0,1-age);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(source.x,source.y);ctx.lineTo(source.x+(target.x-source.x)*p,source.y+(target.y-source.y)*p);ctx.stroke();
+        if(!target||!source)continue;const p=Math.min(1,age/(SHOT_FLIGHT_MS/1000)),x=source.x+(target.x-source.x)*p,y=source.y+(target.y-source.y)*p;ctx.strokeStyle=event.type==='card'&&animation.shotColor?animation.shotColor:event.effect==='chorus'?'#d3b8ee':event.effect==='spotlight'?'#fff2b6':'#f8bdcf';ctx.globalAlpha=Math.max(0,1-age);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(source.x,source.y);ctx.lineTo(x,y);ctx.stroke();
+        if(age<SHOT_FLIGHT_MS/1000){ctx.globalAlpha=1;ctx.fillStyle=ctx.strokeStyle;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
         if(ground){
-          const definition=cardDefinition(cardById(game,event.cardId)),spread=Math.min(1,Math.max(0,(age-.35)/.6)),unit=game.room.radiusUnit;
+          const definition=cardDefinition(cardById(game,event.cardId)),spread=Math.min(1,Math.max(0,(age-SHOT_FLIGHT_MS/1000)/.6)),unit=game.room.radiusUnit;
           if(spread){ctx.beginPath();ctx.arc(ground.x,ground.y,definition.radius*unit*spread,0,Math.PI*2);ctx.stroke();if(definition.coreRadius){ctx.strokeStyle='#ffe184';ctx.beginPath();ctx.arc(ground.x,ground.y,definition.coreRadius*unit*spread,0,Math.PI*2);ctx.stroke();}}
-        }else{ctx.beginPath();ctx.arc(target.x,target.y,8+age*55,0,Math.PI*2);ctx.stroke();}
+        }else if(age>=SHOT_FLIGHT_MS/1000){ctx.beginPath();ctx.arc(target.x,target.y,8+(age-SHOT_FLIGHT_MS/1000)*55,0,Math.PI*2);ctx.stroke();}
         ctx.globalAlpha=1;
       }
     }
   }
   function animate(){
-    if(!animation)return;if(animation.motions?.length&&!getReducedEffects()&&!matchMedia('(prefers-reduced-motion: reduce)').matches)stage.showMotion(animation.motions,Math.min(1,(performance.now()-animation.started)/Math.min(1800,animation.duration)));drawEffects();
+    if(!animation)return;if(animation.pending&&performance.now()-animation.started>=SHOT_FLIGHT_MS)landCardFlight(animation);if(!animation)return;const elapsed=performance.now()-animation.started-(animation.flightMs||0);if(elapsed>=0&&animation.motions?.length&&!getReducedEffects()&&!matchMedia('(prefers-reduced-motion: reduce)').matches)stage.showMotion(animation.motions,Math.min(1,elapsed/Math.min(1800,animation.duration-(animation.flightMs||0))));drawEffects();
     if(performance.now()-animation.started<animation.duration)requestAnimationFrame(animate);else{animation=null;render();}
   }
   root.addEventListener('dragstart',event=>{const card=event.target.closest('[data-bl-card]');if(!card||!startDrag(card.dataset.blCard))return event.preventDefault();event.dataTransfer.setData('application/x-bandlive-card',activeCard);event.dataTransfer.effectAllowed='move';event.dataTransfer.setDragImage(dragImage,0,0);ghost=makeDragGhost(activeCard);document.body.append(ghost);moveDrag(event.clientX,event.clientY);});

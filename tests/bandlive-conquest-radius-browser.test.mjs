@@ -38,6 +38,10 @@ try{
   if(width<500){cdp=await page.context().newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:source.x+source.width/2,y:source.y+source.height/2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point]});}
   else{await page.mouse.move(source.x+source.width/2,source.y+source.height/2);await page.mouse.down();await page.mouse.move(point.x,point.y,{steps:6});}
   const layer=page.locator(`.bl-radius-layer[data-state="${scenario.point||scenario.shift?'card':ready?'triggered':'potential'}"]`);await layer.waitFor();const popup=page.locator('.drag-card-feedback');
+  if(scenario.point||scenario.shift){
+   assert.equal(await page.locator('.bl-aim-line').count(),1,'Area recipients are highlighted, not connected by separate arcs');
+   for(const before of game.fans){const after=expected.game.fans.find(f=>f.id===before.id);if(before.hp<=after.hp)continue;const affected=page.locator(`[data-bl-fan="${before.id}"].bl-forecast`);assert(await affected.count(),'Every predicted gain has a highlighted recipient');assert.notEqual(await affected.evaluate(el=>getComputedStyle(el,'::before').boxShadow),'none','The rendered spectator has a visible highlight');assert((await affected.locator('.bl-impact-kind').textContent()).includes('+'+(before.hp-after.hp)+' ♥'),'Each badge matches the resolved gain');}
+  }
   if(scenario.point){assert(new Set(expected.event.hits.map(h=>h.id)).size>1,'The ground shot affects several bodies');await assertGroundAim(page,point);}
   await outsideRadius(popup);
   const appearance=await popup.evaluate(el=>{const s=getComputedStyle(el.querySelector('.drag-feedback-surface')),main=getComputedStyle(el.querySelector('.drag-outcome-main')),gain=getComputedStyle(el.querySelector('.drag-gain'));return {background:s.backgroundImage,border:s.borderRadius,font:main.fontSize,color:main.color,gain:gain.backgroundImage};});
