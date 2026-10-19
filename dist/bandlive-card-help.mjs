@@ -34,6 +34,7 @@ const effects={
  style:'Les spectateurs ciblés adoptent le style de la chanson pendant la durée choisie.',
  protect:'Protège les spectateurs ciblés de la perte de conquête due à l’ennui à la fin de ce tour.',
  push:'Éloigne les corps du centre de l’effet. Les collisions transmettent le mouvement, y compris aux spectateurs déjà conquis.',
+ split:'Pousse toute la foule horizontalement, loin de la ligne verticale visée : à gauche vers la gauche, à droite vers la droite. Sur la ligne, le corps part à droite. Inclut les conquis et ignore le rayon de la carte. Choisis « Endroit au sol » pour placer librement la ligne; sinon elle passe par la cible ou le milieu du terrain.',
  pull:'Attire les corps vers le centre de l’effet. Les collisions peuvent déplacer et conquérir d’autres spectateurs.',
  vortex:'Lance les corps autour du centre de l’effet avec une rotation. Les contacts utilisent les mêmes règles que les autres mouvements.',
  jump:'Fait bondir les corps et les déplace depuis le centre de l’effet. Les collisions peuvent transmettre le mouvement.',

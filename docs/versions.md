@@ -4,6 +4,8 @@
 
 14 octobre 2026.
 
+- **Impact « Pousser · gauche / droite » :** place une ligne verticale pour écarter horizontalement toute la foule, conquis inclus. Disponible dans le labo et l’atelier avec force et bonus de collision réglables. Cet impact ignore le rayon; les autres effets combinés gardent leur propre zone. Avec une cible au sol, la ligne suit le curseur.
+
 - **Labo dégagé et foule lisible :** les réglages s’ouvrent en fenêtre modale, avec retour au jeu et fermeture par Échap. Une marge protège les bords du terrain. Les spectateurs conquis passent derrière les autres et ne gardent que leur effet de conquête; leur couleur identifie cet effet. L’icône de style s’illumine quand elle correspond à la chanson, les autres sont atténuées.
 
 - **Compteurs du show habillés comme les jauges du jeu :** énergie verte lumineuse, tempo doré avec son icône et ses dix segments, conquête rose et tour dans leurs propres capsules. Les icônes, valeurs et jauges restent visibles sur téléphone; les gains et dépenses gardent leur animation habituelle.

@@ -59,7 +59,7 @@ export function simulateImpulse(game,{center,targets,kind='push',strength=1,stre
  for(const b of bodies)if(selected.has(b.id)){
   let dx=b.x-center.x,dy=b.y-center.y,length=Math.hypot(dx,dy);if(length<1){dx=Math.sin(bodies.indexOf(b)*2.4);dy=1;length=Math.hypot(dx,dy);}
   dx/=length;dy/=length;const speed=settings.force*clamp(strength,0,3)*(strengthById[b.id]??1);
-  if(kind==='pull'){dx=-dx;dy=-dy;}else if(kind==='vortex'){const x=dx;dx=-dy;dy=x;}
+  if(kind==='split'){dx=b.x<center.x?-1:1;dy=0;}else if(kind==='pull'){dx=-dx;dy=-dy;}else if(kind==='vortex'){const x=dx;dx=-dy;dy=x;}
   b.vx=dx*speed;b.vy=dy*speed;b.spin=kind==='vortex'?5:kind==='jump'?1:.4;
  }
  const frames=[];
@@ -92,7 +92,7 @@ export function simulateImpulse(game,{center,targets,kind='push',strength=1,stre
  }
  for(let k=0;k<bodies.length;k++)game.fans[k].position=clampPosition(game,bodies[k]);
  separateCrowd(game);if(recordFrames&&frames.length)frames[frames.length-1]=game.fans.map(f=>({id:f.id,...f.position,angle:0,lift:0}));
- return {type:'motion',name:kind==='hit'?'Impact musical':({push:'Repousser',pull:'Attirer',vortex:'Tourbillon',jump:'Bond',return:'Retour élastique'})[kind]||'Impact',kind,center:{...center},targets:[...targets],before,after:Object.fromEntries(game.fans.map(f=>[f.id,{...f.position}])),frames,contacts:hits};
+ return {type:'motion',name:kind==='hit'?'Impact musical':({push:'Repousser',split:'Pousser · gauche / droite',pull:'Attirer',vortex:'Tourbillon',jump:'Bond',return:'Retour élastique'})[kind]||'Impact',kind,center:{...center},targets:[...targets],before,after:Object.fromEntries(game.fans.map(f=>[f.id,{...f.position}])),frames,contacts:hits};
 }
 export function applyCollisionContact(game,contact,onConquer){
  const hits=[];

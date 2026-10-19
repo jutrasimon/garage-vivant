@@ -15,7 +15,8 @@ export function playProgram(game,card,targetId,options,hooks){
   const condition=e.when==='always'||e.when==='tempo'&&initialTempo>=e.conditionValue||e.when==='alternate'&&previous&&previous.actorId!==card.actorId||e.when==='neighbor'&&neighbor||e.when==='conquest'&&direct.size>0;if(!condition)continue;
   const selected=targets();
   // Preview geometry must describe positions when the effect lands, before its recoil.
-  if(d.radius&&!['tempo','energy','draw','boost'].includes(e.type)){
+  if(e.type==='split')areas.push({kind:'card',shape:'line',sourceId:card.actorId,center:{...origin()},radius:0,coreRadius:0,targets:game.fans.map(f=>({id:f.id,position:{...f.position}}))});
+  if(d.radius&&!['split','tempo','energy','draw','boost'].includes(e.type)){
    const affected=['power','protect','style'].includes(e.type)?selected:inRadius(game,origin(),d.radius,{alive:false});
    areas.push({kind:'card',sourceId:card.actorId,center:{...origin()},radius:d.radius,coreRadius:d.coreRadius||0,targets:affected.map(f=>({id:f.id,position:{...f.position}}))});
   }
@@ -45,8 +46,8 @@ export function playProgram(game,card,targetId,options,hooks){
   else if(e.type==='style')selected.forEach(f=>f[e.duration==='song'?'chorusStyle':'turnStyle']=hooks.currentSong(game).style);
   else{
    // Motion also affects newly conquered spectators; the body remains on the floor.
-   const affected=d.target==='audience'?game.fans:d.radius?inRadius(game,origin(),d.radius,{alive:false}):[fan,...(d.twoTargets?[second]:[])].filter(Boolean);
-   const center={...origin()},strengthById=Object.fromEntries(affected.map(f=>[f.id,d.coreRadius&&Math.hypot(f.position.x-center.x,f.position.y-center.y)>d.coreRadius*game.room.radiusUnit?d.outerScale:1]));
+   const affected=e.type==='split'||d.target==='audience'?game.fans:d.radius?inRadius(game,origin(),d.radius,{alive:false}):[fan,...(d.twoTargets?[second]:[])].filter(Boolean);
+   const center={...origin()},strengthById=Object.fromEntries(affected.map(f=>[f.id,e.type!=='split'&&d.coreRadius&&Math.hypot(f.position.x-center.x,f.position.y-center.y)>d.coreRadius*game.room.radiusUnit?d.outerScale:1]));
    impulse({center,targets:affected.map(f=>f.id),kind:e.type,strength:e.strength,strengthById,collisionPower:e.collisionPower});
   }
  }

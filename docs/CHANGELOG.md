@@ -1,5 +1,7 @@
 # V0.9.0 — 14 octobre 2026
 
+Nouvel impact horizontal « Pousser · gauche / droite », avec ligne verticale de visée, force réglable et collisions; utilisable dans les cartes et le labo.
+
 Contrôles modaux refermables pour tester sans panneau sur la foule, marge autour du terrain, spectateurs conquis derrière les autres avec seulement leur effet visible, couleurs par effet et styles assortis à la chanson mis en lumière.
 
 Bandeau du show : jauges lumineuses d’énergie et de tempo, icônes visibles, compteurs de tour et conquête distincts, adaptés aux petits écrans.

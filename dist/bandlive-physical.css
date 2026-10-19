@@ -143,3 +143,5 @@ body.bandlive-mode:has(.bl-spatial) .workspace.bandlive-layout{height:100dvh}
 .bl-spatial .bl-style-matches .bl-style{opacity:1;background:#ffe8a1;color:#314139;border-color:#fff1b7;box-shadow:0 0 12px #ffe394aa}
 .bl-spatial .bl-conquest-bonus{color:var(--bl-effect-color);border-color:var(--bl-effect-color)}
 .bl-spatial .bl-conquered .bl-conquest-bonus{opacity:1;filter:none}
+.bl-split-line{stroke:#a9f4de;stroke-width:4;stroke-dasharray:10 7;fill:none;filter:drop-shadow(0 0 5px #81e5bd)}
+.bl-split-arrows{stroke:#a9f4de;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}

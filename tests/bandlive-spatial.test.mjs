@@ -33,6 +33,24 @@ function fixture({card=null,catalog=createCatalog(),spatial=true}={}){
  const c=card?g.cards.find(c=>c.kind.includes(':copy-')):g.cards.find(c=>c.kind==='note');g.hand=[c.id];g.discard=[];g.deck=g.cards.filter(x=>x.id!==c.id).map(x=>x.id);
  return {g,c};
 }
+
+test('split impact moves every body horizontally away from a vertical line, with exact preview and save',()=>{
+ const {g,c}=fixture({card:{target:'point',radius:.2,coreRadius:.1,outerScale:.1,effects:[newEffect('split')]}});
+ g.fans.forEach((f,i)=>{f.position={x:i%2?770:350,y:60+Math.floor(i/2)*46};});g.physics.collisionRadius=16;
+ g.fans[0].hp=0;g.fans[0].conquered=true;
+ const before=structuredClone(g),point={x:560,y:180},preview=previewCard(g,c.id,'audience',{point});assert(preview.ok);assert.deepEqual(g,before);
+ const area=preview.areas.find(a=>a.shape==='line');assert.equal(area.targets.length,12);assert.equal(area.center.x,560);assert(!preview.areas.some(a=>a.radius>0));
+ const result=playCard(g,c.id,'audience',{point});assert(result.ok);assert.deepEqual(g,preview.game);assert.deepEqual(restoreBandLive(g),g);
+ for(const [i,f] of g.fans.entries()){assert.equal(f.position.y,before.fans[i].position.y);assert((f.position.x-before.fans[i].position.x)*(i%2?1:-1)>0);}
+ assert.equal(result.motions[0].targets.length,12);assert.equal(result.motions[0].kind,'split');
+ const onLine=structuredClone(before);onLine.fans=[{...onLine.fans[0],position:{...point}}];simulateImpulse(onLine,{center:point,targets:['f0'],kind:'split',strength:.5});assert(onLine.fans[0].position.x>point.x);assert.equal(onLine.fans[0].position.y,point.y);
+});
+
+test('split combined with power keeps a separate circular area for power',()=>{
+ const {g,c}=fixture({card:{target:'point',radius:1,coreRadius:0,effects:[newEffect('split'),{...newEffect('power'),impactStrength:0}]}}),point={x:560,y:180};
+ const preview=previewCard(g,c.id,'audience',{point});assert(preview.ok);assert.equal(preview.areas.filter(a=>a.shape==='line').length,1);assert.equal(preview.areas.filter(a=>a.kind==='card'&&a.radius===1).length,1);
+ playCard(g,c.id,'audience',{point});assert.deepEqual(g,preview.game);
+});
 test('organic crowd has deterministic independent positions, spatial neighbors and exact save resumption',()=>{
  const {g}=fixture(),{g:other}=fixture();assert.deepEqual(g.fans.map(f=>f.position),other.fans.map(f=>f.position));
  assert(new Set(g.fans.map(f=>f.position.y)).size>2);const rng=g.rng;moveSpectator(g,'f0',{x:300,y:160});moveSpectator(g,'f1',{x:320,y:160});
