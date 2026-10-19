@@ -1,3 +1,17 @@
+# V0.9.0 — 14 octobre 2026
+
+Nouvel impact horizontal « Pousser · gauche / droite », avec ligne verticale de visée, force réglable et collisions; utilisable dans les cartes et le labo.
+
+Contrôles modaux refermables pour tester sans panneau sur la foule, marge autour du terrain, spectateurs conquis derrière les autres avec seulement leur effet visible, couleurs par effet et styles assortis à la chanson mis en lumière.
+
+Bandeau du show : jauges lumineuses d’énergie et de tempo, icônes visibles, compteurs de tour et conquête distincts, adaptés aux petits écrans.
+
+Panneau de tests du show : 3 à 50 spectateurs, redémarrage reproductible ou aléatoire, ressources, nouvelle main, point de reprise et export/import du scénario.
+
+Les impacts attendent l’arrivée de leur projectile. La prévision des cartes à rayon utilise un seul arc et des montants de cœurs sur les spectateurs surlignés.
+
+Foule physique et atelier de cartes, visée et impacts optimisés avec tests de stress à 50 spectateurs, tir unique au centre des zones au sol, rayons de chaîne explicites, aperçu d’effet commun et annulation complète des cartes à la souris et au tactile. [Notes complètes](./versions.md#v090).
+
 # V0.8.15 — 13 octobre 2026
 
 Ciblage et réactions cohérents. [Notes complètes](./versions.md#v0815).

@@ -1,4 +1,4 @@
-import {clampBody,resolveBodies} from './bandlive-physics.mjs?v=0.8.15';
+import {clampBody,resolveBodies} from './bandlive-physics.mjs?v=0.9.0';
 export const FAN_BODY=Object.freeze({w:86,h:112});
 export const ACTOR_BODY=Object.freeze({w:132.5,h:110});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));

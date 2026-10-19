@@ -1,4 +1,6 @@
-# BandLive · moteur de spectacle — 0.8.15
+# BandLive · moteur de spectacle — 0.9.0
+
+**Nouveau en 0.9.0 :** la foule quitte ses cases. Les cartes et pouvoirs utilisent des rayons, les impacts déplacent les spectateurs et l’atelier permet de créer, dupliquer et retirer des cartes. [Guide de la foule physique, du laboratoire et de l’atelier](./BANDLIVE_PHYSIQUE.md). Les descriptions de grille ci-dessous concernent les anciens shows, qui restent reprenables.
 
 Tous les nouveaux shows s’ouvrent automatiquement dans BandLive, y compris les jams et les grandes formations jusqu’à 24 musiciens. Une setlist réservée plus longue ne bloque plus le show : BandLive conserve ses deux passages, choisis dans le répertoire actif. Sans composition active, une jam libre de trois tours est proposée. Les anciens spectacles déjà joués ou commencés conservent leurs règles.
 

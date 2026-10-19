@@ -45,6 +45,19 @@ test('all allowed crowds retain their slots and protected rectangles after arbit
     }
   }
 });
+test('effect feedback clears complete radii, multiple zones and edges with a stable side',()=>{
+  for(const [w,h,cx,cy,rx,ry] of [[1440,900,720,500,180,180],[1024,720,850,450,150,150],[390,900,195,520,145,145],[1440,900,650,500,270,130]]){
+    const pointer={x:cx,y:cy},target={left:cx-32,right:cx+32,top:cy-48,bottom:cy+48},bounds={left:12,top:12,right:w-12,bottom:h-12},zones=[{cx,cy,rx,ry}],width=260,height=w<500?250:390;
+    if(w===1440)zones.push({cx:cx+80,cy:cy+60,rx:130,ry:100});
+    const p=placeDragFeedback({pointer,target,bounds,zones,width,height});assert.equal(p.zoneOverlap,0);assert.equal(p.targetOverlap,0);assert(p.x>=12&&p.y>=12&&p.x+width<=w-12&&p.y+height<=h-12);
+    for(const z of zones){const x=Math.max(p.x,Math.min(z.cx,p.x+width)),y=Math.max(p.y,Math.min(z.cy,p.y+height));assert(((x-z.cx)/z.rx)**2+((y-z.cy)/z.ry)**2>=1,'The opaque panel lies outside the actual ellipse, not just outside its source');}
+    for(const dx of [-3,3])assert.equal(placeDragFeedback({pointer:{x:cx+dx,y:cy},target,bounds,zones,width,height,preferredSide:p.side}).side,p.side);
+  }
+});
+test('an oversized radius keeps feedback bounded and its target visible when no exterior panel can fit',()=>{
+  const bounds={left:12,top:12,right:378,bottom:588},pointer={x:195,y:350},target={left:163,right:227,top:302,bottom:398};
+  const p=placeDragFeedback({pointer,target,bounds,zones:[{cx:195,cy:350,rx:500,ry:500}],width:260,height:200});assert(p.zoneOverlap>0);assert.equal(p.targetOverlap,0);assert(p.x>=12&&p.y>=12&&p.x+260<=378&&p.y+200<=588);
+});
 test('moving a hand through the crowd never pushes its protected bodies',()=>{
   const fan={id:'f0',type:'fan',x:100,y:100,...FAN_BODY},hand={id:'p0',type:'cards',x:100,y:100,w:210,h:155};const before={...fan};
   settlePlacement([fan,hand],hand,700,600);assert.deepEqual(fan,before);

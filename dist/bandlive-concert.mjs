@@ -1,7 +1,7 @@
-import {shortlistShowSongs} from './bandlive-auto.mjs?v=0.8.15';
-import {musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.8.15';
-import {RULES,STYLES,createBandLive,restoreBandLive,currentSong} from './bandlive.mjs?v=0.8.15';
-import {performanceResult} from './stage.mjs?v=0.8.15';
+import {shortlistShowSongs} from './bandlive-auto.mjs?v=0.9.0';
+import {musicianDeck,definitionFor} from './bandlive-cards.mjs?v=0.9.0';
+import {RULES,STYLES,createBandLive,restoreBandLive,currentSong} from './bandlive.mjs?v=0.9.0';
+import {performanceResult} from './stage.mjs?v=0.9.0';
 
 // Interactive audiences are compact. Calendar capacity and the full audience
 // passed to the next band remain unchanged.
@@ -63,13 +63,14 @@ export function resolveBandLiveConcert(world) {
   return {ready:true,reason:'',show,booking,group,songs,people,profile,songOrder:null};
 }
 
-export function beginBandLiveConcert(world,{rulesVersion=2}={}) {
+export function beginBandLiveConcert(world,{rulesVersion=2,spatial=rulesVersion>=2}={}) {
   const plan=resolveBandLiveConcert(world);
   if(!plan.ready)return {ok:false,message:plan.reason};
-  const game=createBandLive({people:plan.people,groupId:plan.group.id,groupName:plan.show.groupName,songs:plan.songs,rulesVersion,seed:plan.show.seed,songOrder:null,freeSetlist:true,...plan.profile});
+  const game=createBandLive({people:plan.people,groupId:plan.group.id,groupName:plan.show.groupName,songs:plan.songs,rulesVersion,seed:plan.show.seed,songOrder:null,freeSetlist:true,spatial,catalog:world.cardCatalog,...plan.profile});
   // Preserve the welcome carried from the preceding band in this evening.
   for(const [i,fan] of game.fans.entries()){const prior=plan.show.fans[Math.floor(i*plan.show.fans.length/game.fans.length)];fan.hp=Math.max(1,Math.round(fan.max*(1-prior.meter/100)));}
   game.initialFanHp=game.fans.map(fan=>fan.hp);
+  if(spatial&&!world.cardCatalog)world.cardCatalog=structuredClone(game.catalog);
   plan.show.bandLive={version:1,...(rulesVersion===1?{reward:{status:'pending'}}:{progressionVersion:1}),performanceId:plan.show.id,bookingId:plan.booking.id,profile:plan.profile,game,songResults:[],originalFans:structuredClone(plan.show.fans)};
   plan.show.presentationStarted=true;
   return {ok:true,game};
@@ -117,7 +118,7 @@ export function followingConcertPerformance(show) {
 
 export function createConcertReplay(snapshot) {
   const game=restoreBandLive(snapshot);
-  const replay=createBandLive({people:game.actors,groupId:game.groupId,groupName:game.groupName,songs:game.songs,seed:game.seed,audienceSize:game.fans.length,audienceRules:game.audienceRules,songOrder:game.songOrder,freeSetlist:game.freeSetlist===true,persistentReactions:!!game.reactionVersion,conquestEffects:!!game.conquestVersion,rulesVersion:Math.max(game.reactionVersion||1,game.conquestVersion||1)});
+  const replay=createBandLive({people:game.actors,groupId:game.groupId,groupName:game.groupName,songs:game.songs,seed:game.seed,audienceSize:game.fans.length,audienceRules:game.audienceRules,songOrder:game.songOrder,freeSetlist:game.freeSetlist===true,persistentReactions:!!game.reactionVersion,conquestEffects:!!game.conquestVersion,rulesVersion:Math.max(game.reactionVersion||1,game.conquestVersion||1),spatial:!!game.spatialVersion,catalog:game.catalog});
   if(game.initialFanHp){replay.initialFanHp=[...game.initialFanHp];replay.fans.forEach((fan,i)=>fan.hp=game.initialFanHp[i]);}
   return replay;
 }

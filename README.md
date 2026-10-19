@@ -1,10 +1,10 @@
 [▶ Jouer à Garage vivant](https://jutrasimon.github.io/garage-vivant/)
 
-# Garage vivant · v0.8.15
+# Garage vivant · v0.9.0
 
 Une simulation autonome de musiciens dans une banlieue. Les personnages sont des cubes avec personnalité, émotions, compétences et relations. Ils composent, montent des bands et tentent leur chance devant un public physique. Le joueur peut observer, régler leurs sacs ou intervenir.
 
-[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v0815) · [Contribuer](CONTRIBUTING.md)
+[Documentation du jeu](https://jutrasimon.github.io/garage-vivant/docs/) · [Notes de version](https://jutrasimon.github.io/garage-vivant/docs/versions.html#v090) · [Contribuer](CONTRIBUTING.md)
 
 **V7.10 — personnages et groupes :** nom, surnom et apparence cohérente dans les portraits; suppression confirmée; options de carte; Shows consultable sans pause. Configurations initiales variables, propositions de formation +12,5 % et pratiques plus insistantes pour les groupes fragiles. [Design et bilan](docs/BILAN_V7_10.md). Format du monde toujours 0.7.3.
 
@@ -32,19 +32,21 @@ Les dates se renouvellent continuellement. Un gros événement revient toutes le
 
 ## BandLive · moteur de tous les nouveaux shows
 
+**V0.9.0 — foule physique et atelier de cartes :** nouveaux shows sans cases, rayons réels, impacts réglables, laboratoire sur une copie et éditeur par instrument avec cartes neutres, duplication/retrait/restauration, rareté, niveaux et decks de départ. Le bandeau et la barre inférieure suivent le Visual Lab; les grandes formations se parcourent par pages de six. [Guide et règles](docs/BANDLIVE_PHYSIQUE.md). `npm run test:physical` vérifie moteur, sauvegardes, souris et tactile. Les shows déjà commencés gardent leur moteur; leur bouton Laboratoire ouvre une copie physique.
+
 Depuis 0.8.15, les réactions des spectateurs ne bloquent plus l’aperçu de ciblage. L’annonce de conquête présente seulement les véritables pouvoirs, même lorsqu’une réaction se déclenche avec eux; le compteur de chaîne exclut les réactions. `npm run test:targeting` couvre ces déclenchements à la souris, au tactile et avec une carte sélectionnée.
 
-Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde un gros bouton de fin de tour en bas à droite. La programmation et les outils avancés sont sous le premier écran. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
+Les shows s’ouvrent automatiquement dans BandLive : compositions, jams et grandes formations. L’interface centre la scène, présente le choix des tounes en overlay et garde la fin du tour dans sa barre inférieure. La programmation et les outils avancés sont accessibles dans les détails. Cartes, portraits et fiches partagent leurs composants. Le ciblage explique les réactions, pouvoirs et chaînes prévus.
 
 Les mains sont abaissées et les musiciens légèrement remontés pour montrer leurs instruments. La scène réserve cet espace tout en gardant les cartes lisibles et le public visible; le test de composition couvre les huit instruments et les mains de cinq cartes jusqu’au 1280 × 720.
 
-Les arcs roses indiquent la conquête et les arcs jaunes de tempo suivent le curseur ou le doigt. Le ciblage collectif utilise une lueur et des ondes autour du public, avec des halos pour les cibles individuelles. L’énergie conserve son vert menthe. La prévision des effets suit le curseur en laissant visible la cible; son contenu et l’arc sont réutilisés pendant les petits déplacements. `npm run test:targeting`, inclus dans le smoke obligatoire, vérifie couleurs, suivi souris/tactile, effets réduits, cartes mixtes, cibles invalides et annulation sans dépense.
+Les arcs roses indiquent la conquête et les arcs jaunes de tempo suivent le curseur ou le doigt. Les zones physiques montrent le rayon réel, avec un cœur et une couronne lorsqu’ils sont configurés. Les anciens shows gardent leur visée collective. L’énergie conserve son vert menthe. La prévision des effets suit le curseur en laissant visible la cible; son contenu et l’arc sont réutilisés pendant les petits déplacements. `npm run test:targeting`, inclus dans le smoke obligatoire, vérifie couleurs, suivi souris/tactile, effets réduits, cartes mixtes, cibles invalides et annulation sans dépense.
 
 Si le pouvoir du spectateur va se déclencher, la prévision le met au premier plan dans un encadré rose lumineux : nom en gros, effet, voisins touchés et chaînes de conquêtes. Son animation d’apparition respecte les effets réduits et ne recommence pas pendant les petits mouvements. `npm run test:conquest-preview`, inclus dans le smoke, vérifie les trois pouvoirs et les annonces au curseur, au doigt et après sélection de carte.
 
 Les fans conquis ont un halo rose permanent et une pastille « ♥ ✓ CONQUIS » à la place de leur barre. Leur intention et leur badge de pouvoir disparaissent de la salle. Le même test vérifie ces états après de vraies conquêtes et chaînes, leur stabilité au survol et leur conservation au rechargement.
 
-Énergie et tempo sont regroupés en bas à gauche, avec de gros chiffres et des segments lumineux. Gains, dépenses et recharge du tour affichent leur variation réelle et font réagir la jauge; le mode d’effets réduits garde l’information sans mouvement. `npm run test:resources`, inclus dans le smoke obligatoire, vérifie les valeurs jouées, le rechargement et cinq tailles d’écran.
+Énergie et tempo sont regroupés en haut à droite des nouveaux shows, avec leurs variations et segments lumineux. Les anciens shows gardent leur bloc en bas à gauche. Gains, dépenses et recharge du tour affichent leur variation réelle et font réagir la jauge; le mode d’effets réduits garde l’information sans mouvement. `npm run test:resources`, inclus dans le smoke obligatoire, vérifie les valeurs jouées, le rechargement et cinq tailles d’écran.
 
 Trois pouvoirs de conquête : Onde de choc 2–5, Projecteur 1–3 et Chœur du public 1–2. Rythme et voisinage déclenchent immédiatement leurs gains; les réactions consommées disparaissent jusqu’au prochain tour. Animations et rétroaction couvrent chaque effet, le tempo, les soutiens et la finale.
 
@@ -54,7 +56,7 @@ La grande notification de niveau attend la fin de la soirée et le retour dans l
 
 Nouvelles parties : musiciens et ordre variés, deux chansons avec un seul band, trois à quatre réparties entre plusieurs bands. Les parties existantes sont conservées. [Règles et progression](docs/BANDLIVE.md).
 
-Pour les essais entre amis : `npm run bandlive:test-file` crée un HTML autonome dans `BandLive-test/`, avec ses sauvegardes séparées. `npm run test:refonte` vérifie la nouvelle interface.
+Pour les essais entre amis : `npm run bandlive:test-file` crée un HTML autonome dans `BandLive-test/`, avec ses sauvegardes séparées. `npm run test:physical` vérifie la foule et l’atelier actuels; `npm run test:refonte` conserve le parcours de la précédente interface.
 
 ## Quartier V7.2
 
