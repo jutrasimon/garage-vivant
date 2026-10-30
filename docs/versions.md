@@ -2,6 +2,8 @@
 
 ## V0.9.0 — Foule physique et atelier de cartes {#v090}
 
+Atelier de l’arène : accès direct « Cartes », erreurs de test affichées sans fermer le brouillon, et cible historique conservée à l’écran lorsqu’elle doit être adaptée au prototype.
+
 Les notes dorées de tempo et le tooltip détaillé de BandLive sont réutilisés dans l’arène : ressources, cœurs avant/après, réactions, conquêtes imminentes et chaînes. Le panneau évite les zones visées; les effets réduits et l’annulation restent pris en charge.
 
 29 octobre 2026 — ajout de l’arène isolée.

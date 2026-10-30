@@ -1,5 +1,7 @@
 # V0.9.0 — 29 octobre 2026
 
+Atelier de l’arène : accès direct « Cartes », erreurs de test affichées sans fermer le brouillon, et cible historique conservée à l’écran lorsqu’elle doit être adaptée au prototype.
+
 Les notes dorées de tempo et le tooltip détaillé de BandLive sont réutilisés dans l’arène : ressources, cœurs avant/après, réactions, conquêtes imminentes et chaînes. Le panneau évite les zones visées; les effets réduits et l’annulation restent pris en charge.
 
 Compteur FPS dans l’arène, prévisions hors du fil d’affichage, file de calcul bornée et interpolation des mouvements physiques.
