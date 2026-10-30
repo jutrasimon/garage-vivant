@@ -1,9 +1,10 @@
-import {grantXp,xpProgress,migrateXp} from './progression.mjs?v=0.8.15';
-import {validatePersonDecks} from './bandlive-cards.mjs?v=0.8.15';
-import {rule,validateDesign} from './design-rules.mjs?v=0.8.15';
-import { musicalChemistry, pairEligible, membershipReason, considerMembership, initializeGroupData, resolveInvitation, rehearsalReady, upgradeGroups, validateGroups, leaveGroup } from './groups.mjs?v=0.8.15';
-import {compositionTurns,songTurns} from './song-rules.mjs?v=0.8.15';
-import { V71_RULES, initializeV71, setupAction, chooseInstrument, shouldLeave, musicName, reserveMusicName, classifySongs, upgradeV71, validateV71, decadenceCount } from "./v71.mjs?v=0.8.15";
+import {grantXp,xpProgress,migrateXp} from './progression.mjs?v=0.9.0';
+import {validatePersonDecks,definitionFor} from './bandlive-cards.mjs?v=0.9.0';
+import {validateCatalog} from './bandlive-catalog.mjs?v=0.9.0';
+import {rule,validateDesign} from './design-rules.mjs?v=0.9.0';
+import { musicalChemistry, pairEligible, membershipReason, considerMembership, initializeGroupData, resolveInvitation, rehearsalReady, upgradeGroups, validateGroups, leaveGroup } from './groups.mjs?v=0.9.0';
+import {compositionTurns,songTurns} from './song-rules.mjs?v=0.9.0';
+import { V71_RULES, initializeV71, setupAction, chooseInstrument, shouldLeave, musicName, reserveMusicName, classifySongs, upgradeV71, validateV71, decadenceCount } from "./v71.mjs?v=0.9.0";
 import {
   NEED_DRAIN,
   ACTIVITY_EFFECTS,
@@ -22,13 +23,13 @@ import {
   interactionProbabilities,
   coolRelationV7,
   validateV7,
-} from "./v7.mjs?v=0.8.15";
+} from "./v7.mjs?v=0.9.0";
 import {
   initializeV6Person,
   upgradeV6,
   markGrief,
   repairGrief,
-} from "./social.mjs?v=0.8.15";
+} from "./social.mjs?v=0.9.0";
 import {
   initializePerson,
   initializeGroup,
@@ -44,7 +45,7 @@ import {
   departForShow,
   refreshOpportunity,
   validateLife,
-} from "./life.mjs?v=0.8.15";
+} from "./life.mjs?v=0.9.0";
 export const VERSION = "0.7.3";
 export const NEEDS = {
   energy: "Énergie",
@@ -2530,6 +2531,7 @@ export function restore(input) {
     throw Error("Sauvegarde incompatible ou incomplète.");
   const raw = JSON.parse(JSON.stringify(input));
   validateDesign(raw.design);
+  if(raw.cardCatalog!==undefined)validateCatalog(raw.cardCatalog);
   if (input.version !== VERSION && !["0.7.0","0.7.1","0.7.2"].includes(input.version)) {
     migrate(raw);
     for (const p of raw.people)
@@ -2568,11 +2570,11 @@ export function restore(input) {
     throw Error("Monde invalide.");
   const ids = new Set();
   for (const p of raw.people) {
-    validatePersonDecks(p);
+    validatePersonDecks(p,raw.cardCatalog);
     if(p.xp!==undefined&&(!Number.isSafeInteger(p.xp)||p.xp<0))throw Error('XP individuelle invalide.');
     if(p.xpCurve!==undefined&&p.xpCurve!==2)throw Error('Courbe d’XP invalide.');
     migrateXp(p);
-    if(p.levelRewards!==undefined&&(!Array.isArray(p.levelRewards)||p.levelRewards.some(r=>!Number.isInteger(r.level)||r.level<2||r.level>xpProgress(p).level||!['pending','claimed'].includes(r.status)||!Object.hasOwn(SKILLS,r.instrument)||r.instrument==='writing'||r.status==='claimed'&&(!Number.isInteger(r.slot)||r.slot<0||r.slot>4||!['note','special','new1','new2'].includes(r.before)||!['special','new1','new2'].includes(r.after)||r.before===r.after))||new Set(p.levelRewards.map(r=>r.level)).size!==p.levelRewards.length))throw Error('Récompenses de niveau invalides.');
+    if(p.levelRewards!==undefined&&(!Array.isArray(p.levelRewards)||p.levelRewards.some(r=>!Number.isInteger(r.level)||r.level<2||r.level>xpProgress(p).level||!['pending','claimed'].includes(r.status)||!Object.hasOwn(SKILLS,r.instrument)||r.instrument==='writing'||r.status==='claimed'&&(!Number.isInteger(r.slot)||r.slot<0||r.slot>4||!definitionFor(r.instrument,r.before,raw.cardCatalog)||!definitionFor(r.instrument,r.after,raw.cardCatalog)||r.before===r.after))||new Set(p.levelRewards.map(r=>r.level)).size!==p.levelRewards.length))throw Error('Récompenses de niveau invalides.');
     if(p.practiceXpMinutes!==undefined&&(!Number.isInteger(p.practiceXpMinutes)||p.practiceXpMinutes<0||p.practiceXpMinutes>=15))throw Error('Minutes d’XP de pratique invalides.');
     if (
       !/^p\d+$/.test(p.id) ||

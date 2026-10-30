@@ -1,6 +1,6 @@
-import {activeGroup} from './groups.mjs?v=0.8.15';
-import {eligibleSongs} from './life.mjs?v=0.8.15';
-import {RULES,createBandLive} from './bandlive.mjs?v=0.8.15';
+import {activeGroup} from './groups.mjs?v=0.9.0';
+import {eligibleSongs} from './life.mjs?v=0.9.0';
+import {RULES,createBandLive} from './bandlive.mjs?v=0.9.0';
 
 // Resolve only the module's draft. Group membership, canonical songs, mastery
 // and the world's RNG are read without being changed.
@@ -29,5 +29,5 @@ export function resolveBandLivePlan(world,draft,{canStart=true}={}) {
 export function createBandLiveFromWorld(world,draft) {
   const plan=resolveBandLivePlan(world,draft);
   if(!plan.ready)throw Error(plan.reason);
-  return createBandLive({people:plan.members,groupId:plan.group.id,groupName:plan.group.name,songs:plan.songs,seed:draft.seed,audienceSize:draft.audienceSize});
+  return createBandLive({people:plan.members,groupId:plan.group.id,groupName:plan.group.name,songs:plan.songs,seed:draft.seed,audienceSize:draft.audienceSize,spatial:true,catalog:world.cardCatalog});
 }

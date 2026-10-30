@@ -1,5 +1,5 @@
-import {characterPortrait,characterName} from './character-view.mjs?v=0.8.15';
-import {escapeCard as esc} from './card-view.mjs?v=0.8.15';
+import {characterPortrait,characterName} from './character-view.mjs?v=0.9.0';
+import {escapeCard as esc} from './card-view.mjs?v=0.9.0';
 
 // Presentation acknowledgements stay outside the saved game and never claim a reward.
 export function createLevelNotifications({getWorld,getReducedEffects=()=>false,isShowVisible=()=>false}){

@@ -1,7 +1,8 @@
-export const conquestPreviewHTML='<section class="bl-conquest-preview" hidden aria-label="Effet de conquête prévu"><div class="bl-conquest-preview-kicker">VA SE DÉCLENCHER !</div><div class="bl-conquest-preview-head"><span class="bl-conquest-preview-icon" aria-hidden="true"></span><strong class="bl-conquest-preview-name"></strong></div><p class="bl-conquest-preview-description"></p><p class="bl-conquest-preview-targets"></p><b class="bl-conquest-preview-chain" hidden></b></section>';
+export const conquestPreviewHTML='<p class="bl-conquest-pending" hidden></p><section class="bl-conquest-preview" hidden aria-label="Effet de conquête prévu"><div class="bl-conquest-preview-kicker">VA SE DÉCLENCHER !</div><div class="bl-conquest-preview-head"><span class="bl-conquest-preview-icon" aria-hidden="true"></span><strong class="bl-conquest-preview-name"></strong></div><p class="bl-conquest-preview-description"></p><p class="bl-conquest-preview-targets"></p><b class="bl-conquest-preview-chain" hidden></b></section>';
 
-export function updateConquestPreview(element,value){
+export function updateConquestPreview(element,value,pending=null){
   element.hidden=!value;
+  const inactive=element.parentElement.querySelector('.bl-conquest-pending');inactive.hidden=!!value||!pending;inactive.textContent=pending?'Pouvoir inactif · encore '+pending.remaining+' ♥ pour conquérir':'';
   const key=value?[value.sourceId,value.name,...value.targets,value.chainCount].join('|'):'';
   if(value){
     element.querySelector('.bl-conquest-preview-icon').textContent=value.icon;
