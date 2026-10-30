@@ -2,6 +2,8 @@
 
 ## V0.9.0 — Foule physique et atelier de cartes {#v090}
 
+Les notes dorées de tempo et le tooltip détaillé de BandLive sont réutilisés dans l’arène : ressources, cœurs avant/après, réactions, conquêtes imminentes et chaînes. Le panneau évite les zones visées; les effets réduits et l’annulation restent pris en charge.
+
 29 octobre 2026 — ajout de l’arène isolée.
 
 - **FPS et fluidité de l’arène :** compteur permanent de cadence d’écran et de dessins par seconde; détail du coût de dessin et de prévision au survol. Les prévisions tournent dans un worker avec un seul calcul actif et uniquement le dernier point en attente. Les mouvements sont interpolés entre les positions physiques, sans avancer les cœurs. Pas de dessin continu au repos; le compteur s’arrête en arrière-plan.

@@ -32,6 +32,8 @@ Lancer `npm start`, puis ouvrir [l’arène locale](http://127.0.0.1:8000/arena.
 
 La clé `garage-vivant-arena-v1` conserve ce prototype; le monde principal reste séparé. Exporter/importer le prototype inclut scénario, catalogue, decks et combat courant. Les nouvelles règles de file, pression et conquis non solides sont limitées à cette arène. Les capacités sont des effets paramétrés (avance des voisins ou retrait de tempo), pas du code arbitraire. L’équilibrage du scénario reste expérimental.
 
+Les notes dorées de tempo et le tooltip détaillé de BandLive sont réutilisés dans l’arène : ressources, cœurs avant/après, réactions, conquêtes imminentes et chaînes. Le panneau évite les zones visées; les effets réduits et l’annulation restent pris en charge.
+
 Validation ciblée : `npm run test:arena` (moteur, sauvegardes, vagues, constructeur, bureau et tactile). Le scénario et sa graine permettent de reproduire un essai.
 
 ## Prendre la scène

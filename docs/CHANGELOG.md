@@ -1,5 +1,7 @@
 # V0.9.0 — 29 octobre 2026
 
+Les notes dorées de tempo et le tooltip détaillé de BandLive sont réutilisés dans l’arène : ressources, cœurs avant/après, réactions, conquêtes imminentes et chaînes. Le panneau évite les zones visées; les effets réduits et l’annulation restent pris en charge.
+
 Compteur FPS dans l’arène, prévisions hors du fil d’affichage, file de calcul bornée et interpolation des mouvements physiques.
 
 Arène isolée : trio et decks 2-2-1, deux chansons, public total et capacité distincts, file avec boss, pressions indépendantes et atelier de scénario/public/cartes. Conquis non solides, vagues progressives, sauvegarde séparée et export/import du prototype.
