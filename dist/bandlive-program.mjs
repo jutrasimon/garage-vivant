@@ -48,7 +48,7 @@ export function playProgram(game,card,targetId,options,hooks){
    // Motion also affects newly conquered spectators; the body remains on the floor.
    const affected=e.type==='split'||d.target==='audience'?game.fans:d.radius?inRadius(game,origin(),d.radius,{alive:false}):[fan,...(d.twoTargets?[second]:[])].filter(Boolean);
    const center={...origin()},strengthById=Object.fromEntries(affected.map(f=>[f.id,e.type!=='split'&&d.coreRadius&&Math.hypot(f.position.x-center.x,f.position.y-center.y)>d.coreRadius*game.room.radiusUnit?d.outerScale:1]));
-   impulse({center,targets:affected.map(f=>f.id),kind:e.type,strength:e.strength,strengthById,collisionPower:e.collisionPower});
+   impulse({center,targets:affected.map(f=>f.id),kind:e.type,strength:e.strength,strengthById,collisionPower:e.collisionPower,wavePower:e.wavePower||0});
   }
  }
  const event={id:game.events.length+1,type:'card',turn:game.turn,cardId:card.id,actorId:card.actorId,name:d.name,hits,tempo:game.tempo,tempoGain,tempoSpent,boostGain,boost:game.boost,...(point?{point:{...point}}:{}),...(options.secondTargetId?{secondTargetId:options.secondTargetId}:{})};

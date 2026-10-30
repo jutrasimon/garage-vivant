@@ -6,6 +6,8 @@ import {preparedConcert} from './bandlive-concert-helpers.mjs';
 import {beginBandLiveConcert} from '../dist/bandlive-concert.mjs';
 import {chooseSong} from '../dist/bandlive.mjs';
 const world=preparedConcert({instruments:['drums','keys','voice']}).world,game=beginBandLiveConcert(world).game;chooseSong(game,game.songs[0].id);
+// The active BandLive view pauses the automatic presentation; visibility autosaves must preserve this fixture too.
+world.performance.presentationPaused=true;
 const server=spawn(process.execPath,['scripts/serve.mjs'],{env:{...process.env,PORT:'0'},stdio:['ignore','pipe','pipe']});let browser,page;
 try{
  const url=await new Promise((resolve,reject)=>{let out='';server.on('error',reject);server.stdout.on('data',b=>{out+=b;const m=out.match(/http:\/\/127\.0\.0\.1:\d+\//);if(m)resolve(m[0]);});});

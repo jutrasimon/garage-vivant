@@ -10,7 +10,7 @@ export const EFFECTS=Object.freeze({
  style:{name:'Adopter le style de la chanson',fields:{duration:{label:'Durée',options:{turn:'Ce tour',song:'Cette chanson'}}}},
  protect:{name:'Protéger de l’ennui',fields:{}},
  push:{name:'Repousser',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
- split:{name:'Pousser · gauche / droite',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
+ split:{name:'Pousser · gauche / droite',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0),wavePower:{...number('Puissance de la vague (arène)',0,30,0),optional:true}}},
  pull:{name:'Attirer',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
  vortex:{name:'Tourbillon',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
  jump:{name:'Faire bondir',fields:{strength:number('Force',.1,3,1,.1),collisionPower:number('Bonus de cœur au contact',0,10,0)}},
@@ -79,7 +79,7 @@ export function catalogCard(catalog,instrument,kind){return catalog.cards.find(c
 export function describeCard(c){
  const lines=c.effects.map(e=>{
   let text=e.type==='power'?`${e.amount} puissance${e.formula==='tempo'?' + tout le tempo (consommé)':e.formula==='spend'?` + ${e.multiplier} par tempo consommé (max. ${e.limit})`:''}${e.threshold?.bonus?` (+${e.threshold.bonus} à ${e.threshold.tempo} tempo)`:''}`:e.type==='tempo'?`+${e.amount} tempo`:e.type==='energy'?`+${e.amount} énergie`:e.type==='draw'?`Pioche ${e.amount}`:e.type==='boost'?`+${e.amount} prochaine puissance${e.other==='yes'?' d’un autre musicien':''}`:e.type==='protect'?'Protège de l’ennui ce tour':e.type==='style'?`Adopte le style (${e.duration==='song'?'chanson':'tour'})`:`${EFFECTS[e.type].name} · force ${e.strength}${e.collisionPower?` · collisions +${e.collisionPower}`:''}`;
-  if(e.type==='split')text+=' · toute la foule, loin de la ligne';
+  if(e.type==='split')text+=' · toute la foule, loin de la ligne'+(e.wavePower?' · vague : '+e.wavePower+' puissance':'');
   if(e.type==='power'&&e.strikes>1)text+=` en ${e.strikes} frappes (puissance partagée)`;
   if(e.type==='power'&&e.impactStrength!==undefined&&e.impactStrength!==1)text+=e.impactStrength===0?' · sans repoussement':` · repoussement ×${e.impactStrength}`;
   if(e.when!=='always')text+=' — '+CONDITIONS[e.when]+(e.when==='tempo'?' '+e.conditionValue:'');return text+'.';

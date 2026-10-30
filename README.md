@@ -18,6 +18,21 @@ Une simulation autonome de musiciens dans une banlieue. Les personnages sont des
 
 **V7.2 — groupes autonomes :** [plan et réalisation](docs/PLAN_V7_2.md), [audit précédent](docs/AUDIT_V7_1_RELATIONS.md) et [réception sur 20 graines](docs/BALANCE_V7_2.md). Jeu et documentation sont publiés ensemble après les contrôles de main. Les règles, coefficients et raccords débranchés sont documentés dans les quinze DDD.
 
+## Arène BandLive isolée
+
+Lancer `npm start`, puis ouvrir [l’arène locale](http://127.0.0.1:8000/arena.html). Elle est aussi accessible dans **Réglages → Scénarios**. Aucune préparation de groupe ni sauvegarde de quartier nécessaire.
+
+- Lia (chant), Axel (guitare) et Sam (batterie) : chacun cinq cartes, trois recettes en 2-2-1. Le chant rassemble et prépare, la batterie produit le tempo, la guitare le dépense.
+- Deux chansons de quatre tours par défaut, réglables de trois à six. Faire le meilleur score avant la dernière note; tenue à zéro = show arrêté.
+- 50 spectateurs au total, 20 actifs au maximum, 14 au départ et 5 arrivées par tour. Les conquis deviennent transparents et non solides, puis sortent en fin de tour. La foule avance légèrement vers la scène et converge vers le centre sans produire de cœurs de collision.
+- L’entrée encombrée et la zone rouge ont des pressions indépendantes. La file et les menaces de fin de tour sont visibles. Les nouveaux arrivants attendent un tour de grâce avant de devenir impatients; un spectateur doit rester dans la zone rouge jusqu’à la fin du tour pour infliger sa pression.
+- **Atelier → Show / Public et boss / Cartes et decks / Physique et disposition** : total, capacité, proportions, rangs de boss, capacités périodiques, cartes, force et collisions. Appliquer le scénario redémarre le show. Dans le constructeur, **Tester** ou **Appliquer au show** remplace une carte du musicien et la met en main sans changer la foule ni le tour.
+- Break stéréo : deux fronts partent de la ligne verticale, repoussent et donnent trois cœurs à leur passage. La prévision liste les spectateurs de chaque côté. Le Meneur arrive au rang 31, résiste davantage au repoussement et fait avancer ses voisins tous les deux tours.
+
+La clé `garage-vivant-arena-v1` conserve ce prototype; le monde principal reste séparé. Exporter/importer le prototype inclut scénario, catalogue, decks et combat courant. Les nouvelles règles de file, pression et conquis non solides sont limitées à cette arène. Les capacités sont des effets paramétrés (avance des voisins ou retrait de tempo), pas du code arbitraire. L’équilibrage du scénario reste expérimental.
+
+Validation ciblée : `npm run test:arena` (moteur, sauvegardes, vagues, constructeur, bureau et tactile). Le scénario et sa graine permettent de reproduire un essai.
+
 ## Prendre la scène
 
 1. Dans **Groupes**, choisir un band actif puis **Préparer / réserver**. La préparation met le quartier en pause.

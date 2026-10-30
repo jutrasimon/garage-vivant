@@ -102,7 +102,7 @@ function createGame({people,groupId=null,groupName='Le band du quartier',songs,s
   if(spatial){game.catalog=catalog;initializeCrowd(game);}
   return game;
 }
-export const passageTurns=game=>game.version>=4?songTurns(currentSong(game)):RULES.songTurns;
+export const passageTurns=game=>game.arena?currentSong(game).turns:game.version>=4?songTurns(currentSong(game)):RULES.songTurns;
 export function totalTurns(game){
   if(game.version<4)return RULES.turns;
   const ids=game.songOrder||game.usedSongs,used=ids.reduce((n,id)=>n+songTurns(game.songs.find(s=>s.id===id)),0);
@@ -198,7 +198,7 @@ export function previewCard(game,id,targetId=null,options={}){
   return result.ok?{...result,game:after}:result;
 }
 function runCrowdImpulse(game,options,queue,preview=false){
-  const hits=[],motion=simulateImpulse(game,{...options,recordFrames:!preview,onContact:contact=>hits.push(...applyCollisionContact(game,contact,fan=>conquer(game,fan,queue)))});
+  const hits=[],motion=simulateImpulse(game,{...options,recordFrames:!preview,onContact:contact=>hits.push(...applyCollisionContact(game,contact,fan=>conquer(game,fan,queue))),onWave:(fan,power,frame)=>{const before=fan.hp;fan.hp=Math.max(0,before-power);hits.push({id:fan.id,before,after:fan.hp,gain:before-fan.hp,power,kind:'wave',frame});conquer(game,fan,queue);}});
   const {frames,...saved}=motion,event={id:game.events.length+1,turn:game.turn,...saved,hits:[]};game.events.push(event);
   return {motion,hits,event};
 }
@@ -208,6 +208,7 @@ export function impactCrowd(game,options){
   return {event,effects:game.events.slice(start).filter(e=>e!==event),motions:[motion],hits};
 }
 function checkVictory(game) {
+  if(game.arena)return false;
   if(game.fans.every(fan=>fan.hp===0)){game.phase='won';log(game,'Tout le public est conquis. Show réussi !');return true;}
   return false;
 }

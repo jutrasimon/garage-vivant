@@ -1,4 +1,5 @@
 const fields={
+ wavePower:'Dans l’arène isolée, cœurs reçus quand le front de la vague atteint chaque spectateur actif. 0 pousse seulement. Les bonus de puissance musicaux ne modifient pas ce montant. Hors de l’arène, ce champ est sans effet.',
  category:'Filtre la liste par instrument. Neutre regroupe les cartes accessibles à tous les musiciens.',
  name:'Nom affiché sur la carte, dans le deck et dans les propositions d’amélioration. De 1 à 70 caractères.',
  instrument:'Instrument qui peut obtenir cette carte. Neutre la propose à tous les musiciens. Duplique une carte historique pour changer son instrument.',
@@ -34,7 +35,7 @@ const effects={
  style:'Les spectateurs ciblés adoptent le style de la chanson pendant la durée choisie.',
  protect:'Protège les spectateurs ciblés de la perte de conquête due à l’ennui à la fin de ce tour.',
  push:'Éloigne les corps du centre de l’effet. Les collisions transmettent le mouvement, y compris aux spectateurs déjà conquis.',
- split:'Pousse toute la foule horizontalement, loin de la ligne verticale visée : à gauche vers la gauche, à droite vers la droite. Sur la ligne, le corps part à droite. Inclut les conquis et ignore le rayon de la carte. Choisis « Endroit au sol » pour placer librement la ligne; sinon elle passe par la cible ou le milieu du terrain.',
+ split:'Pousse toute la foule horizontalement, loin de la ligne verticale visée : à gauche vers la gauche, à droite vers la droite. Sur la ligne, le corps part à droite. Dans l’arène isolée, les conquis sont traversés sans impact. Hors arène, ils restent physiques. Ignore le rayon de la carte. Choisis « Endroit au sol » pour placer librement la ligne; sinon elle passe par la cible ou le milieu du terrain.',
  pull:'Attire les corps vers le centre de l’effet. Les collisions peuvent déplacer et conquérir d’autres spectateurs.',
  vortex:'Lance les corps autour du centre de l’effet avec une rotation. Les contacts utilisent les mêmes règles que les autres mouvements.',
  jump:'Fait bondir les corps et les déplace depuis le centre de l’effet. Les collisions peuvent transmettre le mouvement.',

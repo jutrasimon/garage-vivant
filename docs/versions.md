@@ -2,6 +2,14 @@
 
 ## V0.9.0 — Foule physique et atelier de cartes {#v090}
 
+29 octobre 2026 — ajout de l’arène isolée.
+
+- **Arène BandLive indépendante :** accès par `arena.html` ou Réglages → Scénarios. Trio chant/guitare/batterie, trois decks de cinq cartes en 2-2-1 et deux chansons de trois à six tours. Sa sauvegarde et son catalogue ne touchent pas au quartier.
+- **File de public et tenue du show :** total et capacité simultanée distincts (50/20 au départ), arrivées par tour, boss à rang précis, score final. Pressions d’entrée et de zone rouge activables séparément; tenue nulle arrête le show.
+- **Atelier du prototype :** modifier, copier ou retirer les types de public et boss; régler proportions, cœurs, effet de conquête, masse et capacité périodique. Modifier les cartes, composer les decks, tester une recette dans le show en cours, exporter/importer tout le prototype.
+- **Dans cette arène :** les conquis sont transparents, derrière les actifs et non solides. Ils sortent en fin de tour, puis le public se rapproche légèrement de la scène et du centre. La poussée devient deux vagues progressives avec puissance de cœur réglable; l’aperçu nomme les spectateurs à gauche et à droite. Les effets attendent l’arrivée du projectile.
+- **Limite :** ce scénario est un terrain d’équilibrage isolé. Le quartier conserve ses règles; les capacités personnalisables sont celles du constructeur, sans scripts libres.
+
 - **Taille et poussée :** les rotations ne gonflent plus les personnages lors d’un recalcul du rendu. La ligne de poussée affiche sa force; ses flèches s’allongent avec la puissance choisie dans la carte ou le labo.
 
 - **Poussée et collisions :** les colonnes comprimées peuvent se décaler latéralement et se séparer au bord du terrain. Dans le labo, viser la marge du public place l’impact sur sa limite jouable; l’aperçu et le clic utilisent le même emplacement.

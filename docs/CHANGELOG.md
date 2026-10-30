@@ -1,4 +1,6 @@
-# V0.9.0 — 14 octobre 2026
+# V0.9.0 — 29 octobre 2026
+
+Arène isolée : trio et decks 2-2-1, deux chansons, public total et capacité distincts, file avec boss, pressions indépendantes et atelier de scénario/public/cartes. Conquis non solides, vagues progressives, sauvegarde séparée et export/import du prototype.
 
 Nouvel impact horizontal « Pousser · gauche / droite », avec ligne verticale de visée, force réglable et collisions; utilisable dans les cartes et le labo.
 
