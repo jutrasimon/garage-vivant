@@ -1,3 +1,4 @@
+import {interpolateMotion} from '../dist/arena-render.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createArena,defaultScenario,demoCatalog,queuePlan,finishArenaTurn,restoreArena,arenaPreview,arenaPlay,pressureForecast,markRed} from '../dist/arena-engine.mjs';
@@ -17,3 +18,5 @@ test('reject malformed saves, impossible setup and unsupported deck targets',()=
 test('fifty active spectators keep wave previews bounded and reproducible',()=>{const c=quiet();c.initial=50;c.capacity=50;const g=createArena(c),card=g.cards.find(c=>c.definition.name==='Break stéréo');give(g,card.id);assert.equal(g.fans.length,50);const start=performance.now();const preview=arenaPreview(g,card.id,'audience',{x:560,y:180});assert(preview.ok);assert(performance.now()-start<1000,'Preview must remain bounded at 50 active spectators');const played=structuredClone(g);arenaPlay(played,card.id,'audience',{x:560,y:180});assert.deepEqual(played,preview.game);restoreArena(played);});
 
 test('conquering the whole queue preserves the agreed song duration',()=>{const c=quiet();c.total=3;c.initial=3;c.bosses=[];const g=createArena(c);for(const f of g.fans){f.hp=0;f.conquered=true;}finishArenaTurn(g);assert.equal(g.arena.status,'playing');assert.equal(g.fans.length,0);for(let i=1;i<8;i++)finishArenaTurn(g);assert.equal(g.arena.status,'complete');assert.equal(g.arena.round,8);restoreArena(g);});
+
+test('visual interpolation smooths positions without anticipating hearts or changing simulation frames',()=>{const frames=[[{id:'a',x:10,y:20,angle:0,lift:0,hp:8}],[{id:'a',x:30,y:40,angle:1,lift:12,hp:0}]];const original=structuredClone(frames);assert.deepEqual(interpolateMotion(frames,.5).get('a'),{id:'a',x:20,y:30,angle:.5,lift:6,hp:8});assert.equal(interpolateMotion(frames,1).get('a').hp,0);assert.deepEqual(frames,original);});

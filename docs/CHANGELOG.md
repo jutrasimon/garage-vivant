@@ -1,5 +1,7 @@
 # V0.9.0 — 29 octobre 2026
 
+Compteur FPS dans l’arène, prévisions hors du fil d’affichage, file de calcul bornée et interpolation des mouvements physiques.
+
 Arène isolée : trio et decks 2-2-1, deux chansons, public total et capacité distincts, file avec boss, pressions indépendantes et atelier de scénario/public/cartes. Conquis non solides, vagues progressives, sauvegarde séparée et export/import du prototype.
 
 Nouvel impact horizontal « Pousser · gauche / droite », avec ligne verticale de visée, force réglable et collisions; utilisable dans les cartes et le labo.

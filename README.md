@@ -22,6 +22,7 @@ Une simulation autonome de musiciens dans une banlieue. Les personnages sont des
 
 Lancer `npm start`, puis ouvrir [l’arène locale](http://127.0.0.1:8000/arena.html). Elle est aussi accessible dans **Réglages → Scénarios**. Aucune préparation de groupe ni sauvegarde de quartier nécessaire.
 
+- Le compteur **FPS** mesure la cadence de l’écran; **rendu /s** compte les dessins de la scène (zéro au repos). Son survol indique le coût du dessin et de la prévision. Les prévisions tournent dans un worker, avec repli synchrone si indisponible. Les déplacements sont interpolés sans changer la physique.
 - Lia (chant), Axel (guitare) et Sam (batterie) : chacun cinq cartes, trois recettes en 2-2-1. Le chant rassemble et prépare, la batterie produit le tempo, la guitare le dépense.
 - Deux chansons de quatre tours par défaut, réglables de trois à six. Faire le meilleur score avant la dernière note; tenue à zéro = show arrêté.
 - 50 spectateurs au total, 20 actifs au maximum, 14 au départ et 5 arrivées par tour. Les conquis deviennent transparents et non solides, puis sortent en fin de tour. La foule avance légèrement vers la scène et converge vers le centre sans produire de cœurs de collision.

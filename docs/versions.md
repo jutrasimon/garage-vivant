@@ -4,6 +4,8 @@
 
 29 octobre 2026 — ajout de l’arène isolée.
 
+- **FPS et fluidité de l’arène :** compteur permanent de cadence d’écran et de dessins par seconde; détail du coût de dessin et de prévision au survol. Les prévisions tournent dans un worker avec un seul calcul actif et uniquement le dernier point en attente. Les mouvements sont interpolés entre les positions physiques, sans avancer les cœurs. Pas de dessin continu au repos; le compteur s’arrête en arrière-plan.
+
 - **Arène BandLive indépendante :** accès par `arena.html` ou Réglages → Scénarios. Trio chant/guitare/batterie, trois decks de cinq cartes en 2-2-1 et deux chansons de trois à six tours. Sa sauvegarde et son catalogue ne touchent pas au quartier.
 - **File de public et tenue du show :** total et capacité simultanée distincts (50/20 au départ), arrivées par tour, boss à rang précis, score final. Pressions d’entrée et de zone rouge activables séparément; tenue nulle arrête le show.
 - **Atelier du prototype :** modifier, copier ou retirer les types de public et boss; régler proportions, cœurs, effet de conquête, masse et capacité périodique. Modifier les cartes, composer les decks, tester une recette dans le show en cours, exporter/importer tout le prototype.
